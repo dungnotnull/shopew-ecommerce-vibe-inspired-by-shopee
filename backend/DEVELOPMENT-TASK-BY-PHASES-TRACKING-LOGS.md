@@ -2,7 +2,7 @@
 
 ## Phase 1: Database & Core Setup
 - [ ] Initialize NestJS project (Nest CLI).
-- [ ] Setup Docker Compose for PostgreSQL, Redis, Elasticsearch, MinIO.
+- [ ] Setup Docker Compose for PostgreSQL, Redis, Elasticsearch.
 - [ ] Configure TypeORM/Prisma with NestJS.
 - [ ] Setup Swagger UI for API Documentation.
 - [ ] Implement Global Exception Filter and Response Interceptor.
@@ -15,21 +15,24 @@
 ## Phase 2: Core E-Commerce & Product Management
 - [ ] **Categories:**
   - [ ] Define Nested Set or Adjacency List schema for Category Tree.
-  - [ ] Build API to fetch Category Tree structure.
+  - [ ] Define Dynamic Attributes schema (JSONB or EAV pattern) linked to Categories.
+  - [ ] Build API to fetch Category Tree, including sub-categories and their dynamic attributes.
 - [ ] **Products & Variants:**
   - [ ] Define `Product`, `ProductVariant` (Tier variations like Color/Size), `ProductImage` entities.
+  - [ ] Add Product metrics & flags: `isMall`, `isPreferred`, `soldCount`, `discountPercentage`.
   - [ ] Build CRUD APIs for Seller to manage Products.
 - [ ] **Shop Profiles:**
   - [ ] Define `Shop` entity and relation to `User` (Seller).
-  - [ ] Build API to apply/approve Shopee Mall/Preferred Seller status.
+  - [ ] Build API to manage Shop profiles.
 
 ## Phase 3: Elasticsearch & Advanced Search
 - [ ] Install `@nestjs/elasticsearch` module.
 - [ ] Write Sync Job (Cron or Event-driven) to sync PostgreSQL `Product` data to Elasticsearch index.
 - [ ] Implement Search Endpoint (`GET /search`):
   - [ ] Setup Full-text search with Typo tolerance.
-  - [ ] Implement Faceted Filters (Price range, Location, Rating).
-  - [ ] Implement Sorting logic (Relevance, Price, Date).
+  - [ ] Implement Faceted Filters (Price range, Location, Rating, Mall/Yêu Thích, Dynamic Attributes depending on Category).
+  - [ ] Implement Sorting logic (Relevance, Price, Date, Sales).
+  - [ ] Ensure API supports querying by (Search term + Category ID + Filters + Sorting) simultaneously in 1 request.
 
 ## Phase 4: Cart, Checkout & Orders
 - [ ] **Cart Management:**
@@ -43,29 +46,21 @@
   - [ ] Execute `SELECT ... FOR UPDATE` to lock inventory rows.
   - [ ] Split Master Order into multiple Sub-Orders per `shopId`.
   - [ ] Deduct inventory, calculate totals.
+  - [ ] Update `soldCount` for purchased products.
   - [ ] Commit Transaction (`COMMIT`).
 
-## Phase 5: Finance (ShopeePay) & Escrow
-- [ ] **Ledger System (ShopeePay):**
-  - [ ] Define immutable `LedgerTransaction` and `AccountBalance` entities.
-  - [ ] Build Wallet Top-up API (Credit user account).
-- [ ] **Order Payment & Escrow:**
-  - [ ] Implement logic to deduct from ShopeePay during Checkout.
-  - [ ] Move funds to Platform Escrow account.
-  - [ ] Build webhook/cron to release Escrow funds to Seller's Wallet when Order is marked "Completed".
-
-## Phase 6: Promotions & Flash Sales
+## Phase 5: Promotions & Flash Sales
 - [ ] **Vouchers:**
   - [ ] Define `Voucher` schema (Type, MinSpend, DiscountRate, MaxCap, Stock).
   - [ ] Update Checkout Transaction to validate and consume Platform + Shop vouchers.
 - [ ] **Flash Sales (High Concurrency):**
   - [ ] Create Flash Sale time-slot management API.
-  - [ ] Implement Redis Distributed Lock (Redlock) or Lua Scripts to handle high-volume stock deduction instantly.
+  - [ ] Implement Redis Distributed Lock (Redlock) to handle high-volume stock deduction.
   - [ ] Async sync from Redis to PostgreSQL for Flash Sale orders.
 
-## Phase 7: Social, Chat & Dispute
+## Phase 6: Social, Chat & Dispute
 - [ ] **Ratings & Reviews:**
-  - [ ] Integrate AWS S3 / MinIO SDK for Media upload.
+  - [ ] Integrate local docker storage for Media upload.
   - [ ] Build API for users to rate and upload images for completed orders.
 - [ ] **Dispute System:**
   - [ ] Build Return/Refund request API for Buyers.
@@ -77,10 +72,7 @@
   - [ ] Build 1-to-1 Room joining and Message broadcasting.
   - [ ] Persist chat messages to DB.
 
-## Phase 8: Livestreaming & Polish
-- [ ] **Shopee Live:**
-  - [ ] Research and integrate RTMP URL generation for Sellers.
-  - [ ] Build API to fetch active Live Sessions for Homepage.
+## Phase 7: Polish & Testing
 - [ ] **E2E Testing:**
   - [ ] Write Jest E2E tests for Checkout Transaction.
-  - [ ] Write Jest E2E tests for Ledger integrity.
+  - [ ] Admin approval endpoints for Seller payouts.
