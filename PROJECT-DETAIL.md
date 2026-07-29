@@ -1,7 +1,7 @@
 # Shopew - Chi tiết Dự án (100% Shopee Clone)
 
 ## Tổng quan
-Shopew là một nền tảng Thương mại điện tử đa vai trò, toàn diện cấp doanh nghiệp, sao chép lại toàn bộ hệ sinh thái Shopee. Nền tảng này bao gồm hệ thống khám phá sản phẩm phức tạp, thương mại xã hội (livestreaming), hệ thống tiếp thị đa tầng, thanh toán trung gian (escrow), và tích hợp sâu về logistics.
+Shopew là một nền tảng Thương mại điện tử đa vai trò, toàn diện cấp doanh nghiệp, tương tự Shopee. Nền tảng này bao gồm hệ thống khám phá sản phẩm phức tạp, hệ thống tiếp thị đa tầng.
 
 ## Công nghệ sử dụng
 - **Backend:** Node.js, TypeScript, NestJS, Prisma ORM / TypeORM
