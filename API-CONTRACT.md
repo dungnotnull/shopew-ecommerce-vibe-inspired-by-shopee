@@ -1,6 +1,7 @@
 # API Contract (Shopee Clone)
 
 > **SOURCE OF TRUTH:** Both Frontend and Backend agents MUST consult and update this file BEFORE making any changes.
+> **CURRENCY NOTE:** All prices and monetary values in this API are represented in VND (Vietnamese Dong) as integers (no decimals).
 
 ## Search & Discovery
 ### `GET /api/v1/search`

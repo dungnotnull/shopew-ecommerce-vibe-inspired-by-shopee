@@ -16,7 +16,7 @@
 
 ## Phase 4: Cart, Checkout & Orders
 - Cart grouping by Shop in Redis.
-- Checkout flow: ACID Transactions, Inventory locking (`SELECT FOR UPDATE`).
+- Checkout flow: Redis Order Queue (prevent overselling last item), ACID Transactions.
 - Shipping mock calculation.
 
 ## Phase 5: Promotions & Flash Sales

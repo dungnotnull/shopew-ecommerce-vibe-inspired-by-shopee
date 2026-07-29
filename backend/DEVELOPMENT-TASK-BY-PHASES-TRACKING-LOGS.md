@@ -45,7 +45,8 @@
 - [ ] **Shipping Mock:**
   - [ ] Create Service to calculate shipping fee based on User Address and Shop Address.
 - [ ] **Checkout (The Core Transaction):**
-  - [ ] Validate stock for all selected variants.
+  - [ ] Implement Redis Message Queue (e.g., BullMQ) for processing incoming orders to handle extreme concurrency (multiple users buying the last item).
+  - [ ] Queue Consumer pulls order, validates stock for all selected variants.
   - [ ] Begin PostgreSQL Transaction (`BEGIN`).
   - [ ] Execute `SELECT ... FOR UPDATE` to lock inventory rows.
   - [ ] Split Master Order into multiple Sub-Orders per `shopId`.
