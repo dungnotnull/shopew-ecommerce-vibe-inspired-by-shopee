@@ -1,16 +1,16 @@
 # Backend Development Task & Phase Tracking
 
 ## Phase 1: Database & Core Setup
-- [ ] Initialize NestJS project (Nest CLI).
-- [ ] Setup Docker Compose for PostgreSQL, Redis, Elasticsearch.
-- [ ] Configure TypeORM/Prisma with NestJS.
-- [ ] Setup Swagger UI for API Documentation.
-- [ ] Implement Global Exception Filter and Response Interceptor.
-- [ ] **Auth & Users:**
-  - [ ] Define `User`, `Role`, `Address` entities.
-  - [ ] Implement JWT Authentication strategy.
-  - [ ] Create `@Roles()` decorator and `RolesGuard`.
-  - [ ] Build `/auth/register` and `/auth/login` endpoints.
+- [x] Initialize NestJS project (Nest CLI).
+- [x] Setup Docker Compose for PostgreSQL, Redis, Elasticsearch.
+- [x] Configure TypeORM/Prisma with NestJS.
+- [x] Setup Swagger UI for API Documentation.
+- [x] Implement Global Exception Filter and Response Interceptor.
+- [x] **Auth & Users:**
+  - [x] Define `User`, `Role`, `Address` entities.
+  - [x] Implement JWT Authentication strategy.
+  - [x] Create `@Roles()` decorator and `RolesGuard`.
+  - [x] Build `/auth/register` and `/auth/login` endpoints.
 
 ## Phase 2: Core E-Commerce & Product Management
 - [ ] **Categories:**
