@@ -17,10 +17,14 @@
   - [ ] Define Nested Set or Adjacency List schema for Category Tree.
   - [ ] Define Dynamic Attributes schema (JSONB or EAV pattern) linked to Categories.
   - [ ] Build API to fetch Category Tree, including sub-categories and their dynamic attributes.
-- [ ] **Products & Variants:**
-  - [ ] Define `Product`, `ProductVariant` (Tier variations like Color/Size), `ProductImage` entities.
-  - [ ] Add Product metrics & flags: `isMall`, `isPreferred`, `soldCount`, `discountPercentage`.
-  - [ ] Build CRUD APIs for Seller to manage Products.
+- [ ] **Products (SPU & SKU Architecture):**
+  - [ ] Define `Product` (SPU) entity for shared attributes (Name, Description, CategoryId, ViewCount, LikeCount).
+  - [ ] Define `ProductVariantGroup` (e.g., "Màu sắc", "Kích thước") and `ProductVariantOption` (e.g., "Đỏ", "Xanh").
+  - [ ] Define `SKU` entity holding specific combination data: `price`, `promotional_price`, `stock`, `sku_code`, `thumbnail_image_id`.
+  - [ ] **Logic:** Implement Auto-generation of a "Default SKU" if the SPU is created without any variant groups.
+  - [ ] Add Product metrics & flags to SPU: `isMall`, `isPreferred`, `soldCount`, `discountPercentage`.
+  - [ ] Build CRUD APIs for Seller to manage SPU and multi-tier SKUs.
+  - [ ] Build User interactions API: Like/Unlike product (Wishlist).
 - [ ] **Shop Profiles:**
   - [ ] Define `Shop` entity and relation to `User` (Seller).
   - [ ] Build API to manage Shop profiles.

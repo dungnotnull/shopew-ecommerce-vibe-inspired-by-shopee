@@ -36,6 +36,48 @@
 }
 ```
 
+## Product Details (SPU & SKU)
+### `GET /api/v1/products/:id`
+- **Response:**
+```json
+{
+  "id": 101,
+  "name": "Kẹp Tóc 15 Chi Tiết hellokitty",
+  "priceMin": 19000,
+  "priceMax": 60000,
+  "discountPercentage": 14,
+  "isPreferred": true,
+  "rating": 4.8,
+  "soldCount": 55,
+  "likeCount": 20,
+  "variantGroups": [
+    {
+      "name": "Mẫu",
+      "options": ["Sét 15 Kẹp Kitty", "Sét 19 Kẹp Lợn Hồng", "Kẹp 13ct Helokity Đỏ"]
+    }
+  ],
+  "// Note": "Nếu không có phân loại, variantGroups sẽ là rỗng [] và skus sẽ chỉ có 1 phần tử Default SKU với tierIndex là rỗng []",
+  "skus": [
+    {
+      "id": 1001,
+      "tierIndex": [0], 
+      "price": 19000,
+      "originalPrice": 22000,
+      "stock": 150,
+      "thumbnailUrl": "..."
+    },
+    {
+      "id": 1002,
+      "tierIndex": [1], 
+      "price": 60000,
+      "originalPrice": 65000,
+      "stock": 5,
+      "thumbnailUrl": "..."
+    }
+  ]
+}
+```
+
 ## Cart & Checkout
 ### `GET /api/v1/cart`
 - **Response:** 

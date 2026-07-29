@@ -15,8 +15,31 @@ Shopew is a fullstack, enterprise-grade multi-role E-Commerce platform replicati
 
 ### 1. Multi-Role RBAC & Basic E-Commerce (Level: Dễ)
 - **Multi-Role RBAC:** Customer/Buyer, Seller, Admin authentication via JWT.
-- **Product Management:** CRUD operations for basic products.
-- **Shopee Mall & Preferred Seller:** Simple Boolean flags or Badging system on Shop profiles.
+- **Product Management:** 
+  - Áp dụng triệt để kiến trúc SPU & SKU (Xem chi tiết ở phần *Architecture Deep Dive* bên dưới).
+  - Hỗ trợ Badges: Shopee Mall, Shop Yêu Thích.
+  - Quản lý chỉ số: Số lượng đã bán (Sold count), Đã thích (Like count).
+  - Khuyến mãi cơ bản: Cấu hình phần trăm giảm giá (Discount %).
+
+---
+
+## Architecture Deep Dive: Product SPU & SKU
+Để đáp ứng các biến thể phức tạp (ví dụ: Màu sắc + Kích thước) như trang thật, hệ thống áp dụng chuẩn **SPU (Standard Product Unit)** và **SKU (Stock Keeping Unit)**:
+
+1. **SPU (Sản phẩm gốc):**
+   - Đại diện cho mặt hàng tổng thể (Ví dụ: "Kẹp Tóc 15 Chi Tiết hellokitty").
+   - Lưu trữ các thuộc tính dùng chung: `name`, `description`, `category_id`, `rating`, `sold_count`, `like_count`.
+   - Lưu trữ khoảng giá (`price_min`, `price_max`) được tính toán tự động từ các SKU con.
+
+2. **Variant Groups & Options (Nhóm Phân Loại):**
+   - Hỗ trợ tối đa 2 cấp (Tier 1, Tier 2). Ví dụ Tier 1 là "Mẫu mã" (Option: Kẹp Kitty, Lợn Hồng), Tier 2 là "Kích cỡ" (Lớn, Nhỏ).
+   - Nếu Sản phẩm không có biến thể, hệ thống sẽ tự sinh 1 SKU mặc định (Default SKU) ẩn dưới nền.
+
+3. **SKU (Đơn vị lưu kho - Biến thể cụ thể):**
+   - Là tổ hợp của các Options (Ví dụ: "Kẹp Kitty" + "Lớn").
+   - Sở hữu **Tồn kho (Stock) Độc lập:** Khi khách hàng Mua/Thêm vào giỏ, hệ thống phải trừ tồn kho của chính xác SKU này để tránh oversell.
+   - Sở hữu **Giá (Price) Độc lập:** Cùng 1 SPU nhưng SKU "Lợn Hồng" có thể đắt hơn "Kẹp Kitty".
+   - Sở hữu **Ảnh Thumbnail Độc lập:** Khi chọn phân loại, UI tự đổi ảnh tương ứng.
 
 ### 2. Advanced Cart & Checkout (Level: Trung bình)
 - **Advanced Cart:** Items grouped by Shop (`shopId`) in local storage/Redis.
