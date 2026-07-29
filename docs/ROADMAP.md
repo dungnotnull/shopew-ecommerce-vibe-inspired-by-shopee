@@ -26,7 +26,7 @@
 
 ## Phase 6: Social, Chat & Dispute Management
 - Real-time Buyer-Seller Chat (Socket.io).
-- Ratings & Reviews (Media upload).
+- Ratings & Reviews (Buyer Feedback & Media upload).
 - Return & Refund (Dispute workflow).
 
 ## Phase 7: Admin Portal & E2E Testing

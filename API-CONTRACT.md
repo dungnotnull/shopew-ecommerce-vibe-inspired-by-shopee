@@ -118,4 +118,9 @@
 - **Namespace:** `/chat`
 - **Events:** `join_room`, `send_message`, `receive_message`, `read_receipt`
 
+## Ratings & Reviews
+### `POST /api/v1/feedback/product` (Buyer Feedback)
+- **Request:** `{ "orderItemId": 123, "rating": 5, "comment": "Great!", "mediaUrls": ["/img/1.jpg"] }`
+- **Response:** `{ "success": true }`
+
 *(To be expanded)*

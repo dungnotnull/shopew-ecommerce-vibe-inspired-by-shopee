@@ -64,9 +64,9 @@
   - [ ] Async sync from Redis to PostgreSQL for Flash Sale orders.
 
 ## Phase 6: Social, Chat & Dispute
-- [ ] **Ratings & Reviews:**
+- [ ] **Ratings & Reviews (Buyer Feedback):**
   - [ ] Integrate local docker storage for Media upload.
-  - [ ] Build API for users to rate and upload images for completed orders.
+  - [ ] Build API for Buyer to rate Product/Shop (upload images/videos) for completed orders.
 - [ ] **Dispute System:**
   - [ ] Build Return/Refund request API for Buyers.
   - [ ] Build Accept/Reject workflow for Sellers.

@@ -52,7 +52,7 @@ Shopew là một nền tảng Thương mại điện tử đa vai trò, toàn di
 - **Luồng Thanh toán (Checkout):** 
   - Tính tổng tiền (VND), tính phí vận chuyển giả lập theo khoảng cách/cân nặng.
   - **Hàng đợi Redis (Redis Queue):** Áp dụng Message Queue (như BullMQ) để đẩy các yêu cầu đặt hàng vào hàng đợi xử lý tuần tự. Điều này giải quyết triệt để bài toán **Nhiều người cùng bấm mua 1 sản phẩm cuối cùng trong kho**, đảm bảo hệ thống không bao giờ bị bán lố (oversell) và chỉ người nhanh nhất mới mua thành công.
-- **Đánh giá & Nhận xét:** Tải lên văn bản và hình ảnh/video đánh giá qua docker local.
+- **Đánh giá & Nhận xét (Buyer Feedback):** Người mua đánh giá Sản phẩm/Shop sau khi hoàn thành đơn hàng (kèm hình ảnh/video tải lên qua docker local).
 
 ### 3. Hệ sinh thái Voucher & Marketing (Mức độ: Trung bình - Khó)
 - **Voucher 3 Tầng:** Xác thực Voucher Sàn, Voucher Shop, và Shopee Xu (Logic kiếm & tiêu xu).
