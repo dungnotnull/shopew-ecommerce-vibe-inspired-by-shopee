@@ -1,31 +1,43 @@
-# Shopew - Project Details
+# Shopew - Project Details (100% Shopee Clone)
 
 ## Overview
-Shopew is a fullstack, enterprise-grade multi-role E-Commerce platform inspired by Shopee, engineered to handle complex product variant matrices, real-time inventory tracking, and ACID-compliant order fulfillment.
+Shopew is a fullstack, enterprise-grade multi-role E-Commerce platform replicating the complete Shopee ecosystem. It encompasses complex product discovery, social commerce (livestreaming), multi-tier marketing systems, escrow payments, and deep logistics integration.
 
 ## Tech Stack
 - **Backend:** Node.js, TypeScript, NestJS, Prisma ORM / TypeORM
-- **Frontend:** React.js / Vue.js, Tailwind CSS, Redux Toolkit / Pinia, React Query
-- **Database:** PostgreSQL / MySQL (primary relational DB)
-- **Cache:** Redis (caching, session management, transient carts)
-- **DevOps & Tooling:** Docker, Docker Compose, Swagger (API Docs), Jest
+- **Frontend:** React.js, Tailwind CSS, zustand, React Query
+- **Database:** PostgreSQL (Ledger & Primary DB) + Elasticsearch (Search & Filter)
+- **Cache & Real-time:** Redis (caching, session), Socket.io (Chat & Notifications)
+- **Media & Streaming:** AWS S3 / MinIO (Media), Nginx-RTMP / AWS IVS (Livestream/Video)
+- **DevOps & Tooling:** Docker, Docker Compose, Swagger, Jest
 
-## Core Features
-- **Multi-Role Access Control (RBAC):** Strict role segregation and middleware authorization across distinct user tiers (Customer/Buyer, Seller, Admin).
-- **Complex SKU & Variant Architecture:** Supports multi-dimensional product variations (Color, Size, Material, Custom Attributes) with individual pricing, SKU codes, images, and localized inventory tracking.
-- **Hybrid Cart Synchronization:** Ultra-fast transient cart storage using Redis sessions, automatically reconciled and synced with persistent database storage upon user authentication.
-- **ACID Database Order Transactions:** Guarantees zero overselling and data integrity during checkout by executing stock availability checks, inventory deduction, and order/order-item creation within atomic transaction blocks.
+## Core Features (Ordered by Implementation Difficulty: Easiest to Hardest)
 
-## System Architecture
-The backend follows a modular, clean architecture separating domain entities, business use cases, and infrastructure adapters:
-- Frontend Client (Storefront, Seller Center, Admin Portal) -> NestJS API Gateway & Guards (JWT, RBAC) -> Modules (Auth, Product, Order) -> Redis / PostgreSQL.
+### 1. Multi-Role RBAC & Basic E-Commerce (Level: Dễ)
+- **Multi-Role RBAC:** Customer/Buyer, Seller, Admin authentication via JWT.
+- **Product Management:** CRUD operations for basic products.
+- **Shopee Mall & Preferred Seller:** Simple Boolean flags or Badging system on Shop profiles.
 
-## Order Processing Execution Flow
-1. Buyer Initiates Checkout
-2. RBAC Guard & Token Verification
-3. Redis/DB Cart Retrieval
-4. Begin DB Transaction
-5. Lock & Deduct SKU Stock
-6. Create Order & Line-Items Records
-7. Commit Transaction
-8. Clear Cart & Emit Real-Time Order Event
+### 2. Advanced Cart & Checkout (Level: Trung bình)
+- **Advanced Cart:** Items grouped by Shop (`shopId`) in local storage/Redis.
+- **Checkout Flow:** Calculating total prices, Mocking shipping fees based on distance/weight.
+- **Ratings & Reviews:** Uploading review text and images/videos via S3/MinIO.
+
+### 3. Vouchers & Marketing Center (Level: Trung bình - Khó)
+- **3-Tier Vouchers:** Validating Platform Vouchers, Shop Vouchers, and Shopee Coins (Earn & Spend logic).
+- **Advanced Deals:** Bundle Deals (Mua 2 giảm 10%), Add-on Deals (Mua kèm deal sốc).
+- **Logistics AWB & Dispute:** State machines for Order Status, AWB Generation, and Return/Refund workflows (Buyer -> Seller -> Admin).
+
+### 4. Advanced Discovery & Search Engine (Level: Khó)
+- **Deep Category Tree:** Multi-level categories with dynamic attributes (e.g., Electronics -> RAM).
+- **Smart Search (Elasticsearch):** Typo tolerance, autocomplete, trending keywords, syncing Postgres to ES.
+- **Faceted Filtering:** Filter by location, price, rating, shipping options.
+
+### 5. Flash Sales, Finance & Escrow (Level: Rất Khó)
+- **Flash Sales:** Time-slotted, extremely high-concurrency handling using Redis distributed locks and DB row-locks to prevent overselling.
+- **ShopeePay & Wallet:** Double-entry Ledger DB system for E-wallet deposit/withdraw and PIN protection.
+- **Escrow System:** Holding funds centrally and executing complex payouts to Sellers upon order completion.
+
+### 6. Social Commerce & Interactive (Level: Cực Khó)
+- **Buyer-Seller Chat:** Real-time bi-directional chat using WebSockets (Socket.io) with read receipts and offline queues.
+- **Shopee Live & Video:** Setting up RTMP servers, broadcasting livestream video, and integrating real-time product pins during streams.

@@ -2,16 +2,16 @@
 
 ## Framework & Tools
 - **Framework:** NestJS (Node.js, TypeScript)
-- **Database ORM:** Prisma ORM / TypeORM
-- **Database:** PostgreSQL / MySQL
-- **Caching:** Redis (Session management, transient carts)
-- **Tooling:** Docker, Swagger (API Docs), Jest
+- **Database:** Prisma ORM / PostgreSQL + Elasticsearch
+- **Caching & Real-time:** Redis + Socket.io
+- **Storage/Streaming:** MinIO / AWS S3 + RTMP Server
 
 ## Conventions & Architecture
-1. **Architecture:** Follow NestJS modular, clean architecture separating domain entities, business use cases, and infrastructure adapters (Modules, Controllers, Services, Guards, Interceptors).
-2. **Transactions (ACID):** All critical operations (like Order creation, Stock availability checks, and Inventory deduction) MUST be wrapped in an atomic database transaction to prevent overselling.
-3. **RBAC:** Apply role guards on endpoints appropriately (Customer, Seller, Admin).
-4. **API Updates:** If you change an endpoint payload or response, YOU MUST update `../API-CONTRACT.md` before committing the change.
-5. **Tracking:** 
+1. **Flash Sale Concurrency:** When handling inventory deduction, you MUST handle race conditions. Use Redis distributed locks or PostgreSQL Row-Level Locks (`SELECT FOR UPDATE`).
+2. **Transactions (ACID):** Complex operations like Checkout (Validating multiple vouchers, calculating shipping, deducting coins, locking stock, creating sub-orders) MUST be wrapped in a single Database Transaction.
+3. **Financial Ledger (ShopeePay & Escrow):** Any movement of funds (Wallet top-up, Order payment, Escrow release to Seller) MUST use double-entry bookkeeping (Ledger pattern) in PostgreSQL to guarantee data integrity.
+4. **Search:** Use Elasticsearch for querying products on the storefront to relieve PostgreSQL load. All product updates must sync to Elasticsearch.
+5. **WebSockets:** Keep Socket.io controllers lightweight. Delegate business logic to Services.
+6. **Tracking:** 
    - Log task progress in `DEVELOPMENT-TASK-BY-PHASES-TRACKING-LOGS.md`.
-   - Track and update backend issues in `ISSUES-LIST-TRACKING.md`.
+   - Track backend issues in `ISSUES-LIST-TRACKING.md`.

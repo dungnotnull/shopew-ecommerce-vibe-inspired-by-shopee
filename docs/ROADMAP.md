@@ -1,24 +1,36 @@
-# Project Roadmap
+# Project Roadmap (100% Shopee Clone)
 
-## Phase 1: Foundation & Setup
-- Initialize Monorepo (apps/frontend, apps/backend).
-- Setup Database (PostgreSQL/MySQL) and Redis locally via Docker Compose.
-- Configure NestJS, Prisma/TypeORM, and Swagger.
-- Define Database schemas (Users, Roles, Products, Variants, Cart, Orders).
-- Establish API Contract (`API-CONTRACT.md`).
+## Phase 1: Foundation & DB Setup
+- Initialize Monorepo. Setup PostgreSQL, Redis, Elasticsearch, MinIO.
+- Define DB schemas (Users, Products, Cart).
 
-## Phase 2: Core Backend Services & Auth
-- Implement JWT Authentication and RBAC (Admin, Seller, Customer).
-- Develop Product Management APIs (CRUD, Categories, Complex SKU Variants).
-- Implement Hybrid Cart logic with Redis.
+## Phase 2: Core E-Commerce & Advanced Search
+- Implement Category Tree and Product Variants.
+- Integrate Elasticsearch: Full-text search, Typo tolerance, Faceted Filtering.
+- Setup Shopee Mall and Preferred Seller badging.
 
-## Phase 3: Frontend Integration & Order Flow
-- Build Frontend UI components (React/Vue, Tailwind).
-- Integrate Auth, State Management (Redux/Pinia, React Query) and Product browsing.
-- Implement Cart UI and sync with Backend.
-- Develop the Order placement flow with ACID Database Transactions.
+## Phase 3: Advanced Cart & Order Flow
+- Cart grouping by Shop.
+- Checkout flow: ACID Transactions, Inventory locking (`SELECT FOR UPDATE`).
 
-## Phase 4: Refinement & Admin Dashboard
-- Build Seller and Admin portals.
-- Implement Order tracking and status updates.
-- Setup Jest E2E tests, Performance optimization and bug fixing.
+## Phase 4: Logistics & Escrow Finance (ShopeePay)
+- Implement Shopee Guarantee (Escrow).
+- Setup ShopeePay Wallet (Ledger DB).
+- Logistics AWB Generation and Tracking Mocks.
+
+## Phase 5: Marketing & Vouchers Ecosystem
+- 3-Tier Vouchers (Platform, Shop, Coins).
+- Build Flash Sale system (Redis Concurrency).
+- Marketing Center: Bundle Deals, Add-on Deals, Affiliate tracking.
+
+## Phase 6: Social, Chat & Dispute Management
+- Real-time Buyer-Seller Chat (Socket.io).
+- Ratings & Reviews (Media upload).
+- Return & Refund (Dispute workflow).
+
+## Phase 7: Shopee Live & Video (Social Commerce)
+- Setup RTMP / HLS streaming server.
+- Integrate Shopee Live & Shopee Video feeds.
+
+## Phase 8: Admin Portal, Dashboards & Polish
+- Admin & Seller Dashboards, Performance optimization, Jest E2E Testing.
