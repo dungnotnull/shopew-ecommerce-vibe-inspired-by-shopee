@@ -18,7 +18,7 @@
   - [ ] Define Dynamic Attributes schema (JSONB or EAV pattern) linked to Categories.
   - [ ] Build API to fetch Category Tree, including sub-categories and their dynamic attributes.
 - [ ] **Products (SPU & SKU Architecture):**
-  - [ ] Define `Product` (SPU) entity for shared attributes (Name, Description, CategoryId, ViewCount, LikeCount).
+  - [ ] Define `Product` (SPU) entity for shared attributes: Name, Description, CategoryId, ViewCount, LikeCount, and `attributes` (JSONB for dynamic category specs).
   - [ ] Define `ProductVariantGroup` (e.g., "Màu sắc", "Kích thước") and `ProductVariantOption` (e.g., "Đỏ", "Xanh").
   - [ ] Define `SKU` entity holding specific combination data: `price`, `promotional_price`, `stock`, `sku_code`, `thumbnail_image_id`.
   - [ ] **Logic:** Implement Auto-generation of a "Default SKU" if the SPU is created without any variant groups.

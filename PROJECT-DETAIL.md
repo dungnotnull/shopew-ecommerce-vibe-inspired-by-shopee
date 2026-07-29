@@ -41,6 +41,11 @@ Shopew is a fullstack, enterprise-grade multi-role E-Commerce platform replicati
    - Sở hữu **Giá (Price) Độc lập:** Cùng 1 SPU nhưng SKU "Lợn Hồng" có thể đắt hơn "Kẹp Kitty".
    - Sở hữu **Ảnh Thumbnail Độc lập:** Khi chọn phân loại, UI tự đổi ảnh tương ứng.
 
+4. **Dynamic Attributes (Thuộc tính động / Thông số kỹ thuật):**
+   - Thuộc tính của sản phẩm thay đổi hoàn toàn phụ thuộc vào Danh mục (Category). Ví dụ: "Laptop" cần có RAM, CPU; "Quần áo" cần Chất liệu, Phong cách; "Sách" cần Tác giả, NXB.
+   - Các thuộc tính chung này được gắn vào **SPU**.
+   - **Lưu trữ Database:** Sử dụng kiểu dữ liệu **JSONB** trong PostgreSQL (hoặc mô hình EAV) để lưu trữ linh hoạt các cặp `key: value` không giới hạn mà không cần phải liên tục tạo thêm cột mới trong Database. Lượng dữ liệu này sẽ được đồng bộ sang Elasticsearch để phục vụ Lọc (Faceted Filtering).
+
 ### 2. Advanced Cart & Checkout (Level: Trung bình)
 - **Advanced Cart:** Items grouped by Shop (`shopId`) in local storage/Redis.
 - **Checkout Flow:** Calculating total prices, Mocking shipping fees based on distance/weight.

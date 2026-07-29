@@ -50,6 +50,10 @@
   "rating": 4.8,
   "soldCount": 55,
   "likeCount": 20,
+  "attributes": {
+    "Chất liệu": "Nhựa",
+    "Xuất xứ": "Trung Quốc"
+  },
   "variantGroups": [
     {
       "name": "Mẫu",
