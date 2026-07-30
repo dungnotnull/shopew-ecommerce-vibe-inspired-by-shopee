@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { UserProfile, AuthResponseData } from '../types/auth';
+import { UserProfile, AuthResponseData, UserRole } from '../types/auth';
 
 interface AuthState {
   user: UserProfile | null;
@@ -8,11 +8,12 @@ interface AuthState {
   isLoading: boolean;
   setAuth: (data: AuthResponseData) => void;
   updateUser: (updatedUser: Partial<UserProfile>) => void;
+  switchRole: (newRole: UserRole) => void;
   logout: () => void;
   initAuth: () => void;
 }
 
-// Zustand Store quản lý trạng thái xác thực toàn ứng dụng
+// Zustand Store quản lý trạng thái xác thực và Role phân quyền toàn ứng dụng
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
@@ -41,7 +42,17 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
 
-  // Đăng xuất xóa bỏ token và user data
+  // Chuyển đổi linh hoạt Role (CUSTOMER / SELLER / ADMIN) để test giao diện
+  switchRole: (newRole) => {
+    set((state) => {
+      if (!state.user) return state;
+      const updatedUser: UserProfile = { ...state.user, role: newRole };
+      localStorage.setItem('shopew_user', JSON.stringify(updatedUser));
+      return { user: updatedUser };
+    });
+  },
+
+  // Đăng xuất xóa bỏ token và thông tin user
   logout: () => {
     localStorage.removeItem('shopew_token');
     localStorage.removeItem('shopew_user');
@@ -64,7 +75,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ token, user, isAuthenticated: true, isLoading: false });
         return;
       } catch {
-        // Nếu parse JSON lỗi thì tự động dọn sạch local storage
         localStorage.removeItem('shopew_token');
         localStorage.removeItem('shopew_user');
       }

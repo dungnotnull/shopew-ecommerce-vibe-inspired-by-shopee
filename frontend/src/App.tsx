@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/useAuthStore';
 
+// Component Bảo vệ Phân quyền theo Role
+import { RoleGuard } from './components/auth/RoleGuard';
+
 // Layouts & Pages
 import { CustomerLayout } from './components/layout/CustomerLayout';
 import { HomePage } from './pages/HomePage';
@@ -23,7 +26,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Component bảo vệ Route yêu cầu Đăng nhập
+// Component bảo vệ Route cơ bản (Yêu cầu đăng nhập)
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
 
@@ -41,7 +44,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 export const App: React.FC = () => {
   const initAuth = useAuthStore((state) => state.initAuth);
 
-  // Restore session Đăng nhập khi mở trang web
+  // Restore session Đăng nhập khi mở lại ứng dụng
   useEffect(() => {
     initAuth();
   }, [initAuth]);
@@ -50,12 +53,12 @@ export const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          {/* Public Routes */}
+          {/* Public Routes - Khách hàng tự do xem trang chủ & Auth */}
           <Route path="/" element={<CustomerLayout><HomePage /></CustomerLayout>} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Protected User Routes */}
+          {/* Protected Customer Routes - Dành cho người dùng cá nhân đã đăng nhập */}
           <Route
             path="/user/profile"
             element={
@@ -73,15 +76,43 @@ export const App: React.FC = () => {
             }
           />
 
-          {/* Kênh Người Bán (Seller Center Portal) */}
-          <Route path="/seller" element={<SellerDashboardPage />} />
-          <Route path="/seller/*" element={<SellerDashboardPage />} />
+          {/* Kênh Người Bán (Seller Center Portal) - Bảo vệ yêu cầu Role SELLER hoặc ADMIN */}
+          <Route
+            path="/seller"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerDashboardPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/seller/*"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerDashboardPage />
+              </RoleGuard>
+            }
+          />
 
-          {/* Cổng Quản Trị Admin (Admin Portal) */}
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/admin/*" element={<AdminDashboardPage />} />
+          {/* Cổng Quản Trị Admin (Admin Portal) - Bảo vệ yêu cầu duy nhất Role ADMIN */}
+          <Route
+            path="/admin"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminDashboardPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/admin/*"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminDashboardPage />
+              </RoleGuard>
+            }
+          />
 
-          {/* Catch-all fallback */}
+          {/* Fallback route mặc định */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
