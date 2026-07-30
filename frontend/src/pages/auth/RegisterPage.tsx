@@ -45,15 +45,15 @@ export const RegisterPage: React.FC = () => {
       const payload = { email, password, fullName, phone };
       let regRes;
 
-      // Phân tách gọi API Endpoint chính xác theo Role được chọn
+      // Phân tách gọi API Endpoint chính xác theo Role được chọn:
+      // 1. Customer -> POST http://localhost:3000/api/auth/register
+      // 2. Seller   -> POST http://localhost:3000/api/auth/register-seller
+      // 3. Admin    -> POST http://localhost:3000/api/auth/register-admin
       if (role === 'SELLER') {
-        // Gọi API Kênh Người Bán: POST /api/auth/register-seller
         regRes = await authService.registerSeller(payload);
       } else if (role === 'ADMIN') {
-        // Gọi API Cổng Quản Trị: POST /api/auth/register-admin
         regRes = await authService.registerAdmin(payload);
       } else {
-        // Gọi API Khách Hàng: POST /api/auth/register
         regRes = await authService.registerCustomer(payload);
       }
 
@@ -62,7 +62,7 @@ export const RegisterPage: React.FC = () => {
         localStorage.setItem('shopew_token', token);
       }
 
-      // Lấy thông tin Profile & Role chính thức từ Server NestJS
+      // Lấy thông tin Profile & Role chính thức vừa khởi tạo từ Server NestJS
       const userProfile = regRes.user || (await authService.getMe());
 
       // Cập nhật Auth Session toàn cục
@@ -83,6 +83,8 @@ export const RegisterPage: React.FC = () => {
         setErrorMsg(backendMsg.join(', '));
       } else if (typeof backendMsg === 'string') {
         setErrorMsg(backendMsg);
+      } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
+        setErrorMsg('Không thể kết nối đến máy chủ Backend NestJS (http://localhost:3000/api). Vui lòng đảm bảo Server Backend đang khởi chạy.');
       } else {
         setErrorMsg('Đăng ký thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau.');
       }
