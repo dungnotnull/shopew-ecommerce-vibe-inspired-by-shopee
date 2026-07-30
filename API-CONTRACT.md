@@ -164,8 +164,6 @@
       "thumbnailUrl": "..."
     }
   ]
-    }
-  ]
 }
 ```
 
@@ -244,13 +242,16 @@
   "description": "Áo thun 100% cotton",
   "priceMin": 150000,
   "priceMax": 150000,
+  "discountPercentage": 10,
+  "stock": 100,
+  "skuCode": "SPU-AO-THUN",
   "attributes": { "Chất liệu": "Cotton" },
   "variantGroups": [
     { "name": "Màu sắc", "options": ["Đen", "Trắng"] },
     { "name": "Kích cỡ", "options": ["M", "L"] }
   ],
   "skus": [
-    { "price": 150000, "originalPrice": 200000, "stock": 50, "tierIndex": [0, 0] }
+    { "price": 150000, "originalPrice": 200000, "stock": 50, "tierIndex": [0, 0], "skuCode": "SKU-DEN-M" }
   ]
 }
 ```
