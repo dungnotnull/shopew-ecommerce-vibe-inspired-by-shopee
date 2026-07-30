@@ -30,5 +30,4 @@ export interface RegisterRequestPayload {
   password: string;
   fullName: string;
   phone: string;
-  role?: UserRole;
 }

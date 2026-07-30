@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Lock, Mail, User, Phone, AlertCircle, Shield, Store, UserCheck, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Lock, Mail, User, Phone, AlertCircle, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { authService } from '../../services/auth-service';
-import { UserRole } from '../../types/auth';
 
 // Trang Đăng ký (Thực hiện call API thực tế POST /api/auth/register và GET /api/auth/me)
 export const RegisterPage: React.FC = () => {
@@ -12,7 +11,6 @@ export const RegisterPage: React.FC = () => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('CUSTOMER');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,13 +40,12 @@ export const RegisterPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Gọi API Đăng ký tài khoản thực tế: POST /api/auth/register (payload DTO: email, password, fullName, phone, role)
+      // 1. Gọi API Đăng ký tài khoản thực tế: POST /api/auth/register (payload DTO: email, password, fullName, phone)
       const regRes = await authService.register({
         email,
         password,
         fullName,
         phone,
-        role,
       });
 
       const token = regRes.access_token;
@@ -160,40 +157,6 @@ export const RegisterPage: React.FC = () => {
                   required
                 />
                 <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-              </div>
-            </div>
-
-            {/* Chọn Loại Tài Khoản (Role): Khách Hàng, Người Bán, Admin */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Loại Tài Khoản (Vai Trò)</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRole('CUSTOMER')}
-                  className={`py-2 px-1 text-xs font-bold rounded border flex items-center justify-center gap-1 transition-colors ${
-                    role === 'CUSTOMER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  <UserCheck className="w-3.5 h-3.5" /> Khách Hàng
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('SELLER')}
-                  className={`py-2 px-1 text-xs font-bold rounded border flex items-center justify-center gap-1 transition-colors ${
-                    role === 'SELLER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  <Store className="w-3.5 h-3.5" /> Người Bán
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('ADMIN')}
-                  className={`py-2 px-1 text-xs font-bold rounded border flex items-center justify-center gap-1 transition-colors ${
-                    role === 'ADMIN' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" /> Admin
-                </button>
               </div>
             </div>
 

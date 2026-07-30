@@ -12,13 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ForgotPasswordDto = exports.LoginDto = exports.RegisterDto = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
-const client_1 = require("@prisma/client");
 class RegisterDto {
     email;
     password;
     fullName;
     phone;
-    role;
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
@@ -44,12 +42,6 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "phone", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ enum: client_1.Role }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(client_1.Role),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "role", void 0);
 class LoginDto {
     email;
     password;
