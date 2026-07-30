@@ -46,7 +46,7 @@ export const RegisterPage: React.FC = () => {
       let regRes;
 
       // Phân tách gọi API Endpoint chính xác theo Role được chọn:
-      // 1. Customer -> POST http://localhost:3000/api/auth/register
+      // 1. Customer -> POST 
       // 2. Seller   -> POST http://localhost:3000/api/auth/register-seller
       // 3. Admin    -> POST http://localhost:3000/api/auth/register-admin
       if (role === 'SELLER') {

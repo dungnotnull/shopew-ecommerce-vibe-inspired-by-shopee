@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Khởi tạo instance Axios tập trung trỏ trực tiếp tới Backend NestJS API (Port 3000)
+// Khởi tạo instance Axios tập trung trỏ tới API Endpoint (mặc định qua Proxy /api tới Backend NestJS Port 3000)
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
