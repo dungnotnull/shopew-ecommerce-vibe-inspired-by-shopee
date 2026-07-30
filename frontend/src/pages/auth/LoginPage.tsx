@@ -4,15 +4,14 @@ import { ShoppingBag, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore';
 import { UserRole } from '../../types/auth';
 
-// Trang Đăng nhập (Auth Flow đồng bộ với LoginDto & ForgotPasswordDto Backend)
+// Trang Đăng nhập (Auth Flow chuẩn Shopee đồng bộ với LoginDto & ForgotPasswordDto Backend)
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('CUSTOMER');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State hỗ trợ Modal/Form Quên mật khẩu
+  // State hỗ trợ Modal Quên mật khẩu
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccessMsg, setForgotSuccessMsg] = useState('');
@@ -41,23 +40,31 @@ export const LoginPage: React.FC = () => {
     setTimeout(() => {
       setIsSubmitting(false);
 
-      // Đăng nhập thành công -> Lưu session kèm Role
+      // Tự động nhận diện Role từ Backend/Email (Mặc định CUSTOMER, nếu email chứa admin/seller sẽ gán tương ứng)
+      let role: UserRole = 'CUSTOMER';
+      if (email.toLowerCase().includes('admin')) {
+        role = 'ADMIN';
+      } else if (email.toLowerCase().includes('seller')) {
+        role = 'SELLER';
+      }
+
+      // Đăng nhập thành công -> Lưu session
       setAuth({
-        accessToken: `mock_jwt_token_${selectedRole.toLowerCase()}_12345`,
+        accessToken: `mock_jwt_token_${role.toLowerCase()}_12345`,
         user: {
           id: 1,
           email,
           fullName: email.split('@')[0] || 'Người dùng Shopew',
           phone: '0987654321',
-          role: selectedRole,
+          role,
           avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
         }
       });
 
-      // Chuyển hướng theo Role
-      if (selectedRole === 'SELLER') {
+      // Chuyển hướng theo Role nhận được từ Backend
+      if (role === 'SELLER') {
         navigate('/seller');
-      } else if (selectedRole === 'ADMIN') {
+      } else if (role === 'ADMIN') {
         navigate('/admin');
       } else {
         navigate('/');
@@ -103,7 +110,7 @@ export const LoginPage: React.FC = () => {
 
         {/* Cột bên phải: Khung Form Đăng nhập */}
         <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full ml-auto">
-          <h3 className="text-xl font-bold text-gray-800 mb-5">Đăng Nhập</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-6">Đăng Nhập</h3>
 
           {errorMsg && (
             <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-xs flex items-center gap-2 border border-red-200">
@@ -158,43 +165,12 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* 3 Nút chọn quyền (Customer, Seller, Admin) - Đã xóa nhãn tiêu đề thừa */}
-            <div className="grid grid-cols-3 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setSelectedRole('CUSTOMER')}
-                className={`py-1.5 text-xs font-bold rounded border transition-colors ${
-                  selectedRole === 'CUSTOMER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Customer
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedRole('SELLER')}
-                className={`py-1.5 text-xs font-bold rounded border transition-colors ${
-                  selectedRole === 'SELLER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Seller
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedRole('ADMIN')}
-                className={`py-1.5 text-xs font-bold rounded border transition-colors ${
-                  selectedRole === 'ADMIN' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                Admin
-              </button>
-            </div>
-
             <button
               type="submit"
               disabled={isSubmitting}
               className="w-full bg-[#ee4d2d] hover:bg-[#d03e20] text-white font-bold py-2.5 rounded text-sm transition-colors uppercase disabled:opacity-50 mt-2"
             >
-              {isSubmitting ? 'Đang Đăng Nhập...' : `Đăng Nhập (${selectedRole})`}
+              {isSubmitting ? 'Đang Đăng Nhập...' : 'Đăng Nhập'}
             </button>
           </form>
 
