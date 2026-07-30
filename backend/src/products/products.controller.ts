@@ -5,9 +5,11 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { AuthGuard } from '@nestjs/passport';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 @ApiTags('Products')
-@Controller('api/v1/products')
+@Controller('v1/products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
@@ -29,21 +31,21 @@ export class ProductsController {
 @ApiTags('Seller Products')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
-@Controller('api/seller/products')
+@Controller('seller/products')
 export class SellerProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
   @Roles(Role.SELLER)
   @ApiOperation({ summary: 'Create SPU, Variant Groups, and SKUs' })
-  async createProduct(@Request() req: any, @Body() data: any) {
+  async createProduct(@Request() req: any, @Body() data: CreateProductDto) {
     return this.productsService.createProduct(req.user.id, data);
   }
 
   @Put(':id')
   @Roles(Role.SELLER)
   @ApiOperation({ summary: 'Update SPU & SKUs' })
-  async updateProduct(@Request() req: any, @Param('id') id: string, @Body() data: any) {
+  async updateProduct(@Request() req: any, @Param('id') id: string, @Body() data: UpdateProductDto) {
     return this.productsService.updateProduct(req.user.id, +id, data);
   }
 

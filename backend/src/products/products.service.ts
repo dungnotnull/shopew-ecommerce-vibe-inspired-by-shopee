@@ -36,64 +36,69 @@ export class ProductsService {
   async createProduct(userId: number, data: any) {
     const shop = await this.shopsService.getShopByUserId(userId);
     
-    // Create SPU
-    const product = await this.prisma.product.create({
-      data: {
-        shopId: shop.id,
-        categoryId: data.categoryId,
-        name: data.name,
-        description: data.description,
-        attributes: data.attributes,
-        priceMin: data.priceMin || 0,
-        priceMax: data.priceMax || 0,
-        discountPercentage: data.discountPercentage || 0,
-      },
-    });
+    // Bọc toàn bộ quá trình tạo vào Transaction để đảm bảo tính ACID
+    const productId = await this.prisma.$transaction(async (tx: any) => {
+      // Create SPU
+      const product = await tx.product.create({
+        data: {
+          shopId: shop.id,
+          categoryId: data.categoryId,
+          name: data.name,
+          description: data.description,
+          attributes: data.attributes,
+          priceMin: data.priceMin || 0,
+          priceMax: data.priceMax || 0,
+          discountPercentage: data.discountPercentage || 0,
+        },
+      });
 
-    if (data.variantGroups && data.variantGroups.length > 0) {
-      for (let i = 0; i < data.variantGroups.length; i++) {
-        const group = data.variantGroups[i];
-        const createdGroup = await this.prisma.productVariantGroup.create({
-          data: { productId: product.id, name: group.name },
-        });
-        if (group.options) {
-          for (let opt of group.options) {
-            await this.prisma.productVariantOption.create({
-              data: { groupId: createdGroup.id, value: opt },
-            });
+      if (data.variantGroups && data.variantGroups.length > 0) {
+        for (let i = 0; i < data.variantGroups.length; i++) {
+          const group = data.variantGroups[i];
+          const createdGroup = await tx.productVariantGroup.create({
+            data: { productId: product.id, name: group.name },
+          });
+          if (group.options) {
+            for (let opt of group.options) {
+              await tx.productVariantOption.create({
+                data: { groupId: createdGroup.id, value: opt },
+              });
+            }
           }
         }
       }
-    }
 
-    if (data.skus && data.skus.length > 0) {
-      for (const sku of data.skus) {
-        await this.prisma.sKU.create({
-          data: {
-            productId: product.id,
-            price: sku.price,
-            originalPrice: sku.originalPrice,
-            stock: sku.stock,
-            tierIndex: sku.tierIndex,
-            skuCode: sku.skuCode,
-          }
+      if (data.skus && data.skus.length > 0) {
+        for (const sku of data.skus) {
+          await tx.sKU.create({
+            data: {
+              productId: product.id,
+              price: sku.price,
+              originalPrice: sku.originalPrice,
+              stock: sku.stock,
+              tierIndex: sku.tierIndex,
+              skuCode: sku.skuCode,
+            }
+          });
+        }
+      } else {
+        // Logic: Implement Auto-generation of a "Default SKU" if the SPU is created without any variant groups.
+        await tx.sKU.create({
+           data: {
+             productId: product.id,
+             price: data.priceMin || 0,
+             originalPrice: data.priceMax || 0,
+             stock: data.stock || 0,
+             tierIndex: [],
+             skuCode: data.skuCode || `DEFAULT-${product.id}`,
+           }
         });
       }
-    } else {
-      // Logic: Implement Auto-generation of a "Default SKU" if the SPU is created without any variant groups.
-      await this.prisma.sKU.create({
-         data: {
-           productId: product.id,
-           price: data.priceMin || 0,
-           originalPrice: data.priceMax || 0,
-           stock: data.stock || 0,
-           tierIndex: [],
-           skuCode: data.skuCode || `DEFAULT-${product.id}`,
-         }
-      });
-    }
 
-    return this.getProductDetails(product.id);
+      return product.id;
+    });
+
+    return this.getProductDetails(productId);
   }
 
   async updateProduct(userId: number, productId: number, data: any) {

@@ -79,6 +79,7 @@ describe('Phase 2 E2E Tests (Mocked)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
     await app.init();
   });
 
