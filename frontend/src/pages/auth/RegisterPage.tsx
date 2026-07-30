@@ -29,6 +29,7 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
+
     if (password !== confirmPassword) {
       setErrorMsg('Mật khẩu xác nhận không trùng khớp.');
       return;
