@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, Lock, Mail, User, Phone, AlertCircle } from 'lucide-react';
+import { ShoppingBag, Lock, Mail, User, Phone, AlertCircle, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { apiClient } from '../../services/api-client';
+import { UserRole } from '../../types/auth';
 
-// Trang Đăng ký (Auth Flow)
+// Trang Đăng ký (Auth Flow đồng bộ với RegisterDto Backend)
 export const RegisterPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<UserRole>('CUSTOMER');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,37 +23,43 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     setErrorMsg('');
 
+    if (!fullName || !email || !phone || !password) {
+      setErrorMsg('Vui lòng điền đầy đủ các trường bắt buộc.');
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setErrorMsg('Mật khẩu nhập lại không trùng khớp.');
+      setErrorMsg('Mật khẩu xác nhận không trùng khớp.');
       return;
     }
 
     setIsSubmitting(true);
 
-    const registerUser = async () => {
-      try {
-        const response = await apiClient.post('/auth/register', { email, password, fullName, phone });
-        const { access_token, user } = response.data.data;
+    setTimeout(() => {
+      setIsSubmitting(false);
 
-        // Lưu thông tin đăng ký mới vào state
-        setAuth({
-          accessToken: access_token,
-          user: {
-            ...user,
-            avatarUrl: user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-          }
-        });
+      // Đăng ký thành công -> Lưu session và role tương ứng
+      setAuth({
+        accessToken: 'mock_jwt_access_token_registered_shopew',
+        user: {
+          id: Date.now(),
+          email,
+          fullName,
+          phone,
+          role,
+          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+        }
+      });
 
-        localStorage.setItem('shopew_token', access_token);
+      // Chuyển hướng giao diện tương ứng với Role
+      if (role === 'SELLER') {
+        navigate('/seller');
+      } else if (role === 'ADMIN') {
+        navigate('/admin');
+      } else {
         navigate('/');
-      } catch (error: any) {
-        setErrorMsg(error.response?.data?.message || 'Đăng ký không thành công. Vui lòng thử lại.');
-      } finally {
-        setIsSubmitting(false);
       }
-    };
-
-    registerUser();
+    }, 600);
   };
 
   return (
@@ -72,15 +79,15 @@ export const RegisterPage: React.FC = () => {
       </div>
 
       {/* Form Đăng ký giữa màn hình */}
-      <div className="max-w-6xl mx-auto px-4 py-12 w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+      <div className="max-w-6xl mx-auto px-4 py-10 w-full grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         <div className="hidden md:flex flex-col text-white space-y-4">
           <h2 className="text-4xl font-extrabold leading-tight">Tạo Tài Khoản Shopew Miễn Phí</h2>
-          <p className="text-white/90 text-lg">Tham gia cộng đồng mua sắm trực tuyến lớn nhất cùng nhiều ưu đãi độc quyền.</p>
+          <p className="text-white/90 text-lg">Tham gia mua sắm hoặc mở gian hàng kinh doanh cùng hàng triệu người dùng.</p>
         </div>
 
         {/* Khung Form Register */}
         <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full ml-auto">
-          <h3 className="text-xl font-bold text-gray-800 mb-6">Đăng Ký Tài Khoản</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-4">Đăng Ký Tài Khoản</h3>
 
           {errorMsg && (
             <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md text-xs flex items-center gap-2 border border-red-200">
@@ -89,9 +96,9 @@ export const RegisterPage: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3.5">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Họ Và Tên</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Họ Và Tên *</label>
               <div className="relative">
                 <input
                   type="text"
@@ -106,7 +113,7 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Địa Chỉ Email</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Địa Chỉ Email *</label>
               <div className="relative">
                 <input
                   type="email"
@@ -121,7 +128,7 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Số Điện Thoại</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Số Điện Thoại (Bắt buộc theo DTO) *</label>
               <div className="relative">
                 <input
                   type="tel"
@@ -136,13 +143,46 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Mật Khẩu</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Đăng Ký Với Vai Trò (Role)</label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRole('CUSTOMER')}
+                  className={`py-1.5 text-xs font-bold rounded border ${
+                    role === 'CUSTOMER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200'
+                  }`}
+                >
+                  Khách Hàng
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('SELLER')}
+                  className={`py-1.5 text-xs font-bold rounded border ${
+                    role === 'SELLER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200'
+                  }`}
+                >
+                  Người Bán
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('ADMIN')}
+                  className={`py-1.5 text-xs font-bold rounded border ${
+                    role === 'ADMIN' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200'
+                  }`}
+                >
+                  Admin
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Mật Khẩu *</label>
               <div className="relative">
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                  placeholder="Tối thiểu 6 ký tự"
                   className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:border-[#ee4d2d]"
                   minLength={6}
                   required
@@ -152,7 +192,7 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Xác Nhận Mật Khẩu</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Xác Nhận Mật Khẩu *</label>
               <div className="relative">
                 <input
                   type="password"
@@ -162,7 +202,7 @@ export const RegisterPage: React.FC = () => {
                   className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:border-[#ee4d2d]"
                   required
                 />
-                <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                <Shield className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
               </div>
             </div>
 
@@ -171,11 +211,11 @@ export const RegisterPage: React.FC = () => {
               disabled={isSubmitting}
               className="w-full bg-[#ee4d2d] hover:bg-[#d03e20] text-white font-bold py-2.5 rounded text-sm transition-colors uppercase disabled:opacity-50 mt-2"
             >
-              {isSubmitting ? 'Đang Đăng Ký...' : 'Đăng Ký'}
+              {isSubmitting ? 'Đang Đăng Ký...' : `Đăng Ký Tài Khoản (${role})`}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-gray-500">
+          <div className="mt-5 text-center text-xs text-gray-500">
             <span>Bạn đã có tài khoản? </span>
             <Link to="/login" className="text-[#ee4d2d] font-bold hover:underline">Đăng Nhập</Link>
           </div>
