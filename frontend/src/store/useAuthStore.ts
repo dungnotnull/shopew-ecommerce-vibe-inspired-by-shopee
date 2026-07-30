@@ -1,54 +1,44 @@
 import { create } from 'zustand';
-import { UserProfile, AuthResponseData, UserRole } from '../types/auth';
+import { UserProfile } from '../types/auth';
+import { authService } from '../services/auth-service';
 
 interface AuthState {
   user: UserProfile | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  setAuth: (data: AuthResponseData) => void;
+  setAuthSession: (token: string, user: UserProfile) => void;
   updateUser: (updatedUser: Partial<UserProfile>) => void;
-  switchRole: (newRole: UserRole) => void;
   logout: () => void;
-  initAuth: () => void;
+  initAuth: () => Promise<void>;
 }
 
-// Zustand Store quản lý trạng thái xác thực và Role phân quyền toàn ứng dụng
+// Zustand Store quản lý trạng thái xác thực người dùng kết nối trực tiếp API Backend
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
   isAuthenticated: false,
   isLoading: true,
 
-  // Thiết lập session đăng nhập mới
-  setAuth: (data) => {
-    localStorage.setItem('shopew_token', data.accessToken);
-    localStorage.setItem('shopew_user', JSON.stringify(data.user));
+  // Thiết lập session sau khi đăng nhập/đăng ký thành công từ API Backend
+  setAuthSession: (token, user) => {
+    localStorage.setItem('shopew_token', token);
+    localStorage.setItem('shopew_user', JSON.stringify(user));
     set({
-      token: data.accessToken,
-      user: data.user,
+      token,
+      user,
       isAuthenticated: true,
       isLoading: false,
     });
   },
 
-  // Cập nhật thông tin profile người dùng
+  // Cập nhật thông tin profile cục bộ
   updateUser: (updatedUser) => {
     set((state) => {
       if (!state.user) return state;
       const newUser = { ...state.user, ...updatedUser };
       localStorage.setItem('shopew_user', JSON.stringify(newUser));
       return { user: newUser };
-    });
-  },
-
-  // Chuyển đổi linh hoạt Role (CUSTOMER / SELLER / ADMIN) để test giao diện
-  switchRole: (newRole) => {
-    set((state) => {
-      if (!state.user) return state;
-      const updatedUser: UserProfile = { ...state.user, role: newRole };
-      localStorage.setItem('shopew_user', JSON.stringify(updatedUser));
-      return { user: updatedUser };
     });
   },
 
@@ -64,21 +54,29 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
 
-  // Đọc dữ liệu từ LocalStorage khi khởi chạy ứng dụng
-  initAuth: () => {
+  // Gọi API GET /api/auth/me để khôi phục phiên làm việc thực tế từ Backend khi mở lại trang
+  initAuth: async () => {
     const token = localStorage.getItem('shopew_token');
-    const storedUser = localStorage.getItem('shopew_user');
-
-    if (token && storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        set({ token, user, isAuthenticated: true, isLoading: false });
-        return;
-      } catch {
-        localStorage.removeItem('shopew_token');
-        localStorage.removeItem('shopew_user');
-      }
+    if (!token) {
+      set({ isLoading: false, isAuthenticated: false, user: null });
+      return;
     }
-    set({ isLoading: false });
+
+    try {
+      // Gọi API thực tế xác thực Token và lấy thông tin Profile + Role từ Server NestJS
+      const userProfile = await authService.getMe();
+      localStorage.setItem('shopew_user', JSON.stringify(userProfile));
+      set({
+        token,
+        user: userProfile,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+    } catch {
+      // Token không hợp lệ hoặc server từ chối -> Clear session
+      localStorage.removeItem('shopew_token');
+      localStorage.removeItem('shopew_user');
+      set({ token: null, user: null, isAuthenticated: false, isLoading: false });
+    }
   },
 }));

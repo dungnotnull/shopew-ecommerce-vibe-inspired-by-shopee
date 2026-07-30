@@ -2,26 +2,26 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { UserRole } from '../../types/auth';
+import { authService } from '../../services/auth-service';
 
-// Trang Đăng nhập (Auth Flow chuẩn Shopee đồng bộ với LoginDto & ForgotPasswordDto Backend)
+// Trang Đăng nhập (Thực hiện call API thực tế POST /api/auth/login và GET /api/auth/me)
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State hỗ trợ Modal Quên mật khẩu
+  // State Modal Quên mật khẩu
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccessMsg, setForgotSuccessMsg] = useState('');
   const [isSendingForgot, setIsSendingForgot] = useState(false);
 
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const setAuthSession = useAuthStore((state) => state.setAuthSession);
 
-  // Xử lý nộp Form Đăng nhập
-  const handleSubmit = (e: React.FormEvent) => {
+  // Xử lý submit Đăng nhập thực tế tới Backend API
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -30,58 +30,62 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setErrorMsg('Mật khẩu phải có ít nhất 6 ký tự.');
-      return;
-    }
-
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // 1. Gọi API Đăng nhập thực tế: POST /api/auth/login
+      const loginRes = await authService.login({ email, password });
+      const token = loginRes.access_token;
 
-      // Tự động nhận diện Role từ Backend/Email (Mặc định CUSTOMER, nếu email chứa admin/seller sẽ gán tương ứng)
-      let role: UserRole = 'CUSTOMER';
-      if (email.toLowerCase().includes('admin')) {
-        role = 'ADMIN';
-      } else if (email.toLowerCase().includes('seller')) {
-        role = 'SELLER';
-      }
+      // Lưu tạm token để API getMe chèn Authorization Bearer header
+      localStorage.setItem('shopew_token', token);
 
-      // Đăng nhập thành công -> Lưu session
-      setAuth({
-        accessToken: `mock_jwt_token_${role.toLowerCase()}_12345`,
-        user: {
-          id: 1,
-          email,
-          fullName: email.split('@')[0] || 'Người dùng Shopew',
-          phone: '0987654321',
-          role,
-          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-        }
-      });
+      // 2. Gọi API lấy thông tin Profile & Role chính thức từ Server: GET /api/auth/me
+      const userProfile = await authService.getMe();
 
-      // Chuyển hướng theo Role nhận được từ Backend
-      if (role === 'SELLER') {
+      // 3. Cập nhật Auth Session toàn cục
+      setAuthSession(token, userProfile);
+
+      // 4. Điều hướng thông minh dựa trên Role thực tế trả về từ Backend
+      if (userProfile.role === 'SELLER') {
         navigate('/seller');
-      } else if (role === 'ADMIN') {
+      } else if (userProfile.role === 'ADMIN') {
         navigate('/admin');
       } else {
         navigate('/');
       }
-    }, 600);
+    } catch (err: any) {
+      // Trích xuất thông báo lỗi chính xác từ Backend NestJS
+      const backendMsg = err.response?.data?.message;
+      if (Array.isArray(backendMsg)) {
+        setErrorMsg(backendMsg.join(', '));
+      } else if (typeof backendMsg === 'string') {
+        setErrorMsg(backendMsg);
+      } else if (err.response?.status === 401) {
+        setErrorMsg('Email hoặc mật khẩu không chính xác.');
+      } else {
+        setErrorMsg('Đã xảy ra lỗi kết nối tới máy chủ Backend. Vui lòng thử lại.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Xử lý gửi yêu cầu Quên mật khẩu
-  const handleForgotSubmit = (e: React.FormEvent) => {
+  // Xử lý gửi yêu cầu Quên mật khẩu tới API Backend: POST /api/auth/forgot-password
+  const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!forgotEmail) return;
 
     setIsSendingForgot(true);
-    setTimeout(() => {
+    try {
+      const res = await authService.forgotPassword(forgotEmail);
+      setForgotSuccessMsg(res.message || 'Yêu cầu đặt lại mật khẩu đã được gửi đến email của bạn.');
+    } catch (err: any) {
+      const backendMsg = err.response?.data?.message;
+      setForgotSuccessMsg(typeof backendMsg === 'string' ? backendMsg : 'Đã gửi yêu cầu khôi phục mật khẩu.');
+    } finally {
       setIsSendingForgot(false);
-      setForgotSuccessMsg('Nếu tài khoản tồn tại, liên kết khôi phục mật khẩu đã được gửi đến email của bạn.');
-    }, 600);
+    }
   };
 
   return (

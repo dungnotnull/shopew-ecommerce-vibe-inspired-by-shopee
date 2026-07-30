@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Khởi tạo instance Axios tập trung với Base URL chuẩn /api
+// Khởi tạo instance Axios tập trung trỏ trực tiếp tới Backend NestJS API (Port 3000)
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -21,12 +21,12 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Xử lý lỗi hệ thống 401 Unauthorized hoặc 403 Forbidden
+// Response Interceptor: Xử lý lỗi hệ thống 401 Unauthorized
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Hết hạn token -> Clear session và chuyển hướng đăng nhập
+      // Token hết hạn hoặc không hợp lệ -> Xóa thông tin xác thực cũ
       localStorage.removeItem('shopew_token');
       localStorage.removeItem('shopew_user');
     }
