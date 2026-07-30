@@ -12,7 +12,7 @@ export class SellerController {
 
   @Get('dashboard')
   @ApiBearerAuth()
-  @Roles(Role.SELLER)
+  @Roles(Role.SELLER, Role.ADMIN)
   @ApiOperation({ summary: 'Lấy dữ liệu tổng quan cho Seller Dashboard' })
   @ApiResponse({ status: 200, description: 'Trả về thống kê Seller' })
   getDashboard(@Request() req: any) {
