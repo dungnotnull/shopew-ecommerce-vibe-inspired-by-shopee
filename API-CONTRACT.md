@@ -29,6 +29,12 @@
 }
 ```
 
+### `POST /api/auth/register-seller`
+*(Request/Response schema is identical to `/api/auth/register`, but returns `role: "SELLER"`)*
+
+### `POST /api/auth/register-admin`
+*(Request/Response schema is identical to `/api/auth/register`, but returns `role: "ADMIN"`)*
+
 ### `POST /api/auth/login`
 - **Request:**
 ```json
@@ -176,6 +182,39 @@
       ]
     }
   ]
+}
+```
+
+## Seller Portal
+### `GET /api/seller/dashboard`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:**
+```json
+{
+  "shopName": "Nguyen Van A Shop",
+  "revenueThisMonth": 125400000,
+  "newOrders": 48,
+  "totalSPUs": 124,
+  "shopRating": 4.9,
+  "todo": {
+    "pendingConfirmation": 12,
+    "pendingPickup": 5,
+    "returnRequests": 2,
+    "lockedProducts": 0
+  }
+}
+```
+
+## Admin Portal
+### `GET /api/admin/dashboard`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:**
+```json
+{
+  "totalUsers": 12850,
+  "totalShops": 845,
+  "activeDisputes": 3,
+  "totalGMV": 4520000000
 }
 ```
 

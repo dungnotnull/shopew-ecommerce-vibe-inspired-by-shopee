@@ -54,15 +54,16 @@ let AuthService = class AuthService {
         this.usersService = usersService;
         this.jwtService = jwtService;
     }
-    async register(dto) {
+    async register(dto, role = 'CUSTOMER') {
         const existingUser = await this.usersService.findByEmail(dto.email);
         if (existingUser) {
-            throw new common_1.BadRequestException('Email already exists');
+            throw new common_1.BadRequestException('Email already exists. Mỗi 1 email chỉ được dùng cho 1 user duy nhất bất kể role.');
         }
         const hashedPassword = await bcrypt.hash(dto.password, 10);
         const user = await this.usersService.createUser({
             ...dto,
             password: hashedPassword,
+            role: role,
         });
         const payload = { email: user.email, sub: user.id, role: user.role };
         return {

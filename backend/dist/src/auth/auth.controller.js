@@ -24,7 +24,13 @@ let AuthController = class AuthController {
         this.authService = authService;
     }
     register(dto) {
-        return this.authService.register(dto);
+        return this.authService.register(dto, 'CUSTOMER');
+    }
+    registerSeller(dto) {
+        return this.authService.register(dto, 'SELLER');
+    }
+    registerAdmin(dto) {
+        return this.authService.register(dto, 'ADMIN');
     }
     login(dto) {
         return this.authService.login(dto);
@@ -40,13 +46,31 @@ let AuthController = class AuthController {
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('register'),
-    (0, swagger_1.ApiOperation)({ summary: 'Register a new user' }),
-    (0, swagger_1.ApiResponse)({ status: 201, description: 'User successfully registered' }),
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new customer' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Customer successfully registered' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [auth_dto_1.RegisterDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "register", null);
+__decorate([
+    (0, common_1.Post)('register-seller'),
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new seller account' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Seller successfully registered' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.RegisterDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "registerSeller", null);
+__decorate([
+    (0, common_1.Post)('register-admin'),
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new admin account' }),
+    (0, swagger_1.ApiResponse)({ status: 201, description: 'Admin successfully registered' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [auth_dto_1.RegisterDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "registerAdmin", null);
 __decorate([
     (0, common_1.Post)('login'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

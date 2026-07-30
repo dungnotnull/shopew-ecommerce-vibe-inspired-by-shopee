@@ -10,10 +10,24 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({ status: 201, description: 'User successfully registered' })
+  @ApiOperation({ summary: 'Register a new customer' })
+  @ApiResponse({ status: 201, description: 'Customer successfully registered' })
   register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+    return this.authService.register(dto, 'CUSTOMER');
+  }
+
+  @Post('register-seller')
+  @ApiOperation({ summary: 'Register a new seller account' })
+  @ApiResponse({ status: 201, description: 'Seller successfully registered' })
+  registerSeller(@Body() dto: RegisterDto) {
+    return this.authService.register(dto, 'SELLER');
+  }
+
+  @Post('register-admin')
+  @ApiOperation({ summary: 'Register a new admin account' })
+  @ApiResponse({ status: 201, description: 'Admin successfully registered' })
+  registerAdmin(@Body() dto: RegisterDto) {
+    return this.authService.register(dto, 'ADMIN');
   }
 
   @Post('login')

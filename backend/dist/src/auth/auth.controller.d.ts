@@ -14,6 +14,28 @@ export declare class AuthController {
             isActive: boolean;
         };
     }>;
+    registerSeller(dto: RegisterDto): Promise<{
+        access_token: string;
+        user: {
+            id: number;
+            email: string;
+            fullName: string;
+            phone: string | null;
+            role: import("@prisma/client").$Enums.Role;
+            isActive: boolean;
+        };
+    }>;
+    registerAdmin(dto: RegisterDto): Promise<{
+        access_token: string;
+        user: {
+            id: number;
+            email: string;
+            fullName: string;
+            phone: string | null;
+            role: import("@prisma/client").$Enums.Role;
+            isActive: boolean;
+        };
+    }>;
     login(dto: LoginDto): Promise<{
         access_token: string;
         user: {

@@ -14,12 +14,14 @@ const prisma_module_1 = require("./prisma/prisma.module");
 const auth_module_1 = require("./auth/auth.module");
 const users_module_1 = require("./users/users.module");
 const config_1 = require("@nestjs/config");
+const admin_module_1 = require("./admin/admin.module");
+const seller_module_1 = require("./seller/seller.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), prisma_module_1.PrismaModule, auth_module_1.AuthModule, users_module_1.UsersModule],
+        imports: [config_1.ConfigModule.forRoot({ isGlobal: true }), prisma_module_1.PrismaModule, auth_module_1.AuthModule, users_module_1.UsersModule, admin_module_1.AdminModule, seller_module_1.SellerModule],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })
