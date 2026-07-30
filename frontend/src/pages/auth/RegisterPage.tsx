@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Lock, Mail, User, Phone, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { apiClient } from '../../services/api-client';
 
 // Trang Đăng ký (Auth Flow)
 export const RegisterPage: React.FC = () => {
@@ -28,24 +29,30 @@ export const RegisterPage: React.FC = () => {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    const registerUser = async () => {
+      try {
+        const response = await apiClient.post('/auth/register', { email, password, fullName, phone });
+        const { access_token, user } = response.data.data;
 
-      // Lưu thông tin đăng ký mới vào state
-      setAuth({
-        accessToken: 'mock_jwt_access_token_registered',
-        user: {
-          id: Date.now(),
-          email,
-          fullName,
-          phone,
-          role: 'CUSTOMER',
-          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-        }
-      });
+        // Lưu thông tin đăng ký mới vào state
+        setAuth({
+          accessToken: access_token,
+          user: {
+            ...user,
+            avatarUrl: user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+          }
+        });
 
-      navigate('/');
-    }, 600);
+        localStorage.setItem('shopew_token', access_token);
+        navigate('/');
+      } catch (error: any) {
+        setErrorMsg(error.response?.data?.message || 'Đăng ký không thành công. Vui lòng thử lại.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    registerUser();
   };
 
   return (

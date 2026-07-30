@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Lock, Mail, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { apiClient } from '../../services/api-client';
 
 // Trang Đăng nhập (Auth Flow)
 export const LoginPage: React.FC = () => {
@@ -25,30 +26,32 @@ export const LoginPage: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // Giả lập/Xử lý đăng nhập khớp API Contract
-    setTimeout(() => {
-      setIsSubmitting(false);
-
-      if (password.length < 6) {
-        setErrorMsg('Mật khẩu phải có ít nhất 6 ký tự.');
-        return;
+    const loginUser = async () => {
+      try {
+        const response = await apiClient.post('/auth/login', { email, password });
+        const { access_token, user } = response.data.data;
+        
+        // Đăng nhập thành công -> lưu session vào Zustand
+        setAuth({
+          accessToken: access_token,
+          user: {
+            ...user,
+            phone: user.phone || '',
+            avatarUrl: user.avatarUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+          }
+        });
+        
+        localStorage.setItem('shopew_token', access_token);
+        
+        navigate('/');
+      } catch (error: any) {
+        setErrorMsg(error.response?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác.');
+      } finally {
+        setIsSubmitting(false);
       }
+    };
 
-      // Đăng nhập thành công -> lưu session vào Zustand
-      setAuth({
-        accessToken: 'mock_jwt_access_token_shopew_12345',
-        user: {
-          id: 1,
-          email,
-          fullName: email.split('@')[0] || 'Người dùng Shopew',
-          phone: '0987654321',
-          role: 'CUSTOMER',
-          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-        }
-      });
-
-      navigate('/');
-    }, 600);
+    loginUser();
   };
 
   return (

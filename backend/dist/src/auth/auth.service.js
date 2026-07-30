@@ -67,6 +67,14 @@ let AuthService = class AuthService {
         const payload = { email: user.email, sub: user.id, role: user.role };
         return {
             access_token: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                email: user.email,
+                fullName: user.fullName,
+                phone: user.phone,
+                role: user.role,
+                isActive: user.isActive,
+            }
         };
     }
     async login(dto) {
@@ -81,6 +89,14 @@ let AuthService = class AuthService {
         const payload = { email: user.email, sub: user.id, role: user.role };
         return {
             access_token: this.jwtService.sign(payload),
+            user: {
+                id: user.id,
+                email: user.email,
+                fullName: user.fullName,
+                phone: user.phone,
+                role: user.role,
+                isActive: user.isActive,
+            }
         };
     }
     async forgotPassword(dto) {
