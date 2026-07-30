@@ -2,24 +2,23 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Lock, Mail, User, Phone, AlertCircle, Shield } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
-import { UserRole } from '../../types/auth';
+import { authService } from '../../services/auth-service';
 
-// Trang Đăng ký (Auth Flow đồng bộ với RegisterDto Backend)
+// Trang Đăng ký (Thực hiện call API thực tế POST /api/auth/register và GET /api/auth/me)
 export const RegisterPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('CUSTOMER');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
-  const setAuth = useAuthStore((state) => state.setAuth);
+  const setAuthSession = useAuthStore((state) => state.setAuthSession);
 
-  // Xử lý nộp Form Đăng ký
-  const handleSubmit = (e: React.FormEvent) => {
+  // Xử lý nộp Form Đăng ký thực tế tới Backend API
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -33,33 +32,52 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
+    if (password.length < 6) {
+      setErrorMsg('Mật khẩu phải có ít nhất 6 ký tự.');
+      return;
+    }
+
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-
-      // Đăng ký tài khoản mới thành công -> Lưu thông tin và Role tài khoản vừa tạo
-      setAuth({
-        accessToken: `mock_jwt_access_token_registered_${role.toLowerCase()}`,
-        user: {
-          id: Date.now(),
-          email,
-          fullName,
-          phone,
-          role,
-          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
-        }
+    try {
+      // 1. Gọi API Đăng ký tài khoản thực tế: POST /api/auth/register (payload DTO: email, password, fullName, phone)
+      const regRes = await authService.register({
+        email,
+        password,
+        fullName,
+        phone,
       });
 
-      // Tự động chuyển hướng đến đúng màn hình tương ứng với Role của tài khoản vừa tạo
-      if (role === 'SELLER') {
+      const token = regRes.access_token;
+      localStorage.setItem('shopew_token', token);
+
+      // 2. Lấy thông tin Profile & Role chính thức từ Server NestJS: GET /api/auth/me
+      const userProfile = await authService.getMe();
+
+      // 3. Lưu Auth Session vào Zustand Store
+      setAuthSession(token, userProfile);
+
+      // 4. Tự động điều hướng theo Role thực tế của User vừa khởi tạo
+      if (userProfile.role === 'SELLER') {
         navigate('/seller');
-      } else if (role === 'ADMIN') {
+      } else if (userProfile.role === 'ADMIN') {
         navigate('/admin');
       } else {
         navigate('/');
       }
-    }, 600);
+    } catch (err: any) {
+      // Trích xuất thông báo lỗi từ Backend NestJS
+      const backendMsg = err.response?.data?.message;
+      if (Array.isArray(backendMsg)) {
+        setErrorMsg(backendMsg.join(', '));
+      } else if (typeof backendMsg === 'string') {
+        setErrorMsg(backendMsg);
+      } else {
+        setErrorMsg('Đăng ký thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -139,39 +157,6 @@ export const RegisterPage: React.FC = () => {
                   required
                 />
                 <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Loại Tài Khoản (Vai Trò)</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRole('CUSTOMER')}
-                  className={`py-1.5 text-xs font-bold rounded border transition-colors ${
-                    role === 'CUSTOMER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  Khách Hàng
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('SELLER')}
-                  className={`py-1.5 text-xs font-bold rounded border transition-colors ${
-                    role === 'SELLER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  Người Bán
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('ADMIN')}
-                  className={`py-1.5 text-xs font-bold rounded border transition-colors ${
-                    role === 'ADMIN' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                  }`}
-                >
-                  Admin
-                </button>
               </div>
             </div>
 
