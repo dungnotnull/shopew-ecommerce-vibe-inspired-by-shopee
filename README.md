@@ -1,4 +1,4 @@
-# 🛒🛍️ Shopew — Shopee-Inspired Multi-Role E-Commerce Platform
+# 🛒🛍️ Shopew: Shopee-Inspired Multi-Role E-Commerce Vibing Platform
 
 [![NestJS](https://img.shields.io/badge/Backend-NestJS-red.svg)](https://nestjs.com/)
 [![React](https://img.shields.io/badge/Frontend-React%20%2F%20Vue-blue.svg)](https://react.dev/)
