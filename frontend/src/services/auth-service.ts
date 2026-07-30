@@ -1,24 +1,37 @@
 import { apiClient } from './api-client';
 import { RegisterRequestPayload, LoginRequestPayload, UserProfile } from '../types/auth';
 
-// Service gọi API thực tế tới Backend NestJS (/api/auth) đồng bộ với AuthController mới nhất
+// Service gọi API thực tế tới Backend NestJS (/api/auth) tách bạch rõ ràng theo từng Role
 export const authService = {
-  // Gọi API Đăng ký tài khoản tới các endpoint phân quyền tương ứng trên Backend:
-  // - Customer: POST /api/auth/register
-  // - Seller: POST /api/auth/register-seller
-  // - Admin: POST /api/auth/register-admin
-  register: async (payload: RegisterRequestPayload): Promise<{ access_token: string; user: UserProfile }> => {
-    let endpoint = '/auth/register';
-    if (payload.role === 'SELLER') {
-      endpoint = '/auth/register-seller';
-    } else if (payload.role === 'ADMIN') {
-      endpoint = '/auth/register-admin';
-    }
+  // 1. Gọi API Đăng ký Khách Hàng (Role CUSTOMER): POST /api/auth/register
+  registerCustomer: async (payload: Omit<RegisterRequestPayload, 'role'>): Promise<{ access_token: string; user: UserProfile }> => {
+    const response = await apiClient.post('/auth/register', payload);
+    return response.data.data || response.data;
+  },
 
+  // 2. Gọi API Đăng ký Kênh Người Bán (Role SELLER): POST /api/auth/register-seller
+  registerSeller: async (payload: Omit<RegisterRequestPayload, 'role'>): Promise<{ access_token: string; user: UserProfile }> => {
+    const response = await apiClient.post('/auth/register-seller', payload);
+    return response.data.data || response.data;
+  },
+
+  // 3. Gọi API Đăng ký Quản Trị Viên (Role ADMIN): POST /api/auth/register-admin
+  registerAdmin: async (payload: Omit<RegisterRequestPayload, 'role'>): Promise<{ access_token: string; user: UserProfile }> => {
+    const response = await apiClient.post('/auth/register-admin', payload);
+    return response.data.data || response.data;
+  },
+
+  // Hàm helper điều hướng đăng ký tự động theo Role
+  register: async (payload: RegisterRequestPayload): Promise<{ access_token: string; user: UserProfile }> => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { role, ...dto } = payload;
-    const response = await apiClient.post(endpoint, dto);
-    return response.data.data || response.data;
+    if (role === 'SELLER') {
+      return authService.registerSeller(dto);
+    } else if (role === 'ADMIN') {
+      return authService.registerAdmin(dto);
+    } else {
+      return authService.registerCustomer(dto);
+    }
   },
 
   // Gọi API Đăng nhập thực tế: POST /api/auth/login

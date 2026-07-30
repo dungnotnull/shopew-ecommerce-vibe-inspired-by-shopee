@@ -5,7 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { authService } from '../../services/auth-service';
 import { UserRole } from '../../types/auth';
 
-// Trang Đăng ký (Cho phép chọn Role khi tạo tài khoản để đồng bộ điều hướng tự động khi Đăng nhập)
+// Trang Đăng ký (Tách bạch gọi đúng API Endpoint tương ứng cho từng Role: CUSTOMER, SELLER, ADMIN)
 export const RegisterPage: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,7 +19,7 @@ export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const setAuthSession = useAuthStore((state) => state.setAuthSession);
 
-  // Xử lý nộp Form Đăng ký tới Backend API (Gửi kèm Role được chọn)
+  // Xử lý submit Form Đăng ký: Gọi đúng API Endpoint theo Role lựa chọn
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -28,7 +28,6 @@ export const RegisterPage: React.FC = () => {
       setErrorMsg('Vui lòng điền đầy đủ các trường bắt buộc.');
       return;
     }
-
 
     if (password !== confirmPassword) {
       setErrorMsg('Mật khẩu xác nhận không trùng khớp.');
@@ -43,25 +42,33 @@ export const RegisterPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Gọi API Đăng ký tài khoản thực tế: POST /api/auth/register (truyền đầy đủ DTO bao gồm role)
-      const regRes = await authService.register({
-        email,
-        password,
-        fullName,
-        phone,
-        role,
-      });
+      const payload = { email, password, fullName, phone };
+      let regRes;
 
-      const token = regRes.access_token;
-      localStorage.setItem('shopew_token', token);
+      // Phân tách gọi API Endpoint chính xác theo Role được chọn
+      if (role === 'SELLER') {
+        // Gọi API Kênh Người Bán: POST /api/auth/register-seller
+        regRes = await authService.registerSeller(payload);
+      } else if (role === 'ADMIN') {
+        // Gọi API Cổng Quản Trị: POST /api/auth/register-admin
+        regRes = await authService.registerAdmin(payload);
+      } else {
+        // Gọi API Khách Hàng: POST /api/auth/register
+        regRes = await authService.registerCustomer(payload);
+      }
 
-      // 2. Lấy thông tin Profile & Role chính thức vừa khởi tạo từ Server NestJS: GET /api/auth/me
-      const userProfile = await authService.getMe();
+      const token = regRes.access_token || (regRes as any).accessToken;
+      if (token) {
+        localStorage.setItem('shopew_token', token);
+      }
 
-      // 3. Lưu Auth Session vào Zustand Store
+      // Lấy thông tin Profile & Role chính thức từ Server NestJS
+      const userProfile = regRes.user || (await authService.getMe());
+
+      // Cập nhật Auth Session toàn cục
       setAuthSession(token, userProfile);
 
-      // 4. Tự động điều hướng trực tiếp sang màn hình của Role tương ứng
+      // Tự động điều hướng trực tiếp sang màn hình của Role tương ứng
       if (userProfile.role === 'SELLER') {
         navigate('/seller');
       } else if (userProfile.role === 'ADMIN') {
@@ -70,7 +77,7 @@ export const RegisterPage: React.FC = () => {
         navigate('/');
       }
     } catch (err: any) {
-      // Trích xuất thông báo lỗi từ Backend NestJS
+      // Trích xuất thông báo lỗi chính xác từ Backend NestJS
       const backendMsg = err.response?.data?.message;
       if (Array.isArray(backendMsg)) {
         setErrorMsg(backendMsg.join(', '));
@@ -164,7 +171,7 @@ export const RegisterPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Chọn Loại Tài Khoản (Role): Khách Hàng, Người Bán, Admin */}
+            {/* Bộ chọn Loại Tài Khoản (Role): Khách Hàng, Người Bán, Admin */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1.5">Loại Tài Khoản (Vai Trò)</label>
               <div className="grid grid-cols-3 gap-2">
