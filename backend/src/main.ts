@@ -1,6 +1,4 @@
 import { NestFactory } from '@nestjs/core';
-import * as dotenv from 'dotenv';
-dotenv.config();
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -12,9 +10,6 @@ async function bootstrap() {
   
   // Global prefix
   app.setGlobalPrefix('api');
-  
-  // Enable CORS
-  app.enableCors();
 
   // Validation pipe
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));

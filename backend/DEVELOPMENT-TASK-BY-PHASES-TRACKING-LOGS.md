@@ -11,7 +11,6 @@
   - [x] Implement JWT Authentication strategy.
   - [x] Create `@Roles()` decorator and `RolesGuard`.
   - [x] Build `/auth/register` and `/auth/login` endpoints.
-  - [x] Build `/auth/me` endpoint for profile/role fetching.
 
 ## Phase 2: Core E-Commerce & Product Management
 - [ ] **Categories:**

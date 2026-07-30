@@ -11,30 +11,21 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto, role: any = 'CUSTOMER') {
+  async register(dto: RegisterDto) {
     const existingUser = await this.usersService.findByEmail(dto.email);
     if (existingUser) {
-      throw new BadRequestException('Email already exists. Mỗi 1 email chỉ được dùng cho 1 user duy nhất bất kể role.');
+      throw new BadRequestException('Email already exists');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.usersService.createUser({
       ...dto,
       password: hashedPassword,
-      role: role as any,
     });
 
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        phone: user.phone,
-        role: user.role,
-        isActive: user.isActive,
-      }
     };
   }
 
@@ -52,14 +43,6 @@ export class AuthService {
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        fullName: user.fullName,
-        phone: user.phone,
-        role: user.role,
-        isActive: user.isActive,
-      }
     };
   }
 
