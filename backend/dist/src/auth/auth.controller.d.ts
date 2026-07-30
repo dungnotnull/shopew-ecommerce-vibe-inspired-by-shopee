@@ -32,4 +32,5 @@ export declare class AuthController {
         message: string;
         _mockResetTokenForTesting: string;
     }>;
+    getMe(req: any): any;
 }

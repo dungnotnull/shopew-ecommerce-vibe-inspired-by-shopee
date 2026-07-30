@@ -67,6 +67,20 @@
 }
 ```
 
+### `GET /api/auth/me`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:**
+```json
+{
+  "id": 1,
+  "email": "user@example.com",
+  "fullName": "Nguyen Van A",
+  "phone": "0987654321",
+  "role": "CUSTOMER",
+  "isActive": true
+}
+```
+
 ## Search & Discovery
 ### `GET /api/v1/search`
 - **Query:** `?q=iphone&category_id=10&price_min=10000000&rating=4&isMall=true&sort=price&order=asc&attributes={"RAM":"8GB"}`
