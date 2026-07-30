@@ -15,6 +15,11 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   fullName!: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  phone!: string;
 }
 
 export class LoginDto {

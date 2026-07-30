@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Khởi tạo instance Axios tập trung với Base URL chuẩn /api/v1
+// Khởi tạo instance Axios tập trung với Base URL chuẩn /api
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
   headers: {
     'Content-Type': 'application/json',
   },

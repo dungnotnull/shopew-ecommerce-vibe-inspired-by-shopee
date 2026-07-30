@@ -16,6 +16,7 @@ class RegisterDto {
     email;
     password;
     fullName;
+    phone;
 }
 exports.RegisterDto = RegisterDto;
 __decorate([
@@ -35,6 +36,12 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "fullName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "phone", void 0);
 class LoginDto {
     email;
     password;

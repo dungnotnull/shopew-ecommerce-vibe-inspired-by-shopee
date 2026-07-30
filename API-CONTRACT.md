@@ -3,6 +3,70 @@
 > **SOURCE OF TRUTH:** Both Frontend and Backend agents MUST consult and update this file BEFORE making any changes.
 > **CURRENCY NOTE:** All prices and monetary values in this API are represented in VND (Vietnamese Dong) as integers (no decimals).
 
+## Authentication
+### `POST /api/auth/register`
+- **Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "fullName": "Nguyen Van A",
+  "phone": "0987654321"
+}
+```
+- **Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR...",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "fullName": "Nguyen Van A",
+    "phone": "0987654321",
+    "role": "CUSTOMER",
+    "isActive": true
+  }
+}
+```
+
+### `POST /api/auth/login`
+- **Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+- **Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR...",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "fullName": "Nguyen Van A",
+    "phone": "0987654321",
+    "role": "CUSTOMER",
+    "isActive": true
+  }
+}
+```
+
+### `POST /api/auth/forgot-password`
+- **Request:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+- **Response:**
+```json
+{
+  "message": "If an account exists, a reset link has been sent.",
+  "_mockResetTokenForTesting": "eyJhbGciOiJIUz..."
+}
+```
+
 ## Search & Discovery
 ### `GET /api/v1/search`
 - **Query:** `?q=iphone&category_id=10&price_min=10000000&rating=4&isMall=true&sort=price&order=asc&attributes={"RAM":"8GB"}`
