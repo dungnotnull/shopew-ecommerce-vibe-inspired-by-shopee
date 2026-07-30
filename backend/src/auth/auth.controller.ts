@@ -37,7 +37,7 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile and role' })
   @ApiResponse({ status: 200, description: 'Returns the latest user profile' })
-  getMe(@Request() req) {
+  getMe(@Request() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...result } = req.user;
     return result;
