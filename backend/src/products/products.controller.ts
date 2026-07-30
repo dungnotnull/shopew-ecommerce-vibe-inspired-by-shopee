@@ -1,0 +1,56 @@
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { ProductsService } from './products.service';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
+import { AuthGuard } from '@nestjs/passport';
+
+@ApiTags('Products')
+@Controller('api/v1/products')
+export class ProductsController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get SPU and its SKUs (public)' })
+  async getProduct(@Param('id') id: string) {
+    return this.productsService.getProductDetails(+id);
+  }
+
+  @Post(':id/like')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({ summary: 'Toggle like/wishlist' })
+  async toggleLike(@Request() req: any, @Param('id') id: string) {
+    return this.productsService.toggleLike(req.user.id, +id);
+  }
+}
+
+@ApiTags('Seller Products')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Controller('api/seller/products')
+export class SellerProductsController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Post()
+  @Roles(Role.SELLER)
+  @ApiOperation({ summary: 'Create SPU, Variant Groups, and SKUs' })
+  async createProduct(@Request() req: any, @Body() data: any) {
+    return this.productsService.createProduct(req.user.id, data);
+  }
+
+  @Put(':id')
+  @Roles(Role.SELLER)
+  @ApiOperation({ summary: 'Update SPU & SKUs' })
+  async updateProduct(@Request() req: any, @Param('id') id: string, @Body() data: any) {
+    return this.productsService.updateProduct(req.user.id, +id, data);
+  }
+
+  @Delete(':id')
+  @Roles(Role.SELLER)
+  @ApiOperation({ summary: 'Delete SPU' })
+  async deleteProduct(@Request() req: any, @Param('id') id: string) {
+    return this.productsService.deleteProduct(req.user.id, +id);
+  }
+}
