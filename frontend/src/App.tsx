@@ -10,6 +10,8 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { ProfilePage } from './pages/user/ProfilePage';
 import { AddressPage } from './pages/user/AddressPage';
+import { SellerDashboardPage } from './pages/seller/SellerDashboardPage';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 
 // Khởi tạo React Query Client
 const queryClient = new QueryClient({
@@ -70,6 +72,14 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Kênh Người Bán (Seller Center Portal) */}
+          <Route path="/seller" element={<SellerDashboardPage />} />
+          <Route path="/seller/*" element={<SellerDashboardPage />} />
+
+          {/* Cổng Quản Trị Admin (Admin Portal) */}
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/*" element={<AdminDashboardPage />} />
 
           {/* Catch-all fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
