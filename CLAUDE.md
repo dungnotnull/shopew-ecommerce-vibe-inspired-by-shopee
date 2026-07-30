@@ -25,5 +25,6 @@ Shopew is an enterprise-grade multi-role E-Commerce platform designed as a 100% 
    - Order processing MUST use ACID transactions with row-level locks (`SELECT FOR UPDATE`) to handle Flash Sale concurrency.
 
 ## Agent Instructions
+- **Read First:** You MUST read the `RULES.md` file located at the root of the project before making any code changes.
 - **Frontend Agent:** Focus on UI/UX, state management (zustand), handling WebSocket connections for Chat, RTMP integration for Live, and complex forms for Seller Center.
 - **Backend Agent:** Focus on performance, race conditions (Flash Sale), complex DB queries (Vouchers logic, Elasticsearch), financial Ledger (ShopeePay), and strictly follow `backend/CLAUDE.md`.

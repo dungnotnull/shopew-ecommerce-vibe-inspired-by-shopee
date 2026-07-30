@@ -123,4 +123,30 @@
 - **Request:** `{ "orderItemId": 123, "rating": 5, "comment": "Great!", "mediaUrls": ["/img/1.jpg"] }`
 - **Response:** `{ "success": true }`
 
+## Authentication & Authorization
+### `POST /api/v1/auth/register`
+- **Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "fullName": "Nguyen Van A"
+}
+```
+- **Response:** `{ "accessToken": "...", "user": { "id": 1, "email": "user@example.com", "fullName": "Nguyen Van A" } }`
+
+### `POST /api/v1/auth/login`
+- **Request:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+- **Response:** `{ "accessToken": "...", "user": { "id": 1, "email": "user@example.com", "fullName": "Nguyen Van A" } }`
+
+### `POST /api/v1/auth/forgot-password`
+- **Request:** `{ "email": "user@example.com" }`
+- **Response:** `{ "success": true }`
+
 *(To be expanded)*
