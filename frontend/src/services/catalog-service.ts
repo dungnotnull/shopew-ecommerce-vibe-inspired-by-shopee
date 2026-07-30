@@ -1,4 +1,4 @@
-import apiClient from './api-client';
+import { apiClient } from './api-client';
 import { Category, ProductSPU, SearchParams, SearchResult, ShopProfile } from '../types/catalog';
 
 // Mock Categories Tree Fallback
