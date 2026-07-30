@@ -16,6 +16,12 @@ import { AddressPage } from './pages/user/AddressPage';
 import { SellerDashboardPage } from './pages/seller/SellerDashboardPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 
+// Phase 2 & 3 Catalog & Shop Pages
+import { ProductDetailPage } from './pages/ProductDetailPage';
+import { SearchPage } from './pages/SearchPage';
+import { ShopDetailPage } from './pages/ShopDetailPage';
+import { SellerProductManagement } from './pages/seller/SellerProductManagement';
+
 // Khởi tạo React Query Client
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,8 +59,12 @@ export const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          {/* Public Routes - Khách hàng tự do xem trang chủ & Auth */}
+          {/* Public Routes - Khách hàng tự do xem trang chủ, sản phẩm, tìm kiếm & Auth */}
           <Route path="/" element={<CustomerLayout><HomePage /></CustomerLayout>} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/shops/:id" element={<ShopDetailPage />} />
+
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
@@ -82,6 +92,14 @@ export const App: React.FC = () => {
             element={
               <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
                 <SellerDashboardPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/seller/products/new"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerProductManagement />
               </RoleGuard>
             }
           />

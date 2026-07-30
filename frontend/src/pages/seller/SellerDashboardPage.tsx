@@ -1,25 +1,72 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SellerLayout } from '../../components/layout/SellerLayout';
-import { ShoppingBag, Package, TrendingUp, AlertCircle, Plus, CheckCircle } from 'lucide-react';
+import { ShoppingBag, Package, TrendingUp, AlertCircle, Plus, CheckCircle, RefreshCw } from 'lucide-react';
 import { formatVND } from '../../utils/format-currency';
+import { sellerService, SellerDashboardData } from '../../services/seller-service';
 
-// Trang Tổng Quan Kênh Người Bán (Seller Dashboard)
+// Trang Tổng Quan Kênh Người Bán (Gọi API thực tế GET /api/seller/dashboard từ Backend NestJS)
 export const SellerDashboardPage: React.FC = () => {
+  const [data, setData] = useState<SellerDashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Hàm load dữ liệu thực tế từ API Backend NestJS
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await sellerService.getDashboard();
+      setData(res);
+    } catch (err: any) {
+      if (err.response?.status === 403) {
+        setErrorMsg('Tài khoản của bạn chưa có quyền Kênh Người Bán (Role SELLER) để xem thống kê này.');
+      } else {
+        setErrorMsg('Không thể kết nối đến API Seller Backend. Vui lòng kiểm tra lại server.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
   return (
     <SellerLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 font-['Roboto',sans-serif]">
         {/* Banner Chào Mừng Seller */}
-        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-4 gap-4">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">Tổng Quan Gian Hàng</h1>
-            <p className="text-xs text-gray-500 mt-1">Theo dõi hoạt động kinh doanh và chỉ số bán hàng thời gian thực</p>
+            <h1 className="text-xl font-bold text-gray-800">
+              {data?.shopName || 'Gian Hàng Kênh Người Bán'}
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              Dữ liệu thời gian thực được đồng bộ từ Backend NestJS API (`GET /api/seller/dashboard`)
+            </p>
           </div>
-          <button className="inline-flex items-center gap-1.5 bg-[#ee4d2d] hover:bg-[#d03e20] text-white text-xs font-bold px-4 py-2 rounded shadow-sm transition-colors">
-            <Plus className="w-4 h-4" /> Đăng Sản Phẩm Mới (SPU/SKU)
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={fetchDashboardData}
+              className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Tải lại API
+            </button>
+            <button className="inline-flex items-center gap-1.5 bg-[#ee4d2d] hover:bg-[#d03e20] text-white text-xs font-bold px-4 py-2 rounded shadow-sm transition-colors">
+              <Plus className="w-4 h-4" /> Đăng Sản Phẩm Mới (SPU/SKU)
+            </button>
+          </div>
         </div>
 
-        {/* Thống kê 4 Chỉ số Kinh doanh */}
+        {/* Cảnh báo lỗi API nếu có */}
+        {errorMsg && (
+          <div className="p-4 bg-red-50 text-red-600 rounded-lg text-xs flex items-center gap-2 border border-red-200">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {/* Thống kê 4 Chỉ số Kinh doanh từ API Backend */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-orange-50/50 border border-orange-100 p-4 rounded-lg flex items-center gap-4">
             <div className="bg-[#ee4d2d] text-white p-3 rounded-lg shadow-sm">
@@ -27,7 +74,9 @@ export const SellerDashboardPage: React.FC = () => {
             </div>
             <div>
               <span className="text-xs text-gray-500 font-medium">Doanh Thu Tháng Này</span>
-              <h3 className="text-lg font-extrabold text-gray-800">{formatVND(125400000)}</h3>
+              <h3 className="text-lg font-extrabold text-gray-800">
+                {isLoading ? '...' : formatVND(data?.revenueThisMonth || 0)}
+              </h3>
             </div>
           </div>
 
@@ -37,7 +86,9 @@ export const SellerDashboardPage: React.FC = () => {
             </div>
             <div>
               <span className="text-xs text-gray-500 font-medium">Đơn Hàng Mới</span>
-              <h3 className="text-lg font-extrabold text-gray-800">48 Đơn</h3>
+              <h3 className="text-lg font-extrabold text-gray-800">
+                {isLoading ? '...' : `${data?.newOrders || 0} Đơn`}
+              </h3>
             </div>
           </div>
 
@@ -47,7 +98,9 @@ export const SellerDashboardPage: React.FC = () => {
             </div>
             <div>
               <span className="text-xs text-gray-500 font-medium">Tổng Sản Phẩm SPU</span>
-              <h3 className="text-lg font-extrabold text-gray-800">124 Mặt Hàng</h3>
+              <h3 className="text-lg font-extrabold text-gray-800">
+                {isLoading ? '...' : `${data?.totalSPUs || 0} Mặt Hàng`}
+              </h3>
             </div>
           </div>
 
@@ -57,31 +110,41 @@ export const SellerDashboardPage: React.FC = () => {
             </div>
             <div>
               <span className="text-xs text-gray-500 font-medium">Đánh Giá Shop</span>
-              <h3 className="text-lg font-extrabold text-gray-800">4.9 / 5.0 ★</h3>
+              <h3 className="text-lg font-extrabold text-gray-800">
+                {isLoading ? '...' : `${data?.shopRating || 5.0} / 5.0 ★`}
+              </h3>
             </div>
           </div>
         </div>
 
-        {/* Việc Cần Làm (To-do List cho Người Bán) */}
+        {/* Việc Cần Làm (To-do List từ API Backend) */}
         <div className="border border-gray-100 rounded-lg p-5 bg-gray-50/50 space-y-3">
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-[#ee4d2d]" /> Danh Sách Việc Cần Làm
+            <AlertCircle className="w-4 h-4 text-[#ee4d2d]" /> Danh Sách Việc Cần Làm (Backend API Sync)
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div className="bg-white p-3 rounded border border-gray-200">
-              <span className="text-lg font-bold text-[#ee4d2d]">12</span>
+              <span className="text-lg font-bold text-[#ee4d2d]">
+                {isLoading ? '...' : data?.todo?.pendingConfirmation || 0}
+              </span>
               <p className="text-xs text-gray-600 mt-1">Chờ Xác Nhận Đơn</p>
             </div>
             <div className="bg-white p-3 rounded border border-gray-200">
-              <span className="text-lg font-bold text-blue-600">5</span>
+              <span className="text-lg font-bold text-blue-600">
+                {isLoading ? '...' : data?.todo?.pendingPickup || 0}
+              </span>
               <p className="text-xs text-gray-600 mt-1">Chờ Lấy Hàng</p>
             </div>
             <div className="bg-white p-3 rounded border border-gray-200">
-              <span className="text-lg font-bold text-amber-600">2</span>
+              <span className="text-lg font-bold text-amber-600">
+                {isLoading ? '...' : data?.todo?.returnRequests || 0}
+              </span>
               <p className="text-xs text-gray-600 mt-1">Yêu Cầu Trả Hàng</p>
             </div>
             <div className="bg-white p-3 rounded border border-gray-200">
-              <span className="text-lg font-bold text-emerald-600">0</span>
+              <span className="text-lg font-bold text-emerald-600">
+                {isLoading ? '...' : data?.todo?.lockedProducts || 0}
+              </span>
               <p className="text-xs text-gray-600 mt-1">Sản Phẩm Tạm Khóa</p>
             </div>
           </div>
