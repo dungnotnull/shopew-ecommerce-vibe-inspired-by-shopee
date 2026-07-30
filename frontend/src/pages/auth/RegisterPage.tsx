@@ -38,9 +38,9 @@ export const RegisterPage: React.FC = () => {
     setTimeout(() => {
       setIsSubmitting(false);
 
-      // Đăng ký thành công -> Lưu session và role tương ứng
+      // Đăng ký tài khoản mới thành công -> Lưu thông tin và Role tài khoản vừa tạo
       setAuth({
-        accessToken: 'mock_jwt_access_token_registered_shopew',
+        accessToken: `mock_jwt_access_token_registered_${role.toLowerCase()}`,
         user: {
           id: Date.now(),
           email,
@@ -51,7 +51,7 @@ export const RegisterPage: React.FC = () => {
         }
       });
 
-      // Chuyển hướng giao diện tương ứng với Role
+      // Tự động chuyển hướng đến đúng màn hình tương ứng với Role của tài khoản vừa tạo
       if (role === 'SELLER') {
         navigate('/seller');
       } else if (role === 'ADMIN') {
@@ -63,7 +63,7 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#ee4d2d] flex flex-col justify-between">
+    <div className="min-h-screen bg-[#ee4d2d] flex flex-col justify-between font-['Roboto',sans-serif]">
       {/* Header thương hiệu */}
       <div className="bg-white py-4 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 flex justify-between items-center">
@@ -128,7 +128,7 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Số Điện Thoại (Bắt buộc theo DTO) *</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Số Điện Thoại *</label>
               <div className="relative">
                 <input
                   type="tel"
@@ -143,13 +143,13 @@ export const RegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Đăng Ký Với Vai Trò (Role)</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Loại Tài Khoản (Vai Trò)</label>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setRole('CUSTOMER')}
-                  className={`py-1.5 text-xs font-bold rounded border ${
-                    role === 'CUSTOMER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200'
+                  className={`py-1.5 text-xs font-bold rounded border transition-colors ${
+                    role === 'CUSTOMER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                   }`}
                 >
                   Khách Hàng
@@ -157,8 +157,8 @@ export const RegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRole('SELLER')}
-                  className={`py-1.5 text-xs font-bold rounded border ${
-                    role === 'SELLER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200'
+                  className={`py-1.5 text-xs font-bold rounded border transition-colors ${
+                    role === 'SELLER' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                   }`}
                 >
                   Người Bán
@@ -166,8 +166,8 @@ export const RegisterPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setRole('ADMIN')}
-                  className={`py-1.5 text-xs font-bold rounded border ${
-                    role === 'ADMIN' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200'
+                  className={`py-1.5 text-xs font-bold rounded border transition-colors ${
+                    role === 'ADMIN' ? 'bg-[#ee4d2d] text-white border-[#ee4d2d]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                   }`}
                 >
                   Admin
@@ -211,7 +211,7 @@ export const RegisterPage: React.FC = () => {
               disabled={isSubmitting}
               className="w-full bg-[#ee4d2d] hover:bg-[#d03e20] text-white font-bold py-2.5 rounded text-sm transition-colors uppercase disabled:opacity-50 mt-2"
             >
-              {isSubmitting ? 'Đang Đăng Ký...' : `Đăng Ký Tài Khoản (${role})`}
+              {isSubmitting ? 'Đang Đăng Ký...' : 'Đăng Ký'}
             </button>
           </form>
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { UserProfile, AuthResponseData, UserRole } from '../types/auth';
+import { UserProfile, AuthResponseData } from '../types/auth';
 
 interface AuthState {
   user: UserProfile | null;
@@ -8,12 +8,11 @@ interface AuthState {
   isLoading: boolean;
   setAuth: (data: AuthResponseData) => void;
   updateUser: (updatedUser: Partial<UserProfile>) => void;
-  switchRole: (newRole: UserRole) => void;
   logout: () => void;
   initAuth: () => void;
 }
 
-// Zustand Store quản lý trạng thái xác thực và Role phân quyền toàn ứng dụng
+// Zustand Store quản lý trạng thái xác thực người dùng theo Role thực tế từ Backend
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: null,
@@ -39,16 +38,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       const newUser = { ...state.user, ...updatedUser };
       localStorage.setItem('shopew_user', JSON.stringify(newUser));
       return { user: newUser };
-    });
-  },
-
-  // Chuyển đổi linh hoạt Role (CUSTOMER / SELLER / ADMIN) để test giao diện
-  switchRole: (newRole) => {
-    set((state) => {
-      if (!state.user) return state;
-      const updatedUser: UserProfile = { ...state.user, role: newRole };
-      localStorage.setItem('shopew_user', JSON.stringify(updatedUser));
-      return { user: updatedUser };
     });
   },
 
