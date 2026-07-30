@@ -53,3 +53,30 @@ Tài liệu kiểm thử danh sách các trường hợp (Test Cases) cho toàn 
 - [x] **TC-AUTHOR-06 (Cấm Customer):** Đăng nhập với tài khoản Role `CUSTOMER`, gửi Token truy cập `GET /api/admin/dashboard`. Hệ thống từ chối và trả về `403 Forbidden`. *(PASSED)*
 - [x] **TC-AUTHOR-07 (Cấm Seller):** Đăng nhập với tài khoản Role `SELLER`, gửi Token truy cập `GET /api/admin/dashboard`. Hệ thống từ chối và trả về `403 Forbidden`. *(PASSED)*
 - [x] **TC-AUTHOR-08 (Cho phép Admin):** Đăng nhập với tài khoản Role `ADMIN`, gửi Token truy cập `GET /api/admin/dashboard`. Trả về `200 OK` chứa chỉ số tổng quan sàn (Users, Shops, GMV,...). *(PASSED)*
+
+---
+
+## 3. E-Commerce Core & Product Management (Phase 2)
+
+### 3.1. Category Management (`GET /api/v1/categories`)
+- [x] **TC-PHASE2-01 (Public):** Truy cập `GET /api/v1/categories` khi chưa đăng nhập. Trả về `200 OK` chứa cây danh mục phân cấp (`children`) và các thuộc tính động (`attributes`). *(PASSED)*
+
+### 3.2. Shop Profiles (`/api/v1/shops`)
+- [x] **TC-PHASE2-02 (Thêm mới hợp lệ):** Tạo Shop profile qua `POST /api/v1/shops` bằng tài khoản Role `SELLER`. Trả về `201 Created` và thông tin Shop. *(PASSED)*
+- [x] **TC-PHASE2-03 (Lỗi Conflict):** Tạo Shop profile lần 2 cho cùng 1 User. Trả về lỗi `409 Conflict` (Shop already exists). *(PASSED)*
+- [x] **TC-PHASE2-04 (Lỗi Phân quyền):** Truy cập `POST /api/v1/shops` bằng tài khoản Role `CUSTOMER`. Trả về `403 Forbidden`. *(PASSED)*
+- [x] **TC-PHASE2-05 (Truy vấn hợp lệ):** Lấy thông tin Shop cá nhân `GET /api/v1/shops/me` (Role `SELLER`). Trả về `200 OK` cùng thông tin Shop. *(PASSED)*
+- [x] **TC-PHASE2-06 (Cập nhật hợp lệ):** Cập nhật thông tin Shop `PUT /api/v1/shops/me` (Role `SELLER`). Trả về `200 OK` với dữ liệu mới. *(PASSED)*
+
+### 3.3. Product SPU & SKU Management (`/api/seller/products`)
+- [x] **TC-PHASE2-07 (Tạo SPU & Tự sinh Default SKU):** Seller tạo sản phẩm qua `POST /api/seller/products` không truyền `variantGroups` và `skus`. Hệ thống tạo SPU và tự động sinh 1 Default SKU với mảng `tierIndex` rỗng. Trả về `201 Created`. *(PASSED)*
+- [x] **TC-PHASE2-08 (Tạo SPU & Multi-tier SKUs đầy đủ):** Seller tạo sản phẩm truyền kèm `variantGroups` (VD: Màu sắc, Kích cỡ) và danh sách `skus`. Hệ thống tạo SPU, Variant Groups, Variant Options, và SKUs tương ứng. Trả về `201 Created`. *(PASSED)*
+- [x] **TC-PHASE2-09 (Lỗi Phân quyền tạo SP):** Cố ý gọi API `POST /api/seller/products` bằng Role `CUSTOMER`. Trả về `403 Forbidden`. *(PASSED)*
+- [x] **TC-PHASE2-10 (Bảo mật Update/Sở hữu):** Seller gọi `PUT /api/seller/products/:id` hoặc `DELETE /api/seller/products/:id` để sửa/xóa sản phẩm của Shop người khác. Hệ thống trả về `403 Forbidden` (ForbiddenException/NotFound). *(PASSED)*
+- [x] **TC-PHASE2-11 (Xóa SP hợp lệ):** Seller xóa thành công sản phẩm của chính mình. Trả về `200 OK`. *(PASSED)*
+
+### 3.4. Product Details & Wishlist (`/api/v1/products`)
+- [x] **TC-PHASE2-12 (Xem SP Public):** Truy cập chi tiết Sản phẩm `GET /api/v1/products/:id` (Không cần Token). Trả về `200 OK` bao gồm SPU, các `variantGroups`, và danh sách `skus`. *(PASSED)*
+- [x] **TC-PHASE2-13 (Toggle Tim - Like):** Đăng nhập (bất kỳ Role nào) gọi `POST /api/v1/products/:id/like` lần 1. Hệ thống tạo ProductLike, tăng `likeCount` lên 1 và trả về `{ "liked": true }`. *(PASSED)*
+- [x] **TC-PHASE2-14 (Toggle Tim - Unlike):** Gọi lại `POST /api/v1/products/:id/like` lần 2 cho cùng 1 sản phẩm. Hệ thống xóa bản ghi Like, giảm `likeCount` đi 1 và trả về `{ "liked": false }`. *(PASSED)*
+- [x] **TC-PHASE2-15 (Lỗi Phân quyền Toggle):** Chưa đăng nhập gọi `POST /api/v1/products/:id/like`. Trả về `401 Unauthorized`. *(PASSED)*

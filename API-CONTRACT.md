@@ -164,7 +164,36 @@
       "thumbnailUrl": "..."
     }
   ]
+    }
+  ]
 }
+```
+
+### `POST /api/v1/products/:id/like`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** `{ "liked": true }`
+
+## Categories
+### `GET /api/v1/categories`
+- **Response:**
+```json
+[
+  {
+    "id": 1,
+    "name": "Thời Trang Nam",
+    "parentId": null,
+    "attributes": { "Chất liệu": "string" },
+    "children": [
+      {
+        "id": 11,
+        "name": "Áo Thun",
+        "parentId": 1,
+        "attributes": { "Chất liệu": "string", "Kiểu cổ": "string" },
+        "children": []
+      }
+    ]
+  }
+]
 ```
 
 ## Cart & Checkout
@@ -204,6 +233,48 @@
   }
 }
 ```
+
+### `POST /api/seller/products`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Body:**
+```json
+{
+  "categoryId": 11,
+  "name": "Áo Thun Nam Cổ Tròn",
+  "description": "Áo thun 100% cotton",
+  "priceMin": 150000,
+  "priceMax": 150000,
+  "attributes": { "Chất liệu": "Cotton" },
+  "variantGroups": [
+    { "name": "Màu sắc", "options": ["Đen", "Trắng"] },
+    { "name": "Kích cỡ", "options": ["M", "L"] }
+  ],
+  "skus": [
+    { "price": 150000, "originalPrice": 200000, "stock": 50, "tierIndex": [0, 0] }
+  ]
+}
+```
+- **Response:** SPU and SKU details (similar to `GET /api/v1/products/:id`)
+
+### `PUT /api/seller/products/:id`
+*(Updates SPU & SKUs)*
+
+### `DELETE /api/seller/products/:id`
+*(Deletes SPU)*
+
+## Shops
+### `POST /api/v1/shops`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Body:** `{ "name": "My Awesome Shop", "description": "Best shop ever" }`
+- **Response:** `{ "id": 1, "userId": 2, "name": "My Awesome Shop" }`
+
+### `GET /api/v1/shops/me`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Shop profile.
+
+### `PUT /api/v1/shops/me`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Body:** `{ "name": "Updated Shop Name" }`
 
 ## Admin Portal
 ### `GET /api/admin/dashboard`
