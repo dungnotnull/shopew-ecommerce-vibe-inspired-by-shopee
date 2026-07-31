@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { sellerService } from '../../services/seller-service';
-import { VariantGroup, SKU } from '../../types/catalog';
+import { VariantGroup, SKU, Category } from '../../types/catalog';
 
 export const SellerProductManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ export const SellerProductManagement: React.FC = () => {
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
   const [categoryId, setCategoryId] = useState<number>(1);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -23,24 +24,33 @@ export const SellerProductManagement: React.FC = () => {
   const [shopDescription, setShopDescription] = useState<string>('Cửa hàng phân phối sản phẩm chính hãng trên Shopew.');
   const [creatingShop, setCreatingShop] = useState<boolean>(false);
 
-  // Nạp ID Danh mục hợp lệ đầu tiên từ API Backend NestJS để tránh vi phạm khóa ngoại P2003
+  // Call API Backend lấy danh sách Danh mục sản phẩm thực tế: GET /api/v1/categories
   useEffect(() => {
-    const fetchValidCategoryId = async () => {
+    const fetchCategoriesFromAPI = async () => {
       try {
-        const cats = await CatalogService.getCategories();
-        if (cats && cats.length > 0) {
-          const firstCat = cats[0];
-          if (firstCat.children && firstCat.children.length > 0) {
-            setCategoryId(firstCat.children[0].id);
-          } else {
-            setCategoryId(firstCat.id);
+        const catData = await CatalogService.getCategories();
+        if (catData && catData.length > 0) {
+          // Trích xuất phẳng toàn bộ danh mục (gồm cả danh mục cha & danh mục con)
+          const flattenList: Category[] = [];
+          const extractAll = (items: Category[]) => {
+            items.forEach(c => {
+              flattenList.push(c);
+              if (c.children && c.children.length > 0) {
+                extractAll(c.children);
+              }
+            });
+          };
+          extractAll(catData);
+          setCategories(flattenList);
+          if (flattenList.length > 0) {
+            setCategoryId(flattenList[0].id);
           }
         }
       } catch {
-        // Fallback default ID 1
+        // Fallback default
       }
     };
-    fetchValidCategoryId();
+    fetchCategoriesFromAPI();
   }, []);
 
   // 2-Tier Variant Groups State
@@ -342,15 +352,26 @@ export const SellerProductManagement: React.FC = () => {
                   />
                 </div>
 
+                {/* CALL API GET /api/v1/categories - Hiển thị Dropdown Chọn Danh Mục Sản Phẩm */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">ID Danh Mục (Category ID)</label>
-                  <input
-                    type="number"
-                    required
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Danh Mục Sản Phẩm (Call API Backend) *
+                  </label>
+                  <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(Number(e.target.value))}
                     className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
-                  />
+                  >
+                    {categories.length === 0 ? (
+                      <option value={1}>Danh mục mặc định (#1)</option>
+                    ) : (
+                      categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name} (ID #{cat.id})
+                        </option>
+                      ))
+                    )}
+                  </select>
                 </div>
               </div>
             </div>

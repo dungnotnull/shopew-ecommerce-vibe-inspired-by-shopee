@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Package, Layers } from 'lucide-react';
-import { ProductSPU, SKU } from '../../types/catalog';
+import { ProductSPU, SKU, Category } from '../../types/catalog';
 import CatalogService from '../../services/catalog-service';
 
 interface SellerProductEditModalProps {
@@ -20,9 +20,35 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
   const [description, setDescription] = useState<string>(product.description || '');
   const [priceMin, setPriceMin] = useState<number>(product.priceMin || 0);
   const [categoryId, setCategoryId] = useState<number>(product.categoryId || 1);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [skus, setSkus] = useState<SKU[]>(product.skus || []);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
+
+  // Call API GET /api/v1/categories nạp danh sách Danh Mục cho Modal Edit
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const catData = await CatalogService.getCategories();
+        if (catData && catData.length > 0) {
+          const flattenList: Category[] = [];
+          const extractAll = (items: Category[]) => {
+            items.forEach(c => {
+              flattenList.push(c);
+              if (c.children && c.children.length > 0) {
+                extractAll(c.children);
+              }
+            });
+          };
+          extractAll(catData);
+          setCategories(flattenList);
+        }
+      } catch {
+        // Fallback default
+      }
+    };
+    fetchCats();
+  }, []);
 
   useEffect(() => {
     setName(product.name);
@@ -144,14 +170,22 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">ID Danh Mục (Category ID)</label>
-                <input
-                  type="number"
-                  required
+                <label className="block text-xs font-bold text-gray-700 mb-1">Danh Mục Sản Phẩm (Call API) *</label>
+                <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(Number(e.target.value))}
-                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#ee4d2d]"
-                />
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
+                >
+                  {categories.length === 0 ? (
+                    <option value={product.categoryId || 1}>Danh mục #{product.categoryId || 1}</option>
+                  ) : (
+                    categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name} (ID #{cat.id})
+                      </option>
+                    ))
+                  )}
+                </select>
               </div>
             </div>
           </div>
