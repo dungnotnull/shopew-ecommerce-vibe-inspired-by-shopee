@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Package, Layers } from 'lucide-react';
+import { X, Save, Package, Layers, Tag } from 'lucide-react';
 import { ProductSPU, SKU, Category } from '../../types/catalog';
 import CatalogService from '../../services/catalog-service';
 
@@ -19,6 +19,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
   const [name, setName] = useState<string>(product.name);
   const [description, setDescription] = useState<string>(product.description || '');
   const [priceMin, setPriceMin] = useState<number>(product.priceMin || 0);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(product.discountPercentage || 0);
   const [categoryId, setCategoryId] = useState<number>(product.categoryId || 1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [skus, setSkus] = useState<SKU[]>(product.skus || []);
@@ -54,6 +55,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
     setName(product.name);
     setDescription(product.description || '');
     setPriceMin(product.priceMin || 0);
+    setDiscountPercentage(product.discountPercentage || 0);
     setCategoryId(product.categoryId || 1);
     setSkus(product.skus || []);
     setErrorMsg('');
@@ -65,6 +67,17 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
     setSkus(prev => {
       const updated = [...prev];
       updated[skuIdx].price = newPrice;
+      if (!updated[skuIdx].originalPrice || updated[skuIdx].originalPrice! < newPrice) {
+        updated[skuIdx].originalPrice = Math.round(newPrice * 1.25);
+      }
+      return updated;
+    });
+  };
+
+  const handleSkuOriginalPriceChange = (skuIdx: number, newOriginalPrice: number) => {
+    setSkus(prev => {
+      const updated = [...prev];
+      updated[skuIdx].originalPrice = newOriginalPrice;
       return updated;
     });
   };
@@ -98,6 +111,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
         categoryId,
         priceMin: computedPriceMin,
         priceMax: computedPriceMax,
+        discountPercentage,
         skus,
       });
 
@@ -117,7 +131,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
         {/* Header Modal */}
         <div className="flex items-center justify-between pb-3 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-5 h-5 text-[#ee4d2d]" /> Cập Nhật Thông Tin Sản Phẩm
+            <Package className="w-5 h-5 text-[#ee4d2d]" /> Cập Nhật Thông Tin Sản Phẩm #{product.id}
           </h2>
           <button
             onClick={onClose}
@@ -157,7 +171,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">Giá Bán Khởi Điểm (VND) *</label>
                 <input
@@ -167,6 +181,23 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
                   onChange={(e) => setPriceMin(Number(e.target.value))}
                   className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#ee4d2d]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-[#ee4d2d]" /> Khuyến Mãi (% Giảm)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={discountPercentage}
+                    onChange={(e) => setDiscountPercentage(Number(e.target.value))}
+                    className="w-full p-2.5 pr-8 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-xs text-gray-500">%</span>
+                </div>
               </div>
 
               <div>
@@ -201,7 +232,8 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
                   <thead>
                     <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
                       <th className="p-2.5">Mẫu Phân Loại</th>
-                      <th className="p-2.5">Giá Bán (VND)</th>
+                      <th className="p-2.5">Giá Bán Khuyến Mãi (VND)</th>
+                      <th className="p-2.5">Giá Gốc Niêm Yết (VND)</th>
                       <th className="p-2.5">Số Lượng Tồn Kho</th>
                     </tr>
                   </thead>
@@ -219,7 +251,15 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
                               type="number"
                               value={sku.price}
                               onChange={(e) => handleSkuPriceChange(sIdx, Number(e.target.value))}
-                              className="w-28 p-1.5 border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
+                              className="w-28 p-1.5 border border-gray-300 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
+                            />
+                          </td>
+                          <td className="p-2.5">
+                            <input
+                              type="number"
+                              value={sku.originalPrice || Math.round(sku.price * 1.25)}
+                              onChange={(e) => handleSkuOriginalPriceChange(sIdx, Number(e.target.value))}
+                              className="w-28 p-1.5 border border-gray-300 rounded text-xs font-semibold text-gray-500 focus:outline-none focus:border-[#ee4d2d]"
                             />
                           </td>
                           <td className="p-2.5">

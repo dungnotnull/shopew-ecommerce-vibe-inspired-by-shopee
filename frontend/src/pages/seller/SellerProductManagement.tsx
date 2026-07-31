@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store } from 'lucide-react';
+import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, Tag } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { sellerService } from '../../services/seller-service';
 import { VariantGroup, SKU, Category } from '../../types/catalog';
@@ -12,6 +12,7 @@ export const SellerProductManagement: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(10);
   const [categoryId, setCategoryId] = useState<number>(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
@@ -69,7 +70,7 @@ export const SellerProductManagement: React.FC = () => {
           id: 1,
           tierIndex: [],
           price: priceMin,
-          originalPrice: Math.round(priceMin * 1.2),
+          originalPrice: Math.round(priceMin * 1.25),
           stock: 100,
         },
       ]);
@@ -81,7 +82,7 @@ export const SellerProductManagement: React.FC = () => {
         id: idx + 1,
         tierIndex: [idx],
         price: priceMin,
-        originalPrice: Math.round(priceMin * 1.2),
+        originalPrice: Math.round(priceMin * 1.25),
         stock: 50,
       }));
       setSkus(generatedSkus);
@@ -100,7 +101,7 @@ export const SellerProductManagement: React.FC = () => {
             id: skuId++,
             tierIndex: [idx1, idx2],
             price: priceMin,
-            originalPrice: Math.round(priceMin * 1.2),
+            originalPrice: Math.round(priceMin * 1.25),
             stock: 50,
           });
         });
@@ -142,6 +143,17 @@ export const SellerProductManagement: React.FC = () => {
     setSkus(prev => {
       const updated = [...prev];
       updated[skuIndex].price = newPrice;
+      if (!updated[skuIndex].originalPrice || updated[skuIndex].originalPrice! < newPrice) {
+        updated[skuIndex].originalPrice = Math.round(newPrice * 1.25);
+      }
+      return updated;
+    });
+  };
+
+  const handleSkuOriginalPriceChange = (skuIndex: number, newOriginalPrice: number) => {
+    setSkus(prev => {
+      const updated = [...prev];
+      updated[skuIndex].originalPrice = newOriginalPrice;
       return updated;
     });
   };
@@ -154,7 +166,7 @@ export const SellerProductManagement: React.FC = () => {
     });
   };
 
-  // Hàm xử lý gửi API tạo sản phẩm
+  // Hàm xử lý gửi API tạo sản phẩm (Có truyền discountPercentage & originalPrice)
   const executeCreateProduct = async () => {
     const prices = skus.map(s => s.price);
     const computedPriceMin = prices.length > 0 ? Math.min(...prices) : priceMin;
@@ -166,6 +178,7 @@ export const SellerProductManagement: React.FC = () => {
       categoryId,
       priceMin: computedPriceMin,
       priceMax: computedPriceMax,
+      discountPercentage,
       isMall: false,
       isPreferred: true,
       variantGroups,
@@ -312,7 +325,7 @@ export const SellerProductManagement: React.FC = () => {
           {/* Section 1: Thông tin sản phẩm cơ bản */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Cơ Bản
+              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Cơ Bản & Giá Giảm
             </h2>
 
             <div className="space-y-3">
@@ -339,7 +352,7 @@ export const SellerProductManagement: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Bán Khởi Điểm (VND) *</label>
                   <input
@@ -351,7 +364,25 @@ export const SellerProductManagement: React.FC = () => {
                   />
                 </div>
 
-                {/* Ô Chọn Danh Mục Sản Phẩm Mượt Mà (Không chứa ID thô) */}
+                {/* Ô NHẬP PHẦN TRĂM GIẢM GIÁ (discountPercentage) */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5 text-[#ee4d2d]" /> Khuyến Mãi (% Giảm Giá)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={discountPercentage}
+                      onChange={(e) => setDiscountPercentage(Number(e.target.value))}
+                      className="w-full p-2.5 pr-8 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-xs text-gray-500">%</span>
+                  </div>
+                </div>
+
+                {/* Ô Chọn Danh Mục Sản Phẩm */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
                     Danh Mục Ngành Hàng *
@@ -453,10 +484,10 @@ export const SellerProductManagement: React.FC = () => {
             ))}
           </div>
 
-          {/* Section 3: Bảng giá & Tồn kho theo từng phân loại */}
+          {/* Section 3: Bảng giá, giá gốc & Tồn kho theo từng phân loại */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-[#ee4d2d]" /> 3. Bảng Giá & Tồn Kho Theo Phân Loại ({skus.length} Phân Loại)
+              <Layers className="w-4 h-4 text-[#ee4d2d]" /> 3. Bảng Giá Bán, Giá Gốc & Tồn Kho Theo Phân Loại ({skus.length} Phân Loại)
             </h2>
 
             <div className="overflow-x-auto">
@@ -464,7 +495,8 @@ export const SellerProductManagement: React.FC = () => {
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
                     <th className="p-3">Mẫu Phân Loại</th>
-                    <th className="p-3">Giá Bán (VND)</th>
+                    <th className="p-3">Giá Bán Khuyến Mãi (VND)</th>
+                    <th className="p-3">Giá Gốc Niêm Yết (VND)</th>
                     <th className="p-3">Số Lượng Tồn Kho</th>
                   </tr>
                 </thead>
@@ -484,7 +516,15 @@ export const SellerProductManagement: React.FC = () => {
                             type="number"
                             value={sku.price}
                             onChange={(e) => handleSkuPriceChange(idx, Number(e.target.value))}
-                            className="w-32 p-1.5 border border-gray-300 rounded font-semibold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
+                            className="w-32 p-1.5 border border-gray-300 rounded font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
+                          />
+                        </td>
+                        <td className="p-3">
+                          <input
+                            type="number"
+                            value={sku.originalPrice || Math.round(sku.price * 1.25)}
+                            onChange={(e) => handleSkuOriginalPriceChange(idx, Number(e.target.value))}
+                            className="w-32 p-1.5 border border-gray-300 rounded font-semibold text-gray-500 focus:outline-none focus:border-[#ee4d2d]"
                           />
                         </td>
                         <td className="p-3">

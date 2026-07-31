@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Plus, Edit, Trash2, Search, Filter, Layers, RefreshCw } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Search, Filter, Layers, RefreshCw, Tag } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { ProductSPU, Category } from '../../types/catalog';
 import { formatVND } from '../../utils/format-currency';
@@ -147,9 +147,9 @@ export const SellerProductListPage: React.FC = () => {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase font-bold">
-                  <th className="p-3.5">Mã Sản Phẩm</th>
+                  <th className="p-3.5">Mã SP</th>
                   <th className="p-3.5">Thông Tin Sản Phẩm</th>
-                  <th className="p-3.5">Giá Bán (VND)</th>
+                  <th className="p-3.5">Giá Bán Khuyến Mãi (VND)</th>
                   <th className="p-3.5">Phân Loại Hàng</th>
                   <th className="p-3.5">Đã Bán</th>
                   <th className="p-3.5 text-center">Thao Tác</th>
@@ -160,6 +160,7 @@ export const SellerProductListPage: React.FC = () => {
                   const skuCount = p.skus?.length || 0;
                   const totalStock = p.skus?.reduce((acc, curr) => acc + curr.stock, 0) || 0;
                   const catObj = categories.find(c => c.id === p.categoryId);
+                  const hasDiscount = !!p.discountPercentage && p.discountPercentage > 0;
 
                   return (
                     <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
@@ -173,10 +174,15 @@ export const SellerProductListPage: React.FC = () => {
                           />
                           <div className="space-y-0.5">
                             <h3 className="font-bold text-gray-900 line-clamp-1 max-w-xs">{p.name}</h3>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               {catObj && (
                                 <span className="text-[11px] text-gray-500 font-medium">
                                   {catObj.name}
+                                </span>
+                              )}
+                              {hasDiscount && (
+                                <span className="bg-yellow-400 text-red-700 text-[10px] font-black px-1.5 py-0.2 rounded shadow-xs flex items-center gap-0.5">
+                                  <Tag className="w-2.5 h-2.5" /> -{p.discountPercentage}%
                                 </span>
                               )}
                               {p.isMall && (
@@ -193,10 +199,19 @@ export const SellerProductListPage: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3.5 font-bold text-[#ee4d2d] text-sm">
-                        {p.priceMin === p.priceMax
-                          ? formatVND(p.priceMin)
-                          : `${formatVND(p.priceMin)} - ${formatVND(p.priceMax)}`}
+                      <td className="p-3.5">
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-[#ee4d2d] text-sm">
+                            {p.priceMin === p.priceMax
+                              ? formatVND(p.priceMin)
+                              : `${formatVND(p.priceMin)} - ${formatVND(p.priceMax)}`}
+                          </div>
+                          {hasDiscount && (
+                            <div className="text-[11px] text-gray-400 line-through">
+                              {formatVND(Math.round(p.priceMin * (1 + (p.discountPercentage || 0) / 100)))}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3.5">
                         <div className="space-y-1">
@@ -263,8 +278,9 @@ export const SellerProductListPage: React.FC = () => {
                 <thead>
                   <tr className="bg-gray-100 text-gray-700">
                     <th className="p-2">Mẫu Phân Loại</th>
-                    <th className="p-2">Giá Bán</th>
-                    <th className="p-2">Số Lượng Tồn Kho</th>
+                    <th className="p-2">Giá Khuyến Mãi</th>
+                    <th className="p-2">Giá Gốc</th>
+                    <th className="p-2">Tồn Kho</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -277,6 +293,9 @@ export const SellerProductListPage: React.FC = () => {
                       <tr key={idx}>
                         <td className="p-2 font-semibold text-gray-800">{label}</td>
                         <td className="p-2 font-bold text-[#ee4d2d]">{formatVND(sku.price)}</td>
+                        <td className="p-2 text-gray-400 line-through">
+                          {formatVND(sku.originalPrice || Math.round(sku.price * 1.25))}
+                        </td>
                         <td className="p-2">{sku.stock} sản phẩm</td>
                       </tr>
                     );
