@@ -1,0 +1,355 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ShieldCheck, Heart, Star, ShoppingCart, Store, Check, AlertCircle } from 'lucide-react';
+import { ProductSPU, SKU } from '../types/catalog';
+import { formatVND } from '../utils/format-currency';
+import CatalogService from '../services/catalog-service';
+import { CustomerLayout } from '../components/layout/CustomerLayout';
+
+export const ProductDetailPage: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const [product, setProduct] = useState<ProductSPU | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Variant Index Selection State (Array of option indices chosen for each VariantGroup)
+  const [selectedTiers, setSelectedTiers] = useState<number[]>([]);
+  const [activeSku, setActiveSku] = useState<SKU | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [isLiked, setIsLiked] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState<number>(0);
+  const [selectedImage, setSelectedImage] = useState<string>('');
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      setLoading(true);
+      if (!id) return;
+      const data = await CatalogService.getProductById(Number(id));
+      if (data) {
+        setProduct(data);
+        setIsLiked(!!data.isLiked);
+        setLikeCount(data.likeCount || 0);
+        setSelectedImage(data.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800');
+
+        // Khởi tạo mặc định chọn option đầu tiên cho mỗi Variant Group (nếu có)
+        if (data.variantGroups && data.variantGroups.length > 0) {
+          const initialTiers = data.variantGroups.map(() => 0);
+          setSelectedTiers(initialTiers);
+          findMatchingSku(data.skus, initialTiers);
+        } else {
+          // Default SKU fallback khi không có variant groups
+          setSelectedTiers([]);
+          setActiveSku(data.skus[0] || null);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchDetail();
+  }, [id]);
+
+  // Tìm SKU khớp chính xác với mảng tierIndex được chọn
+  const findMatchingSku = (skus: SKU[], tiers: number[]) => {
+    const match = skus.find(sku => {
+      if (sku.tierIndex.length !== tiers.length) return false;
+      return sku.tierIndex.every((val, idx) => val === tiers[idx]);
+    });
+    setActiveSku(match || null);
+  };
+
+  const handleSelectOption = (groupIndex: number, optionIndex: number) => {
+    const newTiers = [...selectedTiers];
+    newTiers[groupIndex] = optionIndex;
+    setSelectedTiers(newTiers);
+
+    if (product) {
+      findMatchingSku(product.skus, newTiers);
+    }
+  };
+
+  const handleToggleLike = async () => {
+    if (!product) return;
+    const newLiked = !isLiked;
+    setIsLiked(newLiked);
+    setLikeCount(prev => prev + (newLiked ? 1 : -1));
+
+    try {
+      await CatalogService.toggleLikeProduct(product.id);
+    } catch {
+      setIsLiked(!newLiked);
+      setLikeCount(prev => prev + (newLiked ? -1 : 1));
+    }
+  };
+
+  if (loading) {
+    return (
+      <CustomerLayout>
+        <div className="min-h-[60vh] flex items-center justify-center text-gray-500 font-medium text-sm">
+          Đang tải chi tiết sản phẩm Shopew...
+        </div>
+      </CustomerLayout>
+    );
+  }
+
+  if (!product) {
+    return (
+      <CustomerLayout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+          <AlertCircle className="w-12 h-12 text-red-500" />
+          <h2 className="text-xl font-bold text-gray-800">Không tìm thấy sản phẩm!</h2>
+          <Link to="/" className="text-sm text-[#ee4d2d] underline">Trở về Trang chủ</Link>
+        </div>
+      </CustomerLayout>
+    );
+  }
+
+  // Xác định Giá hiển thị: nếu đã chọn được SKU cụ thể -> lấy giá SKU, ngược lại lấy giá min-max của SPU
+  const displayPrice = activeSku ? activeSku.price : product.priceMin;
+  const displayOriginalPrice = activeSku?.originalPrice || (product.priceMax ? product.priceMax : undefined);
+  const displayStock = activeSku ? activeSku.stock : (product.skus.reduce((acc, curr) => acc + curr.stock, 0));
+
+  return (
+    <CustomerLayout>
+      <div className="space-y-6">
+        {/* Breadcrumb Navigation */}
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <Link to="/" className="hover:text-[#ee4d2d]">Trang chủ</Link>
+          <span>/</span>
+          <Link to="/search" className="hover:text-[#ee4d2d]">Sản phẩm</Link>
+          <span>/</span>
+          <span className="text-gray-800 font-medium truncate max-w-md">{product.name}</span>
+        </div>
+
+        {/* Khối chính Chi Tiết Sản Phẩm */}
+        <div className="bg-white rounded-lg shadow-sm p-6 grid grid-cols-1 md:grid-cols-12 gap-8 border border-gray-100">
+          {/* Cột trái: Gallery Hình Ảnh */}
+          <div className="md:col-span-5 space-y-4">
+            <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+              <img
+                src={selectedImage}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-2 left-2 flex flex-col gap-1">
+                {product.isMall && (
+                  <span className="bg-[#d0011b] text-white font-extrabold text-[10px] px-2 py-0.5 rounded-xs uppercase tracking-wider shadow">
+                    Shopee Mall
+                  </span>
+                )}
+                {product.isPreferred && (
+                  <span className="bg-[#ee4d2d] text-white font-bold text-[10px] px-2 py-0.5 rounded-xs flex items-center gap-0.5 shadow">
+                    <ShieldCheck className="w-3 h-3" /> Yêu thích
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Sub-images thumbnail carousel */}
+            {product.images && product.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {product.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setSelectedImage(img)}
+                    className={`w-16 h-16 rounded border-2 overflow-hidden flex-shrink-0 transition-all ${
+                      selectedImage === img ? 'border-[#ee4d2d]' : 'border-gray-200 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Cột phải: Thông tin SPU, 2-Tier SKUs Selector, Buttons */}
+          <div className="md:col-span-7 space-y-5">
+            {/* Tên sản phẩm */}
+            <h1 className="text-xl font-bold text-gray-900 leading-snug">
+              {product.name}
+            </h1>
+
+            {/* Metrics: Đánh giá, Lượt bán, Lượt yêu thích */}
+            <div className="flex items-center gap-4 text-xs divide-x divide-gray-200 pt-1">
+              <div className="flex items-center gap-1 text-amber-500 font-bold">
+                <span className="underline">{product.rating}</span>
+                <div className="flex text-amber-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                  ))}
+                </div>
+              </div>
+
+              <div className="pl-4 text-gray-600">
+                <span className="font-bold text-gray-900">{product.soldCount}</span> Đã bán
+              </div>
+
+              <div className="pl-4">
+                <button
+                  onClick={handleToggleLike}
+                  className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors font-medium"
+                >
+                  <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                  <span>{likeCount} Đã thích</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Khối Giá Tiền VND & Voucher */}
+            <div className="bg-gray-50 p-4 rounded-lg flex items-baseline gap-3">
+              <span className="text-3xl font-extrabold text-[#ee4d2d]">
+                {formatVND(displayPrice)}
+              </span>
+
+              {displayOriginalPrice && displayOriginalPrice > displayPrice && (
+                <span className="text-sm text-gray-400 line-through">
+                  {formatVND(displayOriginalPrice)}
+                </span>
+              )}
+
+              {!!product.discountPercentage && product.discountPercentage > 0 && (
+                <span className="bg-[#ee4d2d] text-white text-xs font-bold px-2 py-0.5 rounded-xs uppercase">
+                  -{product.discountPercentage}% GIẢM
+                </span>
+              )}
+            </div>
+
+            {/* Cấu trúc Biến thể 2 tầng (SPU & SKU Variants Selector) */}
+            {product.variantGroups && product.variantGroups.length > 0 && (
+              <div className="space-y-4 pt-2 border-t border-gray-100">
+                {product.variantGroups.map((group, groupIdx) => (
+                  <div key={groupIdx} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-xs text-gray-500 w-24 font-medium">{group.name}</span>
+                    <div className="flex flex-wrap gap-2">
+                      {group.options.map((option, optIdx) => {
+                        const isSelected = selectedTiers[groupIdx] === optIdx;
+                        return (
+                          <button
+                            key={optIdx}
+                            onClick={() => handleSelectOption(groupIdx, optIdx)}
+                            className={`px-3 py-1.5 rounded text-xs font-medium border transition-all flex items-center gap-1 ${
+                              isSelected
+                                ? 'border-[#ee4d2d] text-[#ee4d2d] bg-orange-50/50 ring-1 ring-[#ee4d2d]'
+                                : 'border-gray-200 text-gray-700 hover:border-gray-300 bg-white'
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3 h-3 text-[#ee4d2d]" />}
+                            {option}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Số Lượng & Kho Hàng */}
+            <div className="flex items-center gap-4 pt-3">
+              <span className="text-xs text-gray-500 w-24 font-medium">Số lượng</span>
+              <div className="flex items-center border border-gray-300 rounded">
+                <button
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  className="px-3 py-1 text-gray-600 hover:bg-gray-100"
+                >
+                  -
+                </button>
+                <span className="px-4 py-1 text-xs font-bold text-gray-800 border-x border-gray-300">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity(q => Math.min(displayStock, q + 1))}
+                  className="px-3 py-1 text-gray-600 hover:bg-gray-100"
+                >
+                  +
+                </button>
+              </div>
+              <span className="text-xs text-gray-400">
+                {displayStock} sản phẩm có sẵn
+              </span>
+            </div>
+
+            {/* Nút Action: Thêm vào Giỏ / Mua Ngay */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <button
+                disabled={displayStock === 0}
+                className="flex-1 border border-[#ee4d2d] text-[#ee4d2d] bg-orange-50 hover:bg-orange-100 font-bold text-sm py-3 px-6 rounded flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                Thêm Vào Giỏ Hàng
+              </button>
+
+              <button
+                disabled={displayStock === 0}
+                className="flex-1 bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm py-3 px-6 rounded shadow-md transition-colors text-center disabled:opacity-50"
+              >
+                Mua Ngay
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Thông tin Hồ Sơ Shop người bán */}
+        <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden border border-gray-200 flex-shrink-0">
+              <img
+                src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200"
+                alt="Shop Avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-gray-900 text-base">{product.shopName || 'Shopew Official Store'}</h3>
+                {product.isMall && (
+                  <span className="bg-[#d0011b] text-white text-[9px] font-bold px-1.5 py-0.5 rounded">Mall</span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">Online 5 phút trước</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              to={`/shops/${product.shopId || 1}`}
+              className="border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold text-xs px-4 py-2 rounded flex items-center gap-1.5"
+            >
+              <Store className="w-4 h-4 text-[#ee4d2d]" />
+              Xem Shop
+            </Link>
+          </div>
+        </div>
+
+        {/* Dynamic Attributes & Môt tả sản phẩm */}
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 space-y-6">
+          <div>
+            <h3 className="text-base font-bold text-gray-900 uppercase bg-gray-50 p-3 rounded mb-4">
+              CHI TIẾT SẢN PHẨM
+            </h3>
+            {product.attributes && Object.keys(product.attributes).length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                {Object.entries(product.attributes).map(([key, val]) => (
+                  <div key={key} className="flex border-b border-gray-100 pb-2">
+                    <span className="text-gray-400 w-36 font-medium">{key}</span>
+                    <span className="text-gray-800 font-semibold">{val}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">Đang cập nhật thuộc tính kỹ thuật.</p>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-base font-bold text-gray-900 uppercase bg-gray-50 p-3 rounded mb-4">
+              MÔ TẢ SẢN PHẨM
+            </h3>
+            <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
+              {product.description || 'Sản phẩm chính hãng chất lượng cao phân phối chính thức trên Shopew.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </CustomerLayout>
+  );
+};

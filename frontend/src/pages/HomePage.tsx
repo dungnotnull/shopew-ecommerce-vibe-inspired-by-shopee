@@ -1,61 +1,34 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, ShieldCheck, Flame, ChevronRight } from 'lucide-react';
+import { Zap, Flame, ChevronRight } from 'lucide-react';
+import { CategoryBar } from '../components/catalog/CategoryBar';
+import { ProductCard } from '../components/catalog/ProductCard';
+import { Category, ProductSPU } from '../types/catalog';
+import CatalogService from '../services/catalog-service';
 import { formatVND } from '../utils/format-currency';
 
-// Trang Chủ Shopew (Customer Storefront)
 export const HomePage: React.FC = () => {
-  // Mock dữ liệu Sản phẩm gợi ý phù hợp chuẩn SPU & SKU
-  const mockProducts = [
-    {
-      id: 101,
-      name: 'iPhone 15 Pro Max 256GB - Hàng Chính Hãng VN/A',
-      price: 29990000,
-      originalPrice: 34990000,
-      discountPercentage: 14,
-      isMall: true,
-      isPreferred: false,
-      soldCount: 5420,
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500'
-    },
-    {
-      id: 102,
-      name: 'Kẹp Tóc 15 Chi Tiết Kèm Hộp Đựng Dễ Thương HelloKitty',
-      price: 19000,
-      originalPrice: 25000,
-      discountPercentage: 24,
-      isMall: false,
-      isPreferred: true,
-      soldCount: 18500,
-      rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500'
-    },
-    {
-      id: 103,
-      name: 'Tai Nghe Bluetooth Không Dây Âm Thanh Bass Trầm Ấm',
-      price: 299000,
-      originalPrice: 599000,
-      discountPercentage: 50,
-      isMall: true,
-      isPreferred: false,
-      soldCount: 3200,
-      rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500'
-    },
-    {
-      id: 104,
-      name: 'Áo Phông Nam Oversize chất liệu Cotton 100% Co Giãn 4 Chiều',
-      price: 149000,
-      originalPrice: 220000,
-      discountPercentage: 32,
-      isMall: false,
-      isPreferred: true,
-      soldCount: 8900,
-      rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500'
-    }
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<ProductSPU[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const loadHomeData = async () => {
+      setLoading(true);
+      try {
+        const [catData, searchRes] = await Promise.all([
+          CatalogService.getCategories(),
+          CatalogService.searchProducts({}),
+        ]);
+        setCategories(catData);
+        setProducts(searchRes.data);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHomeData();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -68,7 +41,9 @@ export const HomePage: React.FC = () => {
               Siêu Sale Hàng Tháng
             </span>
             <h1 className="text-3xl font-extrabold mb-2 leading-tight">Shopew Bao La Deal 8.8</h1>
-            <p className="text-white/90 text-sm max-w-md">Miễn Phí Vận Chuyển 0Đ - Voucher Giảm 50% - Đổi Trả Dễ Dàng Trong 7 Ngày</p>
+            <p className="text-white/90 text-sm max-w-md">
+              Miễn Phí Vận Chuyển 0Đ - Voucher Giảm 50% - Đổi Trả Dễ Dàng Trong 7 Ngày
+            </p>
           </div>
           <Link
             to="/search"
@@ -93,6 +68,9 @@ export const HomePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Thanh Danh Mục Sản Phẩm (Category Tree Bar) */}
+      <CategoryBar categories={categories} />
+
       {/* Widget Flash Sale */}
       <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-100">
@@ -115,16 +93,18 @@ export const HomePage: React.FC = () => {
 
         {/* Danh sách Flash Sale Item */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {mockProducts.slice(0, 4).map((p) => (
+          {products.slice(0, 4).map((p) => (
             <Link key={p.id} to={`/products/${p.id}`} className="group block border border-gray-100 rounded-md p-2 hover:shadow-md transition-shadow bg-white">
               <div className="relative aspect-square overflow-hidden rounded mb-2 bg-gray-100">
-                <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                <span className="absolute top-1 right-1 bg-yellow-400 text-red-600 font-bold text-[10px] px-1.5 py-0.5 rounded">
-                  -{p.discountPercentage}%
-                </span>
+                <img src={p.images?.[0] || ''} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                {!!p.discountPercentage && (
+                  <span className="absolute top-1 right-1 bg-yellow-400 text-red-600 font-bold text-[10px] px-1.5 py-0.5 rounded">
+                    -{p.discountPercentage}%
+                  </span>
+                )}
               </div>
               <h4 className="text-xs text-gray-800 font-medium line-clamp-2 mb-1.5 group-hover:text-[#ee4d2d]">{p.name}</h4>
-              <div className="text-sm font-bold text-[#ee4d2d]">{formatVND(p.price)}</div>
+              <div className="text-sm font-bold text-[#ee4d2d]">{formatVND(p.priceMin)}</div>
               <div className="mt-2 w-full bg-orange-100 rounded-full h-3 overflow-hidden relative">
                 <div className="bg-[#ee4d2d] h-full rounded-full" style={{ width: '65%' }}></div>
                 <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white uppercase">
@@ -143,39 +123,15 @@ export const HomePage: React.FC = () => {
           <h2 className="font-bold text-gray-800 uppercase text-sm">GỢI Ý HÔM NAY</h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {mockProducts.map((p) => (
-            <Link key={p.id} to={`/products/${p.id}`} className="bg-white rounded-md overflow-hidden border border-gray-100 hover:border-[#ee4d2d] hover:shadow-lg transition-all group flex flex-col justify-between">
-              <div>
-                <div className="relative aspect-square overflow-hidden bg-gray-100">
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                  {/* Badge Shopee Mall / Yêu thích */}
-                  <div className="absolute top-1 left-1 flex flex-col gap-1">
-                    {p.isMall && (
-                      <span className="bg-[#d0011b] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm">Shopee Mall</span>
-                    )}
-                    {p.isPreferred && (
-                      <span className="bg-[#ee4d2d] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm flex items-center gap-0.5">
-                        <ShieldCheck className="w-2.5 h-2.5" /> Yêu thích
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="p-2.5">
-                  <h3 className="text-xs text-gray-800 line-clamp-2 mb-2 group-hover:text-[#ee4d2d]">{p.name}</h3>
-                  <div className="flex items-baseline justify-between gap-1">
-                    <span className="text-sm font-bold text-[#ee4d2d]">{formatVND(p.price)}</span>
-                    <span className="text-[10px] text-gray-400 line-through">{formatVND(p.originalPrice)}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="px-2.5 pb-2.5 text-[11px] text-gray-500 flex items-center justify-between border-t border-gray-50 pt-2 mt-1">
-                <span>★ {p.rating}</span>
-                <span>Đã bán {(p.soldCount / 1000).toFixed(1)}k</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+        {loading ? (
+          <div className="p-8 text-center text-xs text-gray-500">Đang tải sản phẩm gợi ý...</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {products.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
