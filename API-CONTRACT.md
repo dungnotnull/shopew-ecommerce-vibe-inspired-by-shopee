@@ -87,37 +87,77 @@
 }
 ```
 
-## Search & Discovery
-### `GET /api/v1/search`
-- **Query:** `?q=iphone&category_id=10&price_min=10000000&rating=4&isMall=true&sort=price&order=asc&attributes={"RAM":"8GB"}`
+## Home (Discovery)
+### `GET /api/v1/home/banners`
+- **Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Siêu Sale Thời Trang",
+      "imageUrl": "https://images.unsplash.com/...",
+      "linkUrl": "/search?category_id=1",
+      "isActive": true,
+      "sortOrder": 1
+    }
+  ]
+}
+```
+
+### `GET /api/v1/home/flash-sale`
+- **Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 101,
+      "name": "Kẹp Tóc 15 Chi Tiết",
+      "priceMin": 19000,
+      "priceMax": 60000,
+      "discountPercentage": 14,
+      "soldCount": 55,
+      "stock": 150,
+      "thumbnailUrl": "..."
+    }
+  ]
+}
+```
+
+### `GET /api/v1/home/daily-discover`
+- **Query:** `?page=1&limit=20`
+- **Response:** Paginated products (similar to search results)
+
+## Search & Filter
+### `GET /api/v1/products/search`
+- **Query:** `?q=iphone&category_id=10&price_min=10000000&price_max=20000000&rating=4&isMall=true&isPreferred=true&sort=price&order=asc&page=1&limit=20`
 - **Response:** 
 ```json
 {
+  "success": true,
   "data": [
     {
-      "productId": 101,
+      "id": 101,
       "name": "iPhone 15 Pro 8GB",
-      "price": 25000000,
+      "priceMin": 25000000,
+      "priceMax": 25000000,
       "discountPercentage": 10,
+      "rating": 4.9,
       "soldCount": 5400,
+      "likeCount": 120,
       "isMall": true,
       "isPreferred": false,
-      "rating": 4.9
+      "thumbnailUrl": "...",
+      "shopId": 1,
+      "shopName": "Apple Official Store"
     }
   ],
-  "facets": { 
-    "brands": ["Apple", "Samsung"], 
-    "locations": ["Hà Nội", "TP.HCM"],
-    "dynamicAttributes": [
-      { "name": "RAM", "values": ["4GB", "8GB", "12GB"] },
-      { "name": "Thương hiệu", "values": ["Apple"] }
-    ]
-  },
-  "categoryBreadcrumbs": [
-    { "id": 1, "name": "Điện thoại & Phụ kiện" },
-    { "id": 10, "name": "Điện thoại di động" }
-  ],
-  "total": 1500
+  "total": 1500,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 75
 }
 ```
 

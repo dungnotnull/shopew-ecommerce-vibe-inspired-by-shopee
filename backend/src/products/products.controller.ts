@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -7,11 +7,18 @@ import { Role } from '@prisma/client';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { SearchProductsDto } from './dto/search-products.dto';
 
 @ApiTags('Products')
 @Controller('v1/products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search and filter products' })
+  async searchProducts(@Query() query: SearchProductsDto) {
+    return this.productsService.searchProducts(query);
+  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get SPU and its SKUs (public)' })
