@@ -170,7 +170,7 @@
   "name": "Kẹp Tóc 15 Chi Tiết hellokitty",
   "priceMin": 19000,
   "priceMax": 60000,
-  "discountPercentage": 14,
+  "promotionalPrice": 15000,
   "isPreferred": true,
   "rating": 4.8,
   "soldCount": 55,
@@ -192,6 +192,8 @@
       "tierIndex": [0], 
       "price": 19000,
       "originalPrice": 22000,
+      "discountPercentage": 14,
+      "isDiscount": true,
       "stock": 150,
       "thumbnailUrl": "..."
     },
@@ -200,6 +202,8 @@
       "tierIndex": [1], 
       "price": 60000,
       "originalPrice": 65000,
+      "discountPercentage": 8,
+      "isDiscount": true,
       "stock": 5,
       "thumbnailUrl": "..."
     }
@@ -286,7 +290,7 @@
   "description": "Áo thun 100% cotton",
   "priceMin": 150000,
   "priceMax": 150000,
-  "discountPercentage": 10,
+  "promotionalPrice": 135000,
   "stock": 100,
   "skuCode": "SPU-AO-THUN",
   "attributes": { "Chất liệu": "Cotton" },
@@ -295,7 +299,7 @@
     { "name": "Kích cỡ", "options": ["M", "L"] }
   ],
   "skus": [
-    { "price": 150000, "originalPrice": 200000, "stock": 50, "tierIndex": [0, 0], "skuCode": "SKU-DEN-M" }
+    { "price": 150000, "originalPrice": 200000, "discountPercentage": 10, "isDiscount": true, "stock": 50, "tierIndex": [0, 0], "skuCode": "SKU-DEN-M" }
   ]
 }
 ```

@@ -15,7 +15,7 @@ export class HomeService {
   async getFlashSale() {
     // Return products with discount > 0
     const products = await this.prisma.product.findMany({
-      where: { discountPercentage: { gt: 0 } },
+      where: { skus: { some: { isDiscount: true } } },
       take: 10,
       orderBy: { soldCount: 'desc' },
       include: {
@@ -30,7 +30,8 @@ export class HomeService {
         name: product.name,
         priceMin: product.priceMin,
         priceMax: product.priceMax,
-        discountPercentage: product.discountPercentage,
+        promotionalPrice: product.promotionalPrice,
+        discountPercentage: Math.max(0, ...product.skus.map(s => s.discountPercentage || 0)),
         soldCount: product.soldCount,
         stock: totalStock, // Actual total stock instead of 100
         thumbnailUrl: product.skus[0]?.thumbnailUrl || null,
@@ -60,7 +61,7 @@ export class HomeService {
       name: p.name,
       priceMin: p.priceMin,
       priceMax: p.priceMax,
-      discountPercentage: p.discountPercentage,
+      discountPercentage: p.skus[0]?.discountPercentage || 0,
       rating: p.rating,
       soldCount: p.soldCount,
       likeCount: p.likeCount,
