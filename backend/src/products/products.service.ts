@@ -59,7 +59,8 @@ export class ProductsService {
       name: p.name,
       priceMin: p.priceMin,
       priceMax: p.priceMax,
-      discountPercentage: p.discountPercentage,
+      promotionalPrice: p.promotionalPrice,
+      discountPercentage: Math.max(0, ...p.skus.map(s => s.discountPercentage || 0)),
       rating: p.rating,
       soldCount: p.soldCount,
       likeCount: p.likeCount,
@@ -122,7 +123,7 @@ export class ProductsService {
           attributes: data.attributes,
           priceMin: data.priceMin || 0,
           priceMax: data.priceMax || 0,
-          discountPercentage: data.discountPercentage || 0,
+          promotionalPrice: data.promotionalPrice || 0,
         },
       });
 
@@ -152,6 +153,8 @@ export class ProductsService {
               stock: sku.stock,
               tierIndex: sku.tierIndex,
               skuCode: sku.skuCode,
+              discountPercentage: sku.discountPercentage || 0,
+              isDiscount: sku.isDiscount || false,
             }
           });
         }
@@ -190,7 +193,7 @@ export class ProductsService {
         categoryId: data.categoryId,
         priceMin: data.priceMin,
         priceMax: data.priceMax,
-        discountPercentage: data.discountPercentage,
+        promotionalPrice: data.promotionalPrice,
       },
     });
     
@@ -204,6 +207,8 @@ export class ProductsService {
               data: {
                 price: sku.price,
                 stock: sku.stock,
+                discountPercentage: sku.discountPercentage,
+                isDiscount: sku.isDiscount,
               },
             });
           }
