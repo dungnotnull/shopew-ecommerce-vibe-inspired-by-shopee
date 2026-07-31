@@ -104,6 +104,14 @@ export const App: React.FC = () => {
             }
           />
           <Route
+            path="/seller/products"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerProductManagement />
+              </RoleGuard>
+            }
+          />
+          <Route
             path="/seller/*"
             element={
               <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
