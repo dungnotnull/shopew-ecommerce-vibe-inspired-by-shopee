@@ -12,7 +12,7 @@ export const SellerProductManagement: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
-  const [categoryId, setCategoryId] = useState<number>(11);
+  const [categoryId, setCategoryId] = useState<number>(1);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -22,6 +22,26 @@ export const SellerProductManagement: React.FC = () => {
   const [shopName, setShopName] = useState<string>('Gian Hàng Shopew Official');
   const [shopDescription, setShopDescription] = useState<string>('Cửa hàng phân phối sản phẩm chính hãng trên Shopew.');
   const [creatingShop, setCreatingShop] = useState<boolean>(false);
+
+  // Nạp ID Danh mục hợp lệ đầu tiên từ API Backend NestJS để tránh vi phạm khóa ngoại P2003
+  useEffect(() => {
+    const fetchValidCategoryId = async () => {
+      try {
+        const cats = await CatalogService.getCategories();
+        if (cats && cats.length > 0) {
+          const firstCat = cats[0];
+          if (firstCat.children && firstCat.children.length > 0) {
+            setCategoryId(firstCat.children[0].id);
+          } else {
+            setCategoryId(firstCat.id);
+          }
+        }
+      } catch {
+        // Fallback default ID 1
+      }
+    };
+    fetchValidCategoryId();
+  }, []);
 
   // 2-Tier Variant Groups State
   const [variantGroups, setVariantGroups] = useState<VariantGroup[]>([
@@ -165,7 +185,6 @@ export const SellerProductManagement: React.FC = () => {
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể tạo sản phẩm. Vui lòng kiểm tra lại dữ liệu.';
       
-      // Nếu Backend báo lỗi User chưa có Shop gian hàng
       if (typeof msg === 'string' && (msg.includes('chưa tạo gian hàng') || msg.includes('Shop'))) {
         setShowShopModal(true);
         setErrorMsg('Tài khoản của bạn chưa có Gian hàng trên Shopew. Vui lòng xác nhận tạo gian hàng bên dưới.');
@@ -192,7 +211,6 @@ export const SellerProductManagement: React.FC = () => {
       });
 
       setShowShopModal(false);
-      // Tự động retry tạo lại sản phẩm sau khi đã tạo Shop thành công
       await executeCreateProduct();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể tạo gian hàng. Vui lòng thử lại sau.';
@@ -325,12 +343,13 @@ export const SellerProductManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">ID Danh Mục</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">ID Danh Mục (Category ID)</label>
                   <input
                     type="number"
+                    required
                     value={categoryId}
                     onChange={(e) => setCategoryId(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
                   />
                 </div>
               </div>
