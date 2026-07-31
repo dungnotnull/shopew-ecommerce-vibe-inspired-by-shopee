@@ -27,6 +27,8 @@ model User {
   updatedAt DateTime  @updatedAt
 
   addresses Address[]
+  shop      Shop?
+  productLikes ProductLike[]
 }
 
 model Address {
@@ -41,4 +43,101 @@ model Address {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id          Int        @id @default(autoincrement())
+  name        String
+  parentId    Int?
+  attributes  Json?      // JSONB for dynamic attributes schema
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryToCategory")
+  products    Product[]
+}
+
+model Shop {
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique
+  name        String
+  description String?
+  isMall      Boolean   @default(false)
+  isPreferred Boolean   @default(false)
+  rating      Float     @default(0.0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products    Product[]
+}
+
+model Product {
+  id                 Int       @id @default(autoincrement())
+  shopId             Int
+  categoryId         Int
+  name               String
+  description        String    @db.Text
+  priceMin           Int       @default(0)
+  priceMax           Int       @default(0)
+  discountPercentage Int       @default(0)
+  rating             Float     @default(0.0)
+  soldCount          Int       @default(0)
+  likeCount          Int       @default(0)
+  viewCount          Int       @default(0)
+  isMall             Boolean   @default(false)
+  isPreferred        Boolean   @default(false)
+  attributes         Json?     // JSONB for dynamic attributes matching category schema
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  shop               Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  category           Category  @relation(fields: [categoryId], references: [id])
+  variantGroups      ProductVariantGroup[]
+  skus               SKU[]
+  likes              ProductLike[]
+}
+
+model ProductVariantGroup {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  name      String   // e.g., "Màu sắc", "Kích thước"
+  
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options   ProductVariantOption[]
+}
+
+model ProductVariantOption {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  value     String   // e.g., "Đỏ", "Xanh", "S", "M"
+
+  group     ProductVariantGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model SKU {
+  id            Int      @id @default(autoincrement())
+  productId     Int
+  skuCode       String?  @unique
+  price         Int
+  originalPrice Int
+  stock         Int      @default(0)
+  tierIndex     Json     // e.g., [0, 1] meaning first option of group 1, second option of group 2
+  thumbnailUrl  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductLike {
+  userId    Int
+  productId Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
 }
