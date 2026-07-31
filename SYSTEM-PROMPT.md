@@ -52,4 +52,6 @@ Mỗi khi bắt đầu bất kỳ thao tác phát triển, chỉnh sửa code ho
 3. **Giữ Code Sạch Sẽ (Clean Code):** Tuyệt đối KHÔNG để lại code thừa bị comment-out, không để lại console.log hoặc debugger dư thừa.
 4. **Comment Tiếng Việt:** Tất cả comment giải thích code BẮT BUỘC viết bằng Tiếng Việt ngắn gọn, súc tích và tập trung vào lý do xử lý.
 5. **Kiểm thử trước khi xác nhận:** Bắt buộc chạy lệnh kiểm tra build (`npm run build` / `npm test`) để đảm bảo không có lỗi trước khi hoàn thành công việc.
+6. **Xác nhận trước khi Git Push (Push Approval):** AI Agent CHỈ được thực hiện `git commit` mã nguồn cục bộ. Tuyệt đối KHÔNG tự ý thực hiện `git push` lên GitHub remote trừ khi người dùng kiểm tra và trực tiếp yêu cầu hoặc xác nhận đồng ý.
+
 
