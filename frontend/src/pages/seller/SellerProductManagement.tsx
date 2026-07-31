@@ -12,7 +12,7 @@ export const SellerProductManagement: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
-  const [discountPercentage, setDiscountPercentage] = useState<number>(10);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(20);
   const [categoryId, setCategoryId] = useState<number>(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
@@ -62,15 +62,22 @@ export const SellerProductManagement: React.FC = () => {
   // State Bảng Tồn Kho & Giá Phân Loại
   const [skus, setSkus] = useState<SKU[]>([]);
 
-  // Tự động tính Bảng Phân Loại Hàng
+  // Tự động tính Bảng Phân Loại Hàng & Giá Gốc chuẩn theo % Giảm Giá ở Mục 1
+  const computeOriginalPrice = (price: number, discountPercent: number) => {
+    if (!discountPercent || discountPercent <= 0) return price;
+    return Math.round(price / (1 - discountPercent / 100));
+  };
+
   useEffect(() => {
+    const calcOriginal = computeOriginalPrice(priceMin, discountPercentage);
+
     if (!variantGroups || variantGroups.length === 0) {
       setSkus([
         {
           id: 1,
           tierIndex: [],
           price: priceMin,
-          originalPrice: Math.round(priceMin * 1.25),
+          originalPrice: calcOriginal,
           stock: 100,
         },
       ]);
@@ -82,7 +89,7 @@ export const SellerProductManagement: React.FC = () => {
         id: idx + 1,
         tierIndex: [idx],
         price: priceMin,
-        originalPrice: Math.round(priceMin * 1.25),
+        originalPrice: calcOriginal,
         stock: 50,
       }));
       setSkus(generatedSkus);
@@ -101,7 +108,7 @@ export const SellerProductManagement: React.FC = () => {
             id: skuId++,
             tierIndex: [idx1, idx2],
             price: priceMin,
-            originalPrice: Math.round(priceMin * 1.25),
+            originalPrice: calcOriginal,
             stock: 50,
           });
         });
@@ -109,7 +116,7 @@ export const SellerProductManagement: React.FC = () => {
 
       setSkus(generatedSkus);
     }
-  }, [variantGroups, priceMin]);
+  }, [variantGroups, priceMin, discountPercentage]);
 
   const handleAddVariantGroup = () => {
     if (variantGroups.length >= 2) return;
@@ -143,9 +150,7 @@ export const SellerProductManagement: React.FC = () => {
     setSkus(prev => {
       const updated = [...prev];
       updated[skuIndex].price = newPrice;
-      if (!updated[skuIndex].originalPrice || updated[skuIndex].originalPrice! < newPrice) {
-        updated[skuIndex].originalPrice = Math.round(newPrice * 1.25);
-      }
+      updated[skuIndex].originalPrice = computeOriginalPrice(newPrice, discountPercentage);
       return updated;
     });
   };
@@ -166,7 +171,7 @@ export const SellerProductManagement: React.FC = () => {
     });
   };
 
-  // Hàm xử lý gửi API tạo sản phẩm (Có truyền discountPercentage & originalPrice)
+  // Hàm xử lý gửi API tạo sản phẩm
   const executeCreateProduct = async () => {
     const prices = skus.map(s => s.price);
     const computedPriceMin = prices.length > 0 ? Math.min(...prices) : priceMin;
@@ -325,7 +330,7 @@ export const SellerProductManagement: React.FC = () => {
           {/* Section 1: Thông tin sản phẩm cơ bản */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Cơ Bản & Giá Giảm
+              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Cơ Bản & Khuyến Mãi
             </h2>
 
             <div className="space-y-3">
@@ -354,13 +359,13 @@ export const SellerProductManagement: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Bán Khởi Điểm (VND) *</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Bán Sau Khuyến Mãi (VND) *</label>
                   <input
                     type="number"
                     required
                     value={priceMin}
                     onChange={(e) => setPriceMin(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
                   />
                 </div>
 
@@ -373,7 +378,7 @@ export const SellerProductManagement: React.FC = () => {
                     <input
                       type="number"
                       min={0}
-                      max={100}
+                      max={99}
                       value={discountPercentage}
                       onChange={(e) => setDiscountPercentage(Number(e.target.value))}
                       className="w-full p-2.5 pr-8 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
@@ -496,7 +501,7 @@ export const SellerProductManagement: React.FC = () => {
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
                     <th className="p-3">Mẫu Phân Loại</th>
                     <th className="p-3">Giá Bán Khuyến Mãi (VND)</th>
-                    <th className="p-3">Giá Gốc Niêm Yết (VND)</th>
+                    <th className="p-3">Giá Gốc Niêm Yết (Tự tính từ % Khuyến Mãi)</th>
                     <th className="p-3">Số Lượng Tồn Kho</th>
                   </tr>
                 </thead>
@@ -522,7 +527,7 @@ export const SellerProductManagement: React.FC = () => {
                         <td className="p-3">
                           <input
                             type="number"
-                            value={sku.originalPrice || Math.round(sku.price * 1.25)}
+                            value={sku.originalPrice || computeOriginalPrice(sku.price, discountPercentage)}
                             onChange={(e) => handleSkuOriginalPriceChange(idx, Number(e.target.value))}
                             className="w-32 p-1.5 border border-gray-300 rounded font-semibold text-gray-500 focus:outline-none focus:border-[#ee4d2d]"
                           />
