@@ -38,9 +38,18 @@ Mỗi khi bắt đầu bất kỳ thao tác phát triển, chỉnh sửa code ho
 
 ---
 
+### 5. 📄 [Skills Directory](file:///d:/shopew-ecommerce-vibe-inspired-by-shopee/.agents/skills)
+- **Vai trò:** Thư viện Kỹ năng & Quy chuẩn kỹ thuật thực thi của hệ thống (`.agents/skills/`).
+- **Yêu cầu:**
+  - BẮT BUỘC phải đọc và tuân thủ nội dung các file `SKILL.md` tương ứng trong `.agents/skills/` (ví dụ: `frontend-design`, `react-best-practices`, `building-components`, `web-design-guidelines`, `agent-browser`, `tdd`, v.v.) trước khi thực thi công việc.
+
+---
+
 ## 🛑 QUY TẮC THAO TÁC TỐI THƯỢNG (SUPREME RULES)
 
 1. **Phạm vi thư mục:** Phía Frontend CHỈ chỉnh sửa trong `frontend/`; Phía Backend CHỈ chỉnh sửa trong `backend/`. Không can thiệp sang thư mục đối phương trừ khi cập nhật tài liệu dùng chung ở gốc.
-2. **Giữ Code Sạch Sẽ (Clean Code):** Tuyệt đối KHÔNG để lại code thừa bị comment-out, không để lại console.log hoặc debugger dư thừa.
-3. **Comment Tiếng Việt:** Tất cả comment giải thích code BẮT BUỘC viết bằng Tiếng Việt ngắn gọn, súc tích và tập trung vào lý do xử lý.
-4. **Kiểm thử trước khi xác nhận:** Bắt buộc chạy lệnh kiểm tra build (`npm run build` / `npm test`) để đảm bảo không có lỗi trước khi hoàn thành công việc.
+2. **Đọc Kỹ năng (Skills First):** Đọc kỹ các hướng dẫn và tiêu chuẩn trong `.agents/skills/` liên quan tới tác vụ trước khi viết hoặc sửa code.
+3. **Giữ Code Sạch Sẽ (Clean Code):** Tuyệt đối KHÔNG để lại code thừa bị comment-out, không để lại console.log hoặc debugger dư thừa.
+4. **Comment Tiếng Việt:** Tất cả comment giải thích code BẮT BUỘC viết bằng Tiếng Việt ngắn gọn, súc tích và tập trung vào lý do xử lý.
+5. **Kiểm thử trước khi xác nhận:** Bắt buộc chạy lệnh kiểm tra build (`npm run build` / `npm test`) để đảm bảo không có lỗi trước khi hoàn thành công việc.
+
