@@ -21,9 +21,15 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Xử lý lỗi hệ thống 401 Unauthorized
+// Response Interceptor: Tự động "giải nén" (unwrap) wrapper response.data.data của NestJS TransformInterceptor
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Nếu response từ NestJS Backend chứa thuộc tính bọc 'data', tự động trích xuất lấy dữ liệu lõi
+    if (response.data && typeof response.data === 'object' && 'data' in response.data && response.data.data !== undefined) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       // Token hết hạn hoặc không hợp lệ -> Xóa thông tin xác thực cũ
