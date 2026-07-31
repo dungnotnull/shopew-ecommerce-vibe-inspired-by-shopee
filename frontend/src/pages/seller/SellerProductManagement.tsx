@@ -166,7 +166,7 @@ export const SellerProductManagement: React.FC = () => {
       const updated = [...prev];
       const item = { ...updated[skuIndex] };
       item.isDiscountActive = !item.isDiscountActive;
-      
+
       if (!item.isDiscountActive) {
         // Tắt discount: Giá bán = Giá gốc
         item.price = item.originalPrice;
@@ -281,7 +281,7 @@ export const SellerProductManagement: React.FC = () => {
       await executeCreateProduct();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể tạo sản phẩm. Vui lòng kiểm tra lại dữ liệu.';
-      
+
       if (typeof msg === 'string' && (msg.includes('chưa tạo gian hàng') || msg.includes('Shop'))) {
         setShowShopModal(true);
         setErrorMsg('Tài khoản của bạn chưa có Gian hàng trên Shopew. Vui lòng xác nhận tạo gian hàng bên dưới.');
@@ -553,7 +553,7 @@ export const SellerProductManagement: React.FC = () => {
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
                     <th className="p-3">Mẫu Phân Loại</th>
                     <th className="p-3">Giá Gốc Niêm Yết (VND)</th>
-                    <th className="p-3 text-center">Áp Dụng Giảm Giá?</th>
+                    <th className="p-3 text-center">Áp Dụng Giảm Giá</th>
                     <th className="p-3">% Giảm Giá</th>
                     <th className="p-3">Giá Bán Thực Tế (VND)</th>
                     <th className="p-3">Tồn Kho</th>
@@ -614,9 +614,8 @@ export const SellerProductManagement: React.FC = () => {
                             type="number"
                             value={sku.price}
                             onChange={(e) => handleSkuPriceChange(idx, Number(e.target.value))}
-                            className={`w-28 p-1.5 border rounded font-bold text-xs focus:outline-none ${
-                              sku.isDiscountActive ? 'border-red-300 bg-orange-50/50 text-[#ee4d2d]' : 'border-gray-300 text-gray-900'
-                            }`}
+                            className={`w-28 p-1.5 border rounded font-bold text-xs focus:outline-none ${sku.isDiscountActive ? 'border-red-300 bg-orange-50/50 text-[#ee4d2d]' : 'border-gray-300 text-gray-900'
+                              }`}
                           />
                         </td>
                         {/* 5. Tồn Kho */}

@@ -1,11 +1,82 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, Flame, ChevronRight, ShoppingBag, Sparkles } from 'lucide-react';
+import { Zap, Flame, ChevronRight, ShoppingBag, ChevronLeft } from 'lucide-react';
+import { CatalogService, HomeBanner, FlashSaleItem } from '../services/catalog-service';
+import { Category, ProductSPU } from '../types/catalog';
 import { CategoryBar } from '../components/catalog/CategoryBar';
 import { ProductCard } from '../components/catalog/ProductCard';
-import { Category, ProductSPU } from '../types/catalog';
-import CatalogService, { HomeBanner, FlashSaleItem } from '../services/catalog-service';
 import { formatVND } from '../utils/format-currency';
+
+// Inline Hero Banner Carousel Component
+const HeroBannerCarousel: React.FC<{ banners: HomeBanner[] }> = ({ banners }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (!banners || banners.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [banners]);
+
+  if (!banners || banners.length === 0) {
+    return (
+      <div className="w-full h-48 sm:h-64 md:h-80 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+        Shopew Siêu Sale Đại Hội 8.8
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-48 sm:h-64 md:h-80 overflow-hidden rounded-2xl shadow-md group bg-gray-900">
+      {banners.map((banner, idx) => (
+        <a
+          key={banner.id}
+          href={banner.linkUrl || '#'}
+          className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+            idx === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+          }`}
+        >
+          <img
+            src={banner.imageUrl}
+            alt={banner.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4 sm:p-6">
+            <h3 className="text-white font-bold text-base sm:text-xl drop-shadow-md">{banner.title}</h3>
+          </div>
+        </a>
+      ))}
+
+      {/* Slide Navigation Buttons */}
+      <button
+        onClick={() => setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length)}
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+      <button
+        onClick={() => setCurrentIndex((prev) => (prev + 1) % banners.length)}
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/40 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
+
+      {/* Pagination Dots */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
+        {banners.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrentIndex(idx)}
+            className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+              idx === currentIndex ? 'bg-white w-6' : 'bg-white/50'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const HomePage: React.FC = () => {
   const [banners, setBanners] = useState<HomeBanner[]>([]);
@@ -14,27 +85,31 @@ export const HomePage: React.FC = () => {
   const [dailyProducts, setDailyProducts] = useState<ProductSPU[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Đếm ngược thời gian Flash Sale
-  const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 45, seconds: 12 });
+  // Countdown timer cho Flash Sale (Đếm ngược 04 giờ : 12 phút : 45 giây)
+  const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 12, seconds: 45 });
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
         if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
         if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return { hours: 2, minutes: 0, seconds: 0 };
+        return { hours: 0, minutes: 0, seconds: 0 };
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, []);
 
+  // Call 4 API Backend song song nạp trang chủ:
+  // 1. GET /api/v1/home/banners
+  // 2. GET /api/v1/categories
+  // 3. GET /api/v1/home/flash-sale
+  // 4. GET /api/v1/home/daily-discover
   useEffect(() => {
-    const loadHomeData = async () => {
+    const fetchHomeData = async () => {
       setLoading(true);
       try {
-        const [bannerRes, catRes, flashRes, dailyRes] = await Promise.all([
+        const [bannerRes, catRes, flashRes, discoverRes] = await Promise.all([
           CatalogService.getHomeBanners(),
           CatalogService.getCategories(),
           CatalogService.getFlashSale(),
@@ -44,71 +119,52 @@ export const HomePage: React.FC = () => {
         setBanners(bannerRes);
         setCategories(catRes);
         setFlashSales(flashRes);
-        setDailyProducts(dailyRes.data || []);
+        setDailyProducts(discoverRes.data || []);
       } finally {
         setLoading(false);
       }
     };
 
-    loadHomeData();
+    fetchHomeData();
   }, []);
 
   const formatTwoDigits = (num: number) => String(num).padStart(2, '0');
 
   return (
-    <div className="space-y-6 font-['Roboto',sans-serif]">
-      {/* SECTION 1: HERO BANNERS KHUYẾN MÃI (GET /api/v1/home/banners) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {/* Banner Chính Bên Trái */}
-        <div className="md:col-span-2 relative rounded-xl overflow-hidden bg-gradient-to-r from-[#ee4d2d] via-orange-500 to-amber-500 text-white p-8 flex flex-col justify-between shadow-md min-h-[250px]">
-          <div className="z-10">
-            <span className="inline-flex items-center gap-1 bg-yellow-400 text-gray-900 font-extrabold text-xs px-3 py-1 rounded-full uppercase mb-3 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5" /> Siêu Sale 8.8 Sắp Xuất Hiện
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 leading-tight drop-shadow-xs">
-              Shopew Bao La Deal Đỉnh
-            </h1>
-            <p className="text-white/95 text-xs sm:text-sm max-w-md font-medium">
-              Voucher Giảm 50% - Miễn Phí Vận Chuyển 0Đ - Đổi Trả Dễ Dàng Trong 7 Ngày
-            </p>
-          </div>
-          <div className="z-10 pt-4">
-            <Link
-              to="/search"
-              className="inline-flex items-center gap-2 bg-white text-[#ee4d2d] font-bold text-xs sm:text-sm px-6 py-2.5 rounded-full hover:bg-gray-100 transition-all shadow-md w-fit cursor-pointer"
-            >
-              Săn Deal Ngay <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 space-y-6 font-['Roboto',sans-serif]">
+      {/* SECTION 1: HERO BANNERS (GET /api/v1/home/banners) */}
+      <div className="space-y-4">
+        <HeroBannerCarousel banners={banners} />
 
-          {banners[0] && (
-            <img
-              src={banners[0].imageUrl}
-              alt={banners[0].title}
-              className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-30"
-            />
-          )}
-        </div>
-
-        {/* 2 Banner Phụ Bên Phải */}
-        <div className="flex flex-col gap-3">
-          <div className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 text-white p-4 rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
+        {/* Sub Banners Widget */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="bg-gradient-to-r from-red-500 to-rose-600 text-white p-4 rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
             <span className="text-[11px] font-bold bg-white/20 px-2 py-0.5 rounded w-fit uppercase tracking-wider">
-              Shopee Mall
+              Khuyến Mãi Đặc Biệt
             </span>
-            <div className="z-10">
-              <h3 className="font-extrabold text-base">Thương Hiệu Chính Hãng</h3>
-              <p className="text-xs text-white/80">Hoàn tiền 111% nếu phát hiện hàng giả</p>
+            <div className="z-10 mt-2">
+              <h3 className="font-extrabold text-base">Voucher Độc Quyền 50K</h3>
+              <p className="text-xs text-white/80">Áp dụng cho đơn hàng đầu tiên</p>
             </div>
           </div>
 
-          <div className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4 rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-4 rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
             <span className="text-[11px] font-bold bg-white/20 px-2 py-0.5 rounded w-fit uppercase tracking-wider">
-              Xu Hướng Bán Chạy
+              Giao Hàng Miễn Phí
             </span>
-            <div className="z-10">
-              <h3 className="font-extrabold text-base">Top 100 Sản Phẩm Hot</h3>
-              <p className="text-xs text-white/80">Cập nhật theo thời gian thực</p>
+            <div className="z-10 mt-2">
+              <h3 className="font-extrabold text-base">Freeship Extra Xtra</h3>
+              <p className="text-xs text-white/80">Cho tất cả đơn hàng từ 0đ</p>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white p-4 rounded-xl flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <span className="text-[11px] font-bold bg-white/20 px-2 py-0.5 rounded w-fit uppercase tracking-wider">
+              Shopee Mall
+            </span>
+            <div className="z-10 mt-2">
+              <h3 className="font-extrabold text-base">100% Hàng Chính Hãng</h3>
+              <p className="text-xs text-white/80">Hoàn tiền 111% nếu phát hiện giả</p>
             </div>
           </div>
         </div>
@@ -138,44 +194,51 @@ export const HomePage: React.FC = () => {
         </div>
 
         {/* Grid Item Flash Sale */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
-          {flashSales.slice(0, 5).map((fs) => {
-            const soldPercent = Math.min(100, Math.round((fs.soldCount / (fs.soldCount + fs.stock)) * 100)) || 45;
+        {flashSales.length === 0 ? (
+          <div className="p-8 text-center text-xs text-gray-400">Đang cập nhật danh sách Flash Sale...</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            {flashSales.slice(0, 6).map((fs) => {
+              const displayPrice = fs.promotionalPrice || fs.priceMin;
+              const soldPercent = fs.stock > 0
+                ? Math.min(100, Math.round((fs.soldCount / (fs.soldCount + fs.stock)) * 100))
+                : 85;
 
-            return (
-              <Link
-                key={fs.id}
-                to={`/products/${fs.id}`}
-                className="group block border border-gray-100 rounded-lg p-2.5 hover:shadow-md transition-all bg-white hover:-translate-y-0.5"
-              >
-                <div className="relative aspect-square overflow-hidden rounded-md mb-2 bg-gray-50">
-                  <img
-                    src={fs.thumbnailUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'}
-                    alt={fs.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  />
-                  {!!fs.discountPercentage && (
-                    <span className="absolute top-1 right-1 bg-yellow-400 text-red-600 font-black text-[10px] px-1.5 py-0.5 rounded shadow-xs">
-                      -{fs.discountPercentage}%
+              return (
+                <Link
+                  key={fs.id}
+                  to={`/products/${fs.id}`}
+                  className="group block border border-gray-100 rounded-lg p-2.5 hover:shadow-md transition-all bg-white hover:-translate-y-0.5"
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-md mb-2 bg-gray-50">
+                    <img
+                      src={fs.thumbnailUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'}
+                      alt={fs.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                    {!!fs.discountPercentage && fs.discountPercentage > 0 && (
+                      <span className="absolute top-1 right-1 bg-yellow-400 text-red-600 font-black text-[10px] px-1.5 py-0.5 rounded shadow-xs">
+                        -{fs.discountPercentage}%
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="text-xs text-gray-800 font-medium line-clamp-2 mb-1.5 group-hover:text-[#ee4d2d] h-8">
+                    {fs.name}
+                  </h4>
+                  <div className="text-sm font-bold text-[#ee4d2d] mb-2">{formatVND(displayPrice)}</div>
+
+                  {/* Sold Progress Bar */}
+                  <div className="w-full bg-orange-100 rounded-full h-3.5 overflow-hidden relative border border-orange-200">
+                    <div className="bg-[#ee4d2d] h-full rounded-full transition-all" style={{ width: `${soldPercent}%` }}></div>
+                    <span className="absolute inset-0 flex items-center justify-center text-[9px] font-extrabold text-white uppercase tracking-wider drop-shadow-xs">
+                      ĐÃ BÁN {fs.soldCount || 12}
                     </span>
-                  )}
-                </div>
-                <h4 className="text-xs text-gray-800 font-medium line-clamp-2 mb-1.5 group-hover:text-[#ee4d2d] h-8">
-                  {fs.name}
-                </h4>
-                <div className="text-sm font-bold text-[#ee4d2d] mb-2">{formatVND(fs.priceMin)}</div>
-
-                {/* Sold Progress Bar */}
-                <div className="w-full bg-orange-100 rounded-full h-3.5 overflow-hidden relative border border-orange-200">
-                  <div className="bg-[#ee4d2d] h-full rounded-full transition-all" style={{ width: `${soldPercent}%` }}></div>
-                  <span className="absolute inset-0 flex items-center justify-center text-[9px] font-extrabold text-white uppercase tracking-wider drop-shadow-xs">
-                    ĐÃ BÁN {fs.soldCount || 12}
-                  </span>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* SECTION 4: ALL PRODUCTS FEED / DAILY DISCOVER (GET /api/v1/home/daily-discover) */}
