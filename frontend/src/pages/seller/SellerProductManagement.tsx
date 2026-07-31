@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, ChevronRight } from 'lucide-react';
+import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { sellerService } from '../../services/seller-service';
-import { VariantGroup, SKU, Category } from '../../types/catalog';
+import { VariantGroup, SKU } from '../../types/catalog';
 
 export const SellerProductManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -12,13 +12,7 @@ export const SellerProductManagement: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
-  
-  // State Chọn Danh Mục Phân Tầng 2 Cấp (Parent Category -> Sub Category)
-  const [parentCategories, setParentCategories] = useState<Category[]>([]);
-  const [selectedParentId, setSelectedParentId] = useState<number>(1);
-  const [subCategories, setSubCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState<number>(11);
-
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -28,44 +22,6 @@ export const SellerProductManagement: React.FC = () => {
   const [shopName, setShopName] = useState<string>('Gian Hàng Shopew Official');
   const [shopDescription, setShopDescription] = useState<string>('Cửa hàng phân phối sản phẩm chính hãng trên Shopew.');
   const [creatingShop, setCreatingShop] = useState<boolean>(false);
-
-  // Nạp Danh mục phân tầng 2 Cấp từ API Backend NestJS (GET /api/v1/categories)
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const cats = await CatalogService.getCategories();
-        if (cats && cats.length > 0) {
-          setParentCategories(cats);
-          const defaultParent = cats[0];
-          setSelectedParentId(defaultParent.id);
-
-          if (defaultParent.children && defaultParent.children.length > 0) {
-            setSubCategories(defaultParent.children);
-            setCategoryId(defaultParent.children[0].id);
-          } else {
-            setSubCategories([]);
-            setCategoryId(defaultParent.id);
-          }
-        }
-      } catch {
-        // Fallback default
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  // Xử lý khi Người Bán thay đổi Danh Mục Chính (Parent Category)
-  const handleParentCategoryChange = (parentId: number) => {
-    setSelectedParentId(parentId);
-    const foundParent = parentCategories.find(c => c.id === parentId);
-    if (foundParent && foundParent.children && foundParent.children.length > 0) {
-      setSubCategories(foundParent.children);
-      setCategoryId(foundParent.children[0].id);
-    } else {
-      setSubCategories([]);
-      setCategoryId(parentId);
-    }
-  };
 
   // 2-Tier Variant Groups State
   const [variantGroups, setVariantGroups] = useState<VariantGroup[]>([
@@ -209,6 +165,7 @@ export const SellerProductManagement: React.FC = () => {
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể tạo sản phẩm. Vui lòng kiểm tra lại dữ liệu.';
       
+      // Nếu Backend báo lỗi User chưa có Shop gian hàng
       if (typeof msg === 'string' && (msg.includes('chưa tạo gian hàng') || msg.includes('Shop'))) {
         setShowShopModal(true);
         setErrorMsg('Tài khoản của bạn chưa có Gian hàng trên Shopew. Vui lòng xác nhận tạo gian hàng bên dưới.');
@@ -235,6 +192,7 @@ export const SellerProductManagement: React.FC = () => {
       });
 
       setShowShopModal(false);
+      // Tự động retry tạo lại sản phẩm sau khi đã tạo Shop thành công
       await executeCreateProduct();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể tạo gian hàng. Vui lòng thử lại sau.';
@@ -243,10 +201,6 @@ export const SellerProductManagement: React.FC = () => {
       setCreatingShop(false);
     }
   };
-
-  // Lấy tên danh mục đang chọn để hiển thị Breadcrumb
-  const currentParentCat = parentCategories.find(c => c.id === selectedParentId);
-  const currentSubCat = subCategories.find(c => c.id === categoryId);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-['Roboto',sans-serif]">
@@ -334,7 +288,7 @@ export const SellerProductManagement: React.FC = () => {
               <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Sản Phẩm Gốc (SPU)
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">Tên Sản Phẩm *</label>
                 <input
@@ -358,57 +312,7 @@ export const SellerProductManagement: React.FC = () => {
                 />
               </div>
 
-              {/* BỘ CHỌN DANH MỤC PHÂN TẦNG 2 CẤP CHUẨN SHOPEE */}
-              <div className="p-4 bg-orange-50/50 border border-orange-100 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-gray-800">
-                    Ngành Hàng / Danh Mục Sản Phẩm (Bắt buộc theo CSDL Backend) *
-                  </label>
-                  <span className="text-[11px] text-[#ee4d2d] font-semibold flex items-center gap-1">
-                    {currentParentCat?.name} {currentSubCat && <><ChevronRight className="w-3 h-3 inline" /> {currentSubCat.name}</>}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Ô 1: Chọn Danh Mục Chính (Parent Category) */}
-                  <div>
-                    <span className="block text-[11px] font-semibold text-gray-500 mb-1">1. Danh Mục Chính:</span>
-                    <select
-                      value={selectedParentId}
-                      onChange={(e) => handleParentCategoryChange(Number(e.target.value))}
-                      className="w-full p-2 bg-white border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
-                    >
-                      {parentCategories.map(pCat => (
-                        <option key={pCat.id} value={pCat.id}>
-                          {pCat.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Ô 2: Chọn Danh Mục Chi Tiết / Ngành Hàng Con (Sub Category) */}
-                  <div>
-                    <span className="block text-[11px] font-semibold text-gray-500 mb-1">2. Ngành Hàng Chi Tiết:</span>
-                    <select
-                      value={categoryId}
-                      onChange={(e) => setCategoryId(Number(e.target.value))}
-                      className="w-full p-2 bg-white border border-gray-300 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
-                    >
-                      {subCategories.length === 0 ? (
-                        <option value={selectedParentId}>Mặc định theo {currentParentCat?.name}</option>
-                      ) : (
-                        subCategories.map(subCat => (
-                          <option key={subCat.id} value={subCat.id}>
-                            {subCat.name}
-                          </option>
-                        ))
-                      )}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Chuẩn Mặc Định (VND) *</label>
                   <input
@@ -421,12 +325,12 @@ export const SellerProductManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Mã Định Danh Category ID gửi BE</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">ID Danh Mục</label>
                   <input
-                    type="text"
-                    disabled
-                    value={`ID #${categoryId} (${currentSubCat?.name || currentParentCat?.name})`}
-                    className="w-full p-2.5 bg-gray-100 border border-gray-200 rounded text-xs font-bold text-gray-600 cursor-not-allowed"
+                    type="number"
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(Number(e.target.value))}
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
                   />
                 </div>
               </div>
