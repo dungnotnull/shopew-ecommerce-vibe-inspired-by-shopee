@@ -19,10 +19,16 @@ export class ShopsService {
   }
 
   async getShopByUserId(userId: number) {
-    const shop = await this.prisma.shop.findUnique({ where: { userId } });
+    let shop = await this.prisma.shop.findUnique({ where: { userId } });
     if (!shop) {
-      // User chưa tạo gian hàng, quăng lỗi validation
-      throw new BadRequestException('User chưa tạo gian hàng, không cho tạo sản phẩm.');
+      // Tự động khởi tạo Shop mặc định cho Seller nếu chưa có
+      shop = await this.prisma.shop.create({
+        data: {
+          userId,
+          name: 'Gian Hàng Kênh Người Bán',
+          description: 'Cửa hàng phân phối sản phẩm chính hãng trên Shopew Enterprise.',
+        },
+      });
     }
     return shop;
   }

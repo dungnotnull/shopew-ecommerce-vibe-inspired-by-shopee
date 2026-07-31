@@ -149,19 +149,15 @@ export const SellerProductManagement: React.FC = () => {
 
       setIsSuccess(true);
       setTimeout(() => {
-        navigate('/seller');
+        navigate('/seller/products');
       }, 1500);
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Đã tạo sản phẩm thành công!';
+      const msg = err.response?.data?.message || 'Không thể tạo sản phẩm. Vui lòng kiểm tra lại dữ liệu.';
       if (Array.isArray(msg)) {
         setErrorMsg(msg.join(', '));
       } else {
         setErrorMsg(msg);
       }
-      setIsSuccess(true);
-      setTimeout(() => {
-        navigate('/seller');
-      }, 1500);
     } finally {
       setLoading(false);
     }
