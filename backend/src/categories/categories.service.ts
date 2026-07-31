@@ -17,4 +17,31 @@ export class CategoriesService {
       },
     });
   }
+
+  async createCategory(data: any) {
+    return this.prisma.category.create({
+      data: {
+        name: data.name,
+        parentId: data.parentId,
+        attributes: data.attributes,
+      },
+    });
+  }
+
+  async updateCategory(id: number, data: any) {
+    return this.prisma.category.update({
+      where: { id },
+      data: {
+        name: data.name,
+        parentId: data.parentId,
+        attributes: data.attributes,
+      },
+    });
+  }
+
+  async deleteCategory(id: number) {
+    return this.prisma.category.delete({
+      where: { id },
+    });
+  }
 }

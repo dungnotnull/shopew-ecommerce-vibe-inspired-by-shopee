@@ -193,7 +193,24 @@ export class ProductsService {
         discountPercentage: data.discountPercentage,
       },
     });
-    // In a real scenario we'd also handle updating variant groups and SKUs carefully.
+    
+    // Update SKUs to sync stock and price
+    if (data.skus && Array.isArray(data.skus)) {
+      await Promise.all(
+        data.skus.map((sku: any) => {
+          if (sku.id) {
+            return this.prisma.sKU.update({
+              where: { id: sku.id },
+              data: {
+                price: sku.price,
+                stock: sku.stock,
+              },
+            });
+          }
+        })
+      );
+    }
+    
     return this.getProductDetails(productId);
   }
 

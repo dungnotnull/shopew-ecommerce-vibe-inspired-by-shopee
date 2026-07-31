@@ -16,7 +16,11 @@ export class HomeController {
   @Get('flash-sale')
   @ApiOperation({ summary: 'Get flash sale items' })
   async getFlashSale() {
-    return this.homeService.getFlashSale();
+    const data = await this.homeService.getFlashSale();
+    return {
+      success: true,
+      data
+    };
   }
 
   @Get('daily-discover')

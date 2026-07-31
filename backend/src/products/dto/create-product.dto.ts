@@ -15,6 +15,11 @@ export class VariantGroupDto {
 }
 
 export class SkuDto {
+  @ApiPropertyOptional({ example: 1 })
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+
   @ApiProperty({ example: 100000 })
   @IsNumber()
   @Min(0)
