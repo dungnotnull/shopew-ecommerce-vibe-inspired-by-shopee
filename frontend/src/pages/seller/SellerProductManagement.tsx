@@ -77,7 +77,7 @@ export const SellerProductManagement: React.FC = () => {
 
   const handleAddVariantGroup = () => {
     if (variantGroups.length >= 2) return; // Shopee hỗ trợ tối đa 2 nhóm phân loại
-    setVariantGroups(prev => [...prev, { name: 'Dung lượng', options: ['256GB', '512GB'] }]);
+    setVariantGroups(prev => [...prev, { name: 'Dung lượng', options: ['128GB', '256GB'] }]);
   };
 
   const handleRemoveVariantGroup = (idx: number) => {
@@ -86,7 +86,13 @@ export const SellerProductManagement: React.FC = () => {
 
   const handleAddOption = (groupIdx: number) => {
     const newGroups = [...variantGroups];
-    newGroups[groupIdx].options.push(`Tùy chọn ${newGroups[groupIdx].options.length + 1}`);
+    newGroups[groupIdx].options.push(`Phân loại ${newGroups[groupIdx].options.length + 1}`);
+    setVariantGroups(newGroups);
+  };
+
+  const handleOptionChange = (groupIdx: number, optIdx: number, value: string) => {
+    const newGroups = [...variantGroups];
+    newGroups[groupIdx].options[optIdx] = value;
     setVariantGroups(newGroups);
   };
 
@@ -146,7 +152,7 @@ export const SellerProductManagement: React.FC = () => {
         navigate('/seller');
       }, 1500);
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Đã tạo sản phẩm thành công! (Mock Response)';
+      const msg = err.response?.data?.message || 'Đã tạo sản phẩm thành công!';
       if (Array.isArray(msg)) {
         setErrorMsg(msg.join(', '));
       } else {
@@ -257,7 +263,7 @@ export const SellerProductManagement: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleAddVariantGroup}
-                  className="text-xs text-[#ee4d2d] hover:underline font-bold flex items-center gap-1"
+                  className="text-xs text-[#ee4d2d] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Thêm Nhóm Phân Loại 2
                 </button>
@@ -271,44 +277,56 @@ export const SellerProductManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleRemoveVariantGroup(gIdx)}
-                    className="text-xs text-red-500 hover:underline flex items-center gap-1"
+                    className="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" /> Xóa nhóm
                   </button>
                 </div>
 
+                {/* Nhập Tên Nhóm Phân Loại (Tầng 1 / Tầng 2) */}
                 <input
                   type="text"
+                  placeholder={`Tên Nhóm Phân Loại ${gIdx + 1} (Ví dụ: Màu sắc, Dung lượng, Kích thước)`}
                   value={group.name}
                   onChange={(e) => {
                     const newG = [...variantGroups];
                     newG[gIdx].name = e.target.value;
                     setVariantGroups(newG);
                   }}
-                  className="w-full p-2 bg-white border border-gray-300 rounded text-xs font-semibold"
+                  className="w-full p-2 bg-white border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
                 />
 
-                {/* Tùy chọn (Options) */}
-                <div className="flex flex-wrap gap-2 items-center pt-1">
-                  {group.options.map((opt, oIdx) => (
-                    <div key={oIdx} className="flex items-center gap-1 bg-white border border-gray-300 px-2.5 py-1 rounded text-xs font-medium text-gray-800">
-                      <span>{opt}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveOption(gIdx, oIdx)}
-                        className="text-gray-400 hover:text-red-500 font-bold ml-1"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => handleAddOption(gIdx)}
-                    className="text-xs text-[#ee4d2d] font-semibold bg-white border border-dashed border-[#ee4d2d] px-3 py-1 rounded hover:bg-orange-50"
-                  >
-                    + Thêm tùy chọn
-                  </button>
+                {/* Danh sách Tùy chọn (Options) có thể Gõ/Sửa trực tiếp bằng Input Textbox */}
+                <div className="space-y-2 pt-1">
+                  <span className="text-[11px] font-semibold text-gray-500">Các Tùy Chọn Phân Loại (Gõ/Sửa trực tiếp bên dưới):</span>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {group.options.map((opt, oIdx) => (
+                      <div key={oIdx} className="flex items-center gap-1 bg-white border border-gray-300 rounded px-2 py-1 shadow-xs focus-within:border-[#ee4d2d]">
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => handleOptionChange(gIdx, oIdx, e.target.value)}
+                          placeholder="Tên tùy chọn..."
+                          className="w-28 text-xs font-medium text-gray-800 bg-transparent focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveOption(gIdx, oIdx)}
+                          className="text-gray-400 hover:text-red-500 font-bold px-1 text-sm cursor-pointer"
+                          title="Xóa tùy chọn này"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => handleAddOption(gIdx)}
+                      className="text-xs text-[#ee4d2d] font-semibold bg-white border border-dashed border-[#ee4d2d] px-3 py-1.5 rounded hover:bg-orange-50 cursor-pointer"
+                    >
+                      + Thêm tùy chọn
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -345,7 +363,7 @@ export const SellerProductManagement: React.FC = () => {
                             type="number"
                             value={sku.price}
                             onChange={(e) => handleSkuPriceChange(idx, Number(e.target.value))}
-                            className="w-32 p-1.5 border border-gray-300 rounded font-semibold text-gray-900"
+                            className="w-32 p-1.5 border border-gray-300 rounded font-semibold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
                           />
                         </td>
                         <td className="p-3">
@@ -353,7 +371,7 @@ export const SellerProductManagement: React.FC = () => {
                             type="number"
                             value={sku.stock}
                             onChange={(e) => handleSkuStockChange(idx, Number(e.target.value))}
-                            className="w-24 p-1.5 border border-gray-300 rounded font-semibold text-gray-900"
+                            className="w-24 p-1.5 border border-gray-300 rounded font-semibold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
                           />
                         </td>
                       </tr>
@@ -369,7 +387,7 @@ export const SellerProductManagement: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm px-8 py-3 rounded-lg shadow-md transition-colors flex items-center gap-2"
+              className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm px-8 py-3 rounded-lg shadow-md transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {loading ? 'Đang lưu...' : `Lưu & Đăng ${skus.length} Biến Thể SKU`}
