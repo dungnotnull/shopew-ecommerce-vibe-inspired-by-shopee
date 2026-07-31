@@ -1,284 +1,292 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { SellerLayout } from '../../components/layout/SellerLayout';
-import { Package, Plus, Search, Trash2, Eye, ExternalLink, RefreshCw, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Package, Plus, Edit, Trash2, Search, Filter, Layers, RefreshCw } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { ProductSPU } from '../../types/catalog';
 import { formatVND } from '../../utils/format-currency';
+import { SellerProductEditModal } from './SellerProductEditModal';
 
-// Trang Quản Lý Danh Sách Sản Phẩm SPU & SKUs Kênh Người Bán
 export const SellerProductListPage: React.FC = () => {
-  const navigate = useNavigate();
   const [products, setProducts] = useState<ProductSPU[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('ALL');
-  const [deleteSuccessMsg, setDeleteSuccessMsg] = useState<string>('');
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [selectedProductForSkus, setSelectedProductForSkus] = useState<ProductSPU | null>(null);
 
-  // Load danh sách sản phẩm từ API Backend NestJS
-  const fetchProducts = async () => {
+  // State cho Modal Sửa Sản Phẩm
+  const [editingProduct, setEditingProduct] = useState<ProductSPU | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+
+  const fetchSellerProducts = async () => {
     setLoading(true);
     try {
       const data = await CatalogService.getSellerProducts();
-      setProducts(data || []);
-    } catch {
-      setProducts([]);
+      setProducts(data);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchSellerProducts();
   }, []);
 
-  // Xử lý Xóa Sản phẩm SPU qua REST API DELETE /api/seller/products/:id
-  const handleDeleteProduct = async (id: number, name: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm SPU "${name}" này không?`)) {
-      return;
-    }
+  const handleDeleteProduct = async (id: number) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm SPU #${id} khỏi gian hàng?`)) return;
 
-    setDeletingId(id);
     try {
       await CatalogService.deleteSellerProduct(id);
-      setDeleteSuccessMsg(`Đã xóa sản phẩm SPU #${id} thành công.`);
       setProducts(prev => prev.filter(p => p.id !== id));
-      setTimeout(() => setDeleteSuccessMsg(''), 3000);
     } catch {
-      setDeleteSuccessMsg(`Không thể xóa sản phẩm #${id}. Vui lòng thử lại sau.`);
-      setTimeout(() => setDeleteSuccessMsg(''), 3000);
-    } finally {
-      setDeletingId(null);
+      alert('Không thể xóa sản phẩm. Vui lòng thử lại sau.');
     }
   };
 
-  // Lọc sản phẩm theo Từ khóa tìm kiếm
-  const filteredProducts = products.filter(product => {
-    const matchesQuery = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         String(product.id).includes(searchQuery);
-    if (filterStatus === 'OUT_OF_STOCK') {
-      const totalStock = product.skus ? product.skus.reduce((acc, s) => acc + s.stock, 0) : 0;
-      return matchesQuery && totalStock === 0;
-    }
-    return matchesQuery;
+  const handleOpenEditModal = (p: ProductSPU) => {
+    setEditingProduct(p);
+    setIsEditModalOpen(true);
+  };
+
+  // Lọc sản phẩm theo tìm kiếm & danh mục
+  const filteredProducts = products.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchCat = selectedCategory === 'ALL' || String(p.categoryId) === selectedCategory;
+    return matchSearch && matchCat;
   });
 
   return (
-    <SellerLayout>
-      <div className="space-y-6 font-['Roboto',sans-serif]">
-        {/* Header Quản Lý Sản Phẩm */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-4 gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-              <Package className="w-5 h-5 text-[#ee4d2d]" /> Quản Lý Danh Sách Sản Phẩm (SPU & SKUs)
-            </h1>
-            <p className="text-xs text-gray-500 mt-1">
-              Quản lý toàn bộ danh mục sản phẩm, biến thể kho hàng và doanh số bán trên Shopew Enterprise.
+    <div className="space-y-6 font-['Roboto',sans-serif]">
+      {/* Top Action Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-lg shadow-xs border border-gray-100">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <Package className="w-6 h-6 text-[#ee4d2d]" /> Quản Lý Danh Sách Sản Phẩm (SPU & SKUs)
+          </h1>
+          <p className="text-xs text-gray-500 mt-1">
+            Tổng cộng <span className="font-bold text-[#ee4d2d]">{products.length}</span> sản phẩm đang hoạt động trên Kênh Người Bán
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchSellerProducts}
+            className="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer"
+            title="Làm mới danh sách"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          <Link
+            to="/seller/products/new"
+            className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Đăng Sản Phẩm Mới
+          </Link>
+        </div>
+      </div>
+
+      {/* Control Bar: Search & Filters */}
+      <div className="bg-white p-4 rounded-lg shadow-xs border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Tìm theo tên sản phẩm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#ee4d2d]"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Filter className="w-4 h-4 text-gray-500" />
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
+          >
+            <option value="ALL">Tất Cả Danh Mục</option>
+            <option value="11">Áo Thun Nam (Cat #11)</option>
+            <option value="21">Điện Thoại Di Động (Cat #21)</option>
+            <option value="22">Tai Nghe Bluetooth (Cat #22)</option>
+            <option value="32">Kẹp Tóc & Phụ Kiện (Cat #32)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Main Products Table */}
+      <div className="bg-white rounded-lg shadow-xs border border-gray-100 overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-xs text-gray-500">Đang tải danh sách sản phẩm...</div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="p-12 text-center space-y-3">
+            <Package className="w-12 h-12 text-gray-300 mx-auto" />
+            <p className="text-sm font-bold text-gray-700">Chưa tìm thấy sản phẩm nào</p>
+            <p className="text-xs text-gray-500 max-w-sm mx-auto">
+              Bạn chưa có sản phẩm nào phù hợp với bộ lọc. Hãy bấm Đăng Sản Phẩm Mới để thêm hàng.
             </p>
           </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase font-bold">
+                  <th className="p-3.5">SPU ID</th>
+                  <th className="p-3.5">Thông Tin Sản Phẩm</th>
+                  <th className="p-3.5">Giá Bán (VND)</th>
+                  <th className="p-3.5">Phân Loại Biến Thể</th>
+                  <th className="p-3.5">Đã Bán</th>
+                  <th className="p-3.5 text-center">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredProducts.map((p) => {
+                  const skuCount = p.skus?.length || 0;
+                  const totalStock = p.skus?.reduce((acc, curr) => acc + curr.stock, 0) || 0;
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={fetchProducts}
-              className="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded transition-colors cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Tải lại
-            </button>
-
-            <button
-              onClick={() => navigate('/seller/products/new')}
-              className="inline-flex items-center gap-1.5 bg-[#ee4d2d] hover:bg-[#d03e20] text-white text-xs font-bold px-4 py-2 rounded shadow-sm transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4" /> Đăng Sản Phẩm Mới (SPU/SKU)
-            </button>
-          </div>
-        </div>
-
-        {/* Banner Thông báo Xóa Thành Công */}
-        {deleteSuccessMsg && (
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-lg text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="font-semibold">{deleteSuccessMsg}</span>
+                  return (
+                    <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
+                      <td className="p-3.5 font-bold text-gray-500">#{p.id}</td>
+                      <td className="p-3.5">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={p.images?.[0] || 'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=200'}
+                            alt={p.name}
+                            className="w-12 h-12 object-cover rounded-md border border-gray-200 shrink-0"
+                          />
+                          <div className="space-y-0.5">
+                            <h3 className="font-bold text-gray-900 line-clamp-1 max-w-xs">{p.name}</h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] text-gray-500">Cat ID: #{p.categoryId}</span>
+                              {p.isMall && (
+                                <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded">
+                                  Shopee Mall
+                                </span>
+                              )}
+                              {p.isPreferred && (
+                                <span className="bg-[#ee4d2d] text-white text-[10px] font-bold px-1.5 py-0.2 rounded">
+                                  Yêu Thích
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3.5 font-bold text-[#ee4d2d] text-sm">
+                        {p.priceMin === p.priceMax
+                          ? formatVND(p.priceMin)
+                          : `${formatVND(p.priceMin)} - ${formatVND(p.priceMax)}`}
+                      </td>
+                      <td className="p-3.5">
+                        <div className="space-y-1">
+                          <span className="inline-flex items-center gap-1 font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
+                            <Layers className="w-3 h-3 text-[#ee4d2d]" /> {skuCount} SKUs ({totalStock} tồn)
+                          </span>
+                          {skuCount > 0 && (
+                            <button
+                              onClick={() => setSelectedProductForSkus(p)}
+                              className="block text-[11px] text-[#ee4d2d] hover:underline cursor-pointer"
+                            >
+                              Xem ma trận SKU
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3.5 font-semibold text-gray-700">{p.soldCount || 0}</td>
+                      <td className="p-3.5">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleOpenEditModal(p)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            title="Sửa sản phẩm"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(p.id)}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Xóa sản phẩm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
+      </div>
 
-        {/* Khung Bộ Lọc & Tìm Kiếm */}
-        <div className="bg-gray-50/70 p-4 rounded-lg border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Ô Nhập Tìm Kiếm */}
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              placeholder="Tìm theo Tên sản phẩm SPU hoặc ID sản phẩm..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
-            />
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-          </div>
-
-          {/* Filter Status Tabs */}
-          <div className="flex items-center gap-2 text-xs">
-            <button
-              onClick={() => setFilterStatus('ALL')}
-              className={`px-3 py-1.5 rounded font-semibold transition-colors cursor-pointer ${
-                filterStatus === 'ALL'
-                  ? 'bg-[#ee4d2d] text-white'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Tất Cả ({products.length})
-            </button>
-            <button
-              onClick={() => setFilterStatus('OUT_OF_STOCK')}
-              className={`px-3 py-1.5 rounded font-semibold transition-colors cursor-pointer ${
-                filterStatus === 'OUT_OF_STOCK'
-                  ? 'bg-[#ee4d2d] text-white'
-                  : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Hết Hàng
-            </button>
-          </div>
-        </div>
-
-        {/* Bảng Danh Sách Sản Phẩm SPU & SKUs */}
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-xs">
-          {loading ? (
-            <div className="p-12 text-center text-xs text-gray-500 flex flex-col items-center gap-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-[#ee4d2d]" />
-              <span>Đang tải danh sách sản phẩm SPU & SKUs...</span>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="p-12 text-center text-xs text-gray-500 space-y-3">
-              <AlertCircle className="w-8 h-8 text-gray-300 mx-auto" />
-              <p className="font-semibold text-gray-700">Chưa có sản phẩm nào trong cửa hàng.</p>
+      {/* Modal Chi Tiết SKUs */}
+      {selectedProductForSkus && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full space-y-4 shadow-xl">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+              <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#ee4d2d]" /> Ma Trận SKUs #{selectedProductForSkus.id}
+              </h3>
               <button
-                onClick={() => navigate('/seller/products/new')}
-                className="inline-flex items-center gap-1 bg-[#ee4d2d] text-white font-bold px-4 py-2 rounded text-xs"
+                onClick={() => setSelectedProductForSkus(null)}
+                className="text-gray-400 hover:text-gray-600 font-bold"
               >
-                <Plus className="w-4 h-4" /> Tạo sản phẩm đầu tiên
+                ✕
               </button>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
+            <p className="text-xs font-bold text-gray-800">{selectedProductForSkus.name}</p>
+
+            <div className="overflow-x-auto max-h-60">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold uppercase tracking-wider">
-                    <th className="p-3.5">Sản Phẩm SPU</th>
-                    <th className="p-3.5">Giá Tiêu Chuẩn (VND)</th>
-                    <th className="p-3.5">Tồn Kho (SKUs)</th>
-                    <th className="p-3.5">Doanh Số (Đã Bán)</th>
-                    <th className="p-3.5 text-center">Thao Tác</th>
+                  <tr className="bg-gray-100 text-gray-700">
+                    <th className="p-2">Tên Phân Loại SKU</th>
+                    <th className="p-2">Giá Bán</th>
+                    <th className="p-2">Tồn Kho</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredProducts.map((product) => {
-                    const totalStock = product.skus ? product.skus.reduce((acc, s) => acc + s.stock, 0) : 0;
-                    const variantCount = product.skus ? product.skus.length : 0;
-                    const thumbnail = product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300';
+                  {selectedProductForSkus.skus?.map((sku, idx) => {
+                    const label1 = selectedProductForSkus.variantGroups?.[0]?.options[sku.tierIndex[0]] || '';
+                    const label2 = selectedProductForSkus.variantGroups?.[1]?.options[sku.tierIndex[1]] || '';
+                    const label = [label1, label2].filter(Boolean).join(' - ') || 'Default SKU';
 
                     return (
-                      <tr key={product.id} className="hover:bg-gray-50/80 transition-colors">
-                        {/* Cột 1: Thông tin Sản Phẩm SPU */}
-                        <td className="p-3.5">
-                          <div className="flex items-start gap-3">
-                            <img
-                              src={thumbnail}
-                              alt={product.name}
-                              className="w-12 h-12 rounded object-cover border border-gray-200 shrink-0 bg-gray-50"
-                            />
-                            <div className="space-y-1">
-                              <span className="font-bold text-gray-900 line-clamp-2 leading-tight">
-                                {product.name}
-                              </span>
-                              <div className="flex items-center gap-2 text-[11px] text-gray-500">
-                                <span>ID: <strong className="text-gray-700">#{product.id}</strong></span>
-                                <span>•</span>
-                                <span className="bg-orange-50 text-[#ee4d2d] px-1.5 py-0.5 rounded font-semibold">
-                                  {variantCount} SKU Phân Loại
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Cột 2: Giá Bán tiêu chuẩn */}
-                        <td className="p-3.5 font-bold text-gray-900 whitespace-nowrap">
-                          {product.priceMax && product.priceMax > product.priceMin ? (
-                            <span className="text-[#ee4d2d]">
-                              {formatVND(product.priceMin)} - {formatVND(product.priceMax)}
-                            </span>
-                          ) : (
-                            <span className="text-[#ee4d2d]">
-                              {formatVND(product.priceMin)}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Cột 3: Tồn kho SKUs */}
-                        <td className="p-3.5 whitespace-nowrap">
-                          {totalStock > 0 ? (
-                            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded">
-                              {totalStock} sản phẩm
-                            </span>
-                          ) : (
-                            <span className="font-bold text-red-600 bg-red-50 px-2 py-1 rounded">
-                              Hết hàng
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Cột 4: Doanh Số (Lượt Bán & Yêu Thích) */}
-                        <td className="p-3.5 whitespace-nowrap">
-                          <div className="space-y-0.5">
-                            <div className="font-bold text-gray-800">{product.soldCount || 0} đã bán</div>
-                            <div className="text-[11px] text-gray-500">♥ {product.likeCount || 0} thích</div>
-                          </div>
-                        </td>
-
-                        {/* Cột 5: Thao tác (Action Buttons) */}
-                        <td className="p-3.5 text-center whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-2">
-                            {/* Nút Xem Chi Tiết trên Sàn */}
-                            <Link
-                              to={`/products/${product.id}`}
-                              target="_blank"
-                              className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                              title="Xem sản phẩm trên Shopew"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </Link>
-
-                            {/* Nút Chỉnh Sửa */}
-                            <button
-                              onClick={() => navigate('/seller/products/new')}
-                              className="p-1.5 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
-                              title="Chỉnh sửa sản phẩm SPU & SKUs"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-
-                            {/* Nút Xóa Sản Phẩm */}
-                            <button
-                              onClick={() => handleDeleteProduct(product.id, product.name)}
-                              disabled={deletingId === product.id}
-                              className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer disabled:opacity-50"
-                              title="Xóa sản phẩm SPU này"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+                      <tr key={idx}>
+                        <td className="p-2 font-semibold text-gray-800">{label}</td>
+                        <td className="p-2 font-bold text-[#ee4d2d]">{formatVND(sku.price)}</td>
+                        <td className="p-2">{sku.stock} phần</td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
             </div>
-          )}
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setSelectedProductForSkus(null)}
+                className="px-4 py-1.5 bg-gray-200 text-gray-800 text-xs font-bold rounded hover:bg-gray-300 cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </SellerLayout>
+      )}
+
+      {/* Modal Sửa Sản Phẩm */}
+      {editingProduct && (
+        <SellerProductEditModal
+          product={editingProduct}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingProduct(null);
+          }}
+          onSuccess={fetchSellerProducts}
+        />
+      )}
+    </div>
   );
 };
