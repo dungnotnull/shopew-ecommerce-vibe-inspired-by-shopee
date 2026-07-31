@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, Search, RotateCcw, ArrowUpDown, ChevronRight } from 'lucide-react';
-import { ProductSPU, SearchParams, SearchResult, Category } from '../types/catalog';
+import { SearchParams, SearchResult, Category } from '../types/catalog';
 import CatalogService from '../services/catalog-service';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { CustomerLayout } from '../components/layout/CustomerLayout';

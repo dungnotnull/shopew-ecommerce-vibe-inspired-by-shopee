@@ -22,7 +22,7 @@ export const SellerProductManagement: React.FC = () => {
   ]);
 
   // SKUs Matrix State
-  const [skus, setSkus] = useState<SKU[]>([
+  const [skus, _setSkus] = useState<SKU[]>([
     { id: 1, tierIndex: [0], price: 100000, originalPrice: 120000, stock: 50 },
     { id: 2, tierIndex: [1], price: 100000, originalPrice: 120000, stock: 30 },
   ]);
