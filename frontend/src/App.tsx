@@ -21,6 +21,7 @@ import { ProductDetailPage } from './pages/ProductDetailPage';
 import { SearchPage } from './pages/SearchPage';
 import { ShopDetailPage } from './pages/ShopDetailPage';
 import { SellerProductManagement } from './pages/seller/SellerProductManagement';
+import { SellerProductListPage } from './pages/seller/SellerProductListPage';
 
 // Khởi tạo React Query Client
 const queryClient = new QueryClient({
@@ -107,7 +108,7 @@ export const App: React.FC = () => {
             path="/seller/products"
             element={
               <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
-                <SellerProductManagement />
+                <SellerProductListPage />
               </RoleGuard>
             }
           />
