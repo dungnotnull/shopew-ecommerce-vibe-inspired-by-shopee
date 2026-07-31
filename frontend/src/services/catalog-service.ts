@@ -192,7 +192,6 @@ export const CatalogService = {
       const response = await apiClient.get('/v1/search', { params });
       return response.data;
     } catch {
-      // Logic lọc trên Mock Data
       let filtered = [...mockProducts];
 
       if (params.q) {
@@ -218,7 +217,6 @@ export const CatalogService = {
         filtered = filtered.filter(p => p.rating >= Number(params.rating));
       }
 
-      // Sắp xếp
       if (params.sort === 'sold') {
         filtered.sort((a, b) => b.soldCount - a.soldCount);
       } else if (params.sort === 'price') {
@@ -256,6 +254,26 @@ export const CatalogService = {
     } catch {
       const found = mockProducts.find(p => p.id === Number(id));
       return found || mockProducts[0];
+    }
+  },
+
+  // Lấy danh sách sản phẩm của Seller hiện tại
+  async getSellerProducts(): Promise<ProductSPU[]> {
+    try {
+      const response = await apiClient.get('/seller/products');
+      return response.data;
+    } catch {
+      return mockProducts;
+    }
+  },
+
+  // Seller Xóa sản phẩm SPU
+  async deleteSellerProduct(id: number): Promise<{ success: boolean }> {
+    try {
+      const response = await apiClient.delete(`/seller/products/${id}`);
+      return response.data;
+    } catch {
+      return { success: true };
     }
   },
 
