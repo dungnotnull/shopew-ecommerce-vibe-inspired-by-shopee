@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers } from 'lucide-react';
+import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
+import { sellerService } from '../../services/seller-service';
 import { VariantGroup, SKU } from '../../types/catalog';
 
 export const SellerProductManagement: React.FC = () => {
@@ -16,6 +17,12 @@ export const SellerProductManagement: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
+  // State Modal Khởi Tạo Shop
+  const [showShopModal, setShowShopModal] = useState<boolean>(false);
+  const [shopName, setShopName] = useState<string>('Gian Hàng Shopew Official');
+  const [shopDescription, setShopDescription] = useState<string>('Cửa hàng phân phối sản phẩm chính hãng trên Shopew.');
+  const [creatingShop, setCreatingShop] = useState<boolean>(false);
+
   // 2-Tier Variant Groups State
   const [variantGroups, setVariantGroups] = useState<VariantGroup[]>([
     { name: 'Màu sắc', options: ['Titan Đen', 'Titan Tự Nhiên'] },
@@ -28,7 +35,6 @@ export const SellerProductManagement: React.FC = () => {
   // Tự động tính Ma trận SKU (Cartesian Product của 2 Nhóm biến thể)
   useEffect(() => {
     if (!variantGroups || variantGroups.length === 0) {
-      // Default SKU fallback khi không có phân loại
       setSkus([
         {
           id: 1,
@@ -76,7 +82,7 @@ export const SellerProductManagement: React.FC = () => {
   }, [variantGroups, priceMin]);
 
   const handleAddVariantGroup = () => {
-    if (variantGroups.length >= 2) return; // Shopee hỗ trợ tối đa 2 nhóm phân loại
+    if (variantGroups.length >= 2) return;
     setVariantGroups(prev => [...prev, { name: 'Dung lượng', options: ['128GB', '256GB'] }]);
   };
 
@@ -119,6 +125,30 @@ export const SellerProductManagement: React.FC = () => {
     });
   };
 
+  // Hàm xử lý gửi API tạo sản phẩm
+  const executeCreateProduct = async () => {
+    const prices = skus.map(s => s.price);
+    const computedPriceMin = prices.length > 0 ? Math.min(...prices) : priceMin;
+    const computedPriceMax = prices.length > 0 ? Math.max(...prices) : priceMin;
+
+    await CatalogService.createSellerProduct({
+      name,
+      description,
+      categoryId,
+      priceMin: computedPriceMin,
+      priceMax: computedPriceMax,
+      isMall: false,
+      isPreferred: true,
+      variantGroups,
+      skus,
+    });
+
+    setIsSuccess(true);
+    setTimeout(() => {
+      navigate('/seller/products');
+    }, 1500);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -131,29 +161,15 @@ export const SellerProductManagement: React.FC = () => {
     setLoading(true);
 
     try {
-      const prices = skus.map(s => s.price);
-      const computedPriceMin = prices.length > 0 ? Math.min(...prices) : priceMin;
-      const computedPriceMax = prices.length > 0 ? Math.max(...prices) : priceMin;
-
-      await CatalogService.createSellerProduct({
-        name,
-        description,
-        categoryId,
-        priceMin: computedPriceMin,
-        priceMax: computedPriceMax,
-        isMall: false,
-        isPreferred: true,
-        variantGroups,
-        skus,
-      });
-
-      setIsSuccess(true);
-      setTimeout(() => {
-        navigate('/seller/products');
-      }, 1500);
+      await executeCreateProduct();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể tạo sản phẩm. Vui lòng kiểm tra lại dữ liệu.';
-      if (Array.isArray(msg)) {
+      
+      // Nếu Backend báo lỗi User chưa có Shop gian hàng
+      if (typeof msg === 'string' && (msg.includes('chưa tạo gian hàng') || msg.includes('Shop'))) {
+        setShowShopModal(true);
+        setErrorMsg('Tài khoản của bạn chưa có Gian hàng trên Shopew. Vui lòng xác nhận tạo gian hàng bên dưới.');
+      } else if (Array.isArray(msg)) {
         setErrorMsg(msg.join(', '));
       } else {
         setErrorMsg(msg);
@@ -163,16 +179,39 @@ export const SellerProductManagement: React.FC = () => {
     }
   };
 
+  // Xử lý Khởi Tạo Gian Hàng qua API POST /api/v1/shops từ Frontend
+  const handleCreateShopAndRetry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingShop(true);
+    setErrorMsg('');
+
+    try {
+      await sellerService.createShop({
+        name: shopName,
+        description: shopDescription,
+      });
+
+      setShowShopModal(false);
+      // Tự động retry tạo lại sản phẩm sau khi đã tạo Shop thành công
+      await executeCreateProduct();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể tạo gian hàng. Vui lòng thử lại sau.';
+      setErrorMsg(Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setCreatingShop(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6 font-['Roboto',sans-serif]">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header Navigation */}
         <div className="flex items-center justify-between">
           <button
-            onClick={() => navigate('/seller')}
-            className="flex items-center gap-2 text-xs text-gray-600 hover:text-[#ee4d2d] font-semibold"
+            onClick={() => navigate('/seller/products')}
+            className="flex items-center gap-2 text-xs text-gray-600 hover:text-[#ee4d2d] font-semibold cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" /> Trở về Kênh Người Bán
+            <ArrowLeft className="w-4 h-4" /> Trở về Quản Lý Sản Phẩm
           </button>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Package className="w-5 h-5 text-[#ee4d2d]" /> Đăng Sản Phẩm Biến Thể SPU & SKU
@@ -190,6 +229,55 @@ export const SellerProductManagement: React.FC = () => {
         {errorMsg && (
           <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-xs">
             {errorMsg}
+          </div>
+        )}
+
+        {/* Modal Tự Động Khởi Tạo Gian Hàng Nếu Backend Yêu Cầu */}
+        {showShopModal && (
+          <div className="bg-orange-50 border-2 border-[#ee4d2d] p-5 rounded-lg space-y-3 shadow-md">
+            <h3 className="text-sm font-bold text-[#ee4d2d] flex items-center gap-2">
+              <Store className="w-5 h-5" /> Kích Hoạt Gian Hàng Người Bán (Shopew Seller Shop)
+            </h3>
+            <p className="text-xs text-gray-600">
+              Backend yêu cầu tài khoản của bạn phải có Gian hàng để gắn sản phẩm. Vui lòng nhập tên Shop để kích hoạt:
+            </p>
+            <form onSubmit={handleCreateShopAndRetry} className="space-y-3 pt-1">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Tên Gian Hàng *</label>
+                <input
+                  type="text"
+                  required
+                  value={shopName}
+                  onChange={(e) => setShopName(e.target.value)}
+                  className="w-full p-2 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Mô Tả Gian Hàng</label>
+                <input
+                  type="text"
+                  value={shopDescription}
+                  onChange={(e) => setShopDescription(e.target.value)}
+                  className="w-full p-2 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowShopModal(false)}
+                  className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold rounded cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingShop}
+                  className="px-4 py-1.5 bg-[#ee4d2d] hover:bg-orange-600 text-white text-xs font-bold rounded cursor-pointer disabled:opacity-50"
+                >
+                  {creatingShop ? 'Đang kích hoạt...' : 'Kích Hoạt Gian Hàng & Đăng Sản Phẩm'}
+                </button>
+              </div>
+            </form>
           </div>
         )}
 
@@ -279,10 +367,9 @@ export const SellerProductManagement: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Nhập Tên Nhóm Phân Loại (Tầng 1 / Tầng 2) */}
                 <input
                   type="text"
-                  placeholder={`Tên Nhóm Phân Loại ${gIdx + 1} (Ví dụ: Màu sắc, Dung lượng, Kích thước)`}
+                  placeholder={`Tên Nhóm Phân Loại ${gIdx + 1}`}
                   value={group.name}
                   onChange={(e) => {
                     const newG = [...variantGroups];
@@ -292,7 +379,6 @@ export const SellerProductManagement: React.FC = () => {
                   className="w-full p-2 bg-white border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
                 />
 
-                {/* Danh sách Tùy chọn (Options) có thể Gõ/Sửa trực tiếp bằng Input Textbox */}
                 <div className="space-y-2 pt-1">
                   <span className="text-[11px] font-semibold text-gray-500">Các Tùy Chọn Phân Loại (Gõ/Sửa trực tiếp bên dưới):</span>
                   <div className="flex flex-wrap gap-2 items-center">
