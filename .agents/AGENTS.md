@@ -13,5 +13,7 @@ Mỗi khi thao tác hoặc phát triển dự án Shopew, tất cả AI Agents B
 - Clean code (không comment-out code cũ, không console.log dư thừa).
 - 100% Comment bằng Tiếng Việt ngắn gọn, súc tích và đúng trọng tâm.
 - **Xác nhận trước khi Git Push:** CHỈ `git commit` mã nguồn cục bộ. Tuyệt đối KHÔNG `git push` lên remote nếu chưa có sự kiểm tra và đồng ý trực tiếp từ người dùng.
+- **Tách biệt Backend & Báo cáo Lỗi:** KHÔNG sửa đổi code trong `backend/`. Nếu phát hiện lỗi hoặc thiếu API Backend, tổng hợp đầy đủ nguyên nhân & đề xuất để người dùng báo lại phía Backend.
+
 
 
