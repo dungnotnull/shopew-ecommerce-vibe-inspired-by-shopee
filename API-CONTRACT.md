@@ -232,6 +232,10 @@
 }
 ```
 
+### `GET /api/seller/products`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Array of SPU and SKU details (similar to `GET /api/v1/products/:id`)
+
 ### `POST /api/seller/products`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
 - **Body:**

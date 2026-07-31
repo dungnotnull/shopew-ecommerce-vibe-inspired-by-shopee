@@ -18,6 +18,18 @@ export class ProductsService {
     return product;
   }
 
+  async getSellerProducts(userId: number) {
+    const shop = await this.shopsService.getShopByUserId(userId);
+    return this.prisma.product.findMany({
+      where: { shopId: shop.id },
+      include: {
+        variantGroups: { include: { options: true } },
+        skus: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async toggleLike(userId: number, productId: number) {
     const existing = await this.prisma.productLike.findUnique({
       where: { userId_productId: { userId, productId } },

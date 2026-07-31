@@ -35,6 +35,13 @@ export class ProductsController {
 export class SellerProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Get()
+  @Roles(Role.SELLER)
+  @ApiOperation({ summary: 'Get list of SPU and SKUs for the current seller' })
+  async getProducts(@Request() req: any) {
+    return this.productsService.getSellerProducts(req.user.id);
+  }
+
   @Post()
   @Roles(Role.SELLER)
   @ApiOperation({ summary: 'Create SPU, Variant Groups, and SKUs' })
