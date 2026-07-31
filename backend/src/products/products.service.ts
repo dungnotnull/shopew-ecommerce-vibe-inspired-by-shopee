@@ -19,7 +19,8 @@ export class ProductsService {
   }
 
   async getSellerProducts(userId: number) {
-    const shop = await this.shopsService.getShopByUserId(userId);
+    const shop = await this.prisma.shop.findUnique({ where: { userId } });
+    if (!shop) return [];
     return this.prisma.product.findMany({
       where: { shopId: shop.id },
       include: {
