@@ -12,10 +12,71 @@ export class ProductsService {
       include: {
         variantGroups: { include: { options: true } },
         skus: true,
+        shop: { select: { id: true, name: true } },
       },
     });
     if (!product) throw new NotFoundException('Product not found');
     return product;
+  }
+
+  async searchProducts(query: any) {
+    const { q, category_id, price_min, price_max, rating, isMall, isPreferred, sort, order, page = 1, limit = 20 } = query;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (q) where.name = { contains: q, mode: 'insensitive' };
+    if (category_id) where.categoryId = category_id;
+    if (price_min !== undefined || price_max !== undefined) {
+      where.priceMin = {};
+      if (price_min !== undefined) where.priceMin.gte = price_min;
+      if (price_max !== undefined) where.priceMin.lte = price_max;
+    }
+    if (rating !== undefined) where.rating = { gte: rating };
+    if (isMall !== undefined) where.isMall = isMall;
+    if (isPreferred !== undefined) where.isPreferred = isPreferred;
+
+    let orderBy: any = {};
+    if (sort === 'sold') orderBy = { soldCount: order || 'desc' };
+    else if (sort === 'newest') orderBy = { createdAt: order || 'desc' };
+    else if (sort === 'price') orderBy = { priceMin: order || 'asc' };
+    else orderBy = { viewCount: 'desc' }; // default relevance
+
+    const products = await this.prisma.product.findMany({
+      where,
+      orderBy,
+      skip,
+      take: limit,
+      include: {
+        shop: { select: { id: true, name: true } },
+        skus: { take: 1 }
+      }
+    });
+
+    const total = await this.prisma.product.count({ where });
+
+    const mapped = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      priceMin: p.priceMin,
+      priceMax: p.priceMax,
+      discountPercentage: p.discountPercentage,
+      rating: p.rating,
+      soldCount: p.soldCount,
+      likeCount: p.likeCount,
+      isMall: p.isMall,
+      isPreferred: p.isPreferred,
+      thumbnailUrl: p.skus[0]?.thumbnailUrl || null,
+      shopId: p.shopId,
+      shopName: p.shop?.name
+    }));
+
+    return {
+      data: mapped,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 
   async getSellerProducts(userId: number) {
