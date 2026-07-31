@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { sellerService } from '../../services/seller-service';
-import { VariantGroup, SKU } from '../../types/catalog';
+import { VariantGroup, SKU, Category } from '../../types/catalog';
 
 export const SellerProductManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -12,7 +12,8 @@ export const SellerProductManagement: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
-  const [categoryId, setCategoryId] = useState<number>(11);
+  const [categoryId, setCategoryId] = useState<number>(1);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -22,6 +23,35 @@ export const SellerProductManagement: React.FC = () => {
   const [shopName, setShopName] = useState<string>('Gian Hàng Shopew Official');
   const [shopDescription, setShopDescription] = useState<string>('Cửa hàng phân phối sản phẩm chính hãng trên Shopew.');
   const [creatingShop, setCreatingShop] = useState<boolean>(false);
+
+  // Load danh mục thực tế từ API Backend NestJS (GET /api/v1/categories)
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const cats = await CatalogService.getCategories();
+        if (cats && cats.length > 0) {
+          // Lấy danh mục con cấp thấp nhất nếu có
+          const flatten: Category[] = [];
+          const extract = (items: Category[]) => {
+            items.forEach(c => {
+              flatten.push(c);
+              if (c.children && c.children.length > 0) {
+                extract(c.children);
+              }
+            });
+          };
+          extract(cats);
+          setCategories(flatten);
+          if (flatten.length > 0) {
+            setCategoryId(flatten[0].id);
+          }
+        }
+      } catch {
+        // Fallback default
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // 2-Tier Variant Groups State
   const [variantGroups, setVariantGroups] = useState<VariantGroup[]>([
@@ -325,13 +355,22 @@ export const SellerProductManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">ID Danh Mục</label>
-                  <input
-                    type="number"
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Danh Mục Sản Phẩm *</label>
+                  <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
-                  />
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
+                  >
+                    {categories.length === 0 ? (
+                      <option value={1}>Danh mục mặc định (#1)</option>
+                    ) : (
+                      categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name} (ID: #{cat.id})
+                        </option>
+                      ))
+                    )}
+                  </select>
                 </div>
               </div>
             </div>
