@@ -72,10 +72,10 @@ export const SellerCategoryListPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-lg shadow-xs border border-gray-100">
         <div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Layers className="w-6 h-6 text-[#ee4d2d]" /> Quản Lý Danh Mục Sản Phẩm (2 Cấp)
+            <Layers className="w-6 h-6 text-[#ee4d2d]" /> Quản Lý Danh Mục Ngành Hàng
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Xem danh sách ngành hàng, thêm mới và tùy chỉnh danh mục sản phẩm cho Kênh Người Bán
+            Xem cây ngành hàng sản phẩm, thêm mới và quản lý phân loại danh mục sản phẩm trên hệ thống
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export const SellerCategoryListPage: React.FC = () => {
           <button
             onClick={fetchCategories}
             className="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer"
-            title="Làm mới"
+            title="Làm mới danh sách"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -118,12 +118,12 @@ export const SellerCategoryListPage: React.FC = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-sm text-gray-900">{pCat.name}</h3>
-                          <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                            ID #{pCat.id}
+                          <span className="text-[10px] font-bold bg-orange-100 text-[#ee4d2d] px-2 py-0.5 rounded-full">
+                            Danh Mục Cấp 1
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          {subCount > 0 ? `Chứa ${subCount} ngành hàng con` : 'Chưa có ngành hàng con'}
+                          {subCount > 0 ? `Bao gồm ${subCount} ngành hàng con` : 'Chưa có ngành hàng con'}
                         </p>
                       </div>
                     </div>
@@ -157,7 +157,6 @@ export const SellerCategoryListPage: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <ChevronRight className="w-3.5 h-3.5 text-[#ee4d2d]" />
                             <span className="text-xs font-semibold text-gray-800">{subCat.name}</span>
-                            <span className="text-[10px] text-gray-400">#{subCat.id}</span>
                           </div>
                           <button
                             onClick={() => handleOpenEditModal(subCat)}
@@ -184,7 +183,7 @@ export const SellerCategoryListPage: React.FC = () => {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
                 <Folder className="w-5 h-5 text-[#ee4d2d]" />
-                {editingCategory ? `Sửa Danh Mục #${editingCategory.id}` : 'Thêm Danh Mục Mới'}
+                {editingCategory ? `Sửa Danh Mục: ${editingCategory.name}` : 'Thêm Danh Mục Mới'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -196,11 +195,11 @@ export const SellerCategoryListPage: React.FC = () => {
 
             <form onSubmit={handleSaveCategory} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Tên Danh Mục *</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Tên Danh Mục Ngành Hàng *</label>
                 <input
                   type="text"
                   required
-                  placeholder="VD: Thời Trang Nam, Điện Thoại Di Động..."
+                  placeholder="Ví dụ: Thời Trang Nam, Điện Thoại Di Động..."
                   value={categoryName}
                   onChange={(e) => setCategoryName(e.target.value)}
                   className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#ee4d2d]"
@@ -208,16 +207,16 @@ export const SellerCategoryListPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Thuộc Danh Mục Cha (Nếu có)</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Trực Thuộc Danh Mục Cha</label>
                 <select
                   value={parentId || ''}
                   onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
-                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
                 >
-                  <option value="">-- Là Danh Mục Cấp 1 (Gốc) --</option>
+                  <option value="">-- Là Danh Mục Cấp 1 (Danh Mục Gốc) --</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name} (ID #{c.id})
+                      {c.name}
                     </option>
                   ))}
                 </select>

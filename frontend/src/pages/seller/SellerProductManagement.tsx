@@ -8,7 +8,7 @@ import { VariantGroup, SKU, Category } from '../../types/catalog';
 export const SellerProductManagement: React.FC = () => {
   const navigate = useNavigate();
 
-  // SPU Form State
+  // State Form Sản Phẩm
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
@@ -24,13 +24,12 @@ export const SellerProductManagement: React.FC = () => {
   const [shopDescription, setShopDescription] = useState<string>('Cửa hàng phân phối sản phẩm chính hãng trên Shopew.');
   const [creatingShop, setCreatingShop] = useState<boolean>(false);
 
-  // Call API Backend lấy danh sách Danh mục sản phẩm thực tế: GET /api/v1/categories
+  // Call API nạp danh sách Danh mục sản phẩm thực tế: GET /api/v1/categories
   useEffect(() => {
     const fetchCategoriesFromAPI = async () => {
       try {
         const catData = await CatalogService.getCategories();
         if (catData && catData.length > 0) {
-          // Trích xuất phẳng toàn bộ danh mục (gồm cả danh mục cha & danh mục con)
           const flattenList: Category[] = [];
           const extractAll = (items: Category[]) => {
             items.forEach(c => {
@@ -53,16 +52,16 @@ export const SellerProductManagement: React.FC = () => {
     fetchCategoriesFromAPI();
   }, []);
 
-  // 2-Tier Variant Groups State
+  // State Nhóm Phân Loại Hàng (Màu sắc, Kích cỡ...)
   const [variantGroups, setVariantGroups] = useState<VariantGroup[]>([
-    { name: 'Màu sắc', options: ['Titan Đen', 'Titan Tự Nhiên'] },
-    { name: 'Dung lượng', options: ['256GB', '512GB'] },
+    { name: 'Màu sắc', options: ['Đen', 'Trắng'] },
+    { name: 'Kích cỡ', options: ['M', 'L'] },
   ]);
 
-  // SKUs Matrix State
+  // State Bảng Tồn Kho & Giá Phân Loại
   const [skus, setSkus] = useState<SKU[]>([]);
 
-  // Tự động tính Ma trận SKU (Cartesian Product của 2 Nhóm biến thể)
+  // Tự động tính Bảng Phân Loại Hàng
   useEffect(() => {
     if (!variantGroups || variantGroups.length === 0) {
       setSkus([
@@ -113,7 +112,7 @@ export const SellerProductManagement: React.FC = () => {
 
   const handleAddVariantGroup = () => {
     if (variantGroups.length >= 2) return;
-    setVariantGroups(prev => [...prev, { name: 'Dung lượng', options: ['128GB', '256GB'] }]);
+    setVariantGroups(prev => [...prev, { name: 'Kích cỡ', options: ['S', 'M', 'L'] }]);
   };
 
   const handleRemoveVariantGroup = (idx: number) => {
@@ -122,7 +121,7 @@ export const SellerProductManagement: React.FC = () => {
 
   const handleAddOption = (groupIdx: number) => {
     const newGroups = [...variantGroups];
-    newGroups[groupIdx].options.push(`Phân loại ${newGroups[groupIdx].options.length + 1}`);
+    newGroups[groupIdx].options.push(`Tùy chọn ${newGroups[groupIdx].options.length + 1}`);
     setVariantGroups(newGroups);
   };
 
@@ -242,7 +241,7 @@ export const SellerProductManagement: React.FC = () => {
             <ArrowLeft className="w-4 h-4" /> Trở về Quản Lý Sản Phẩm
           </button>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-5 h-5 text-[#ee4d2d]" /> Đăng Sản Phẩm Biến Thể SPU & SKU
+            <Package className="w-5 h-5 text-[#ee4d2d]" /> Thêm Sản Phẩm Mới
           </h1>
         </div>
 
@@ -250,7 +249,7 @@ export const SellerProductManagement: React.FC = () => {
         {isSuccess && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-lg flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span className="font-bold text-sm">Đã khởi tạo SPU và ma trận SKUs thành công! Đang chuyển hướng...</span>
+            <span className="font-bold text-sm">Đã đăng sản phẩm thành công! Đang chuyển hướng về danh sách...</span>
           </div>
         )}
 
@@ -267,7 +266,7 @@ export const SellerProductManagement: React.FC = () => {
               <Store className="w-5 h-5" /> Kích Hoạt Gian Hàng Người Bán (Shopew Seller Shop)
             </h3>
             <p className="text-xs text-gray-600">
-              Backend yêu cầu tài khoản của bạn phải có Gian hàng để gắn sản phẩm. Vui lòng nhập tên Shop để kích hoạt:
+              Tài khoản của bạn chưa có Gian hàng để bán hàng. Vui lòng nhập tên Shop để kích hoạt:
             </p>
             <form onSubmit={handleCreateShopAndRetry} className="space-y-3 pt-1">
               <div>
@@ -310,10 +309,10 @@ export const SellerProductManagement: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 1: Thông tin SPU cơ bản */}
+          {/* Section 1: Thông tin sản phẩm cơ bản */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Sản Phẩm Gốc (SPU)
+              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Cơ Bản
             </h2>
 
             <div className="space-y-3">
@@ -322,7 +321,7 @@ export const SellerProductManagement: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="VD: iPhone 15 Pro Max 256GB - Hàng Chính Hãng VN/A"
+                  placeholder="Ví dụ: Áo Phông Nam Oversize Cotton 100% Co Giãn"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
@@ -330,10 +329,10 @@ export const SellerProductManagement: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Mô Tả Chi Tiết</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Mô Tả Chi Tiết Sản Phẩm</label>
                 <textarea
                   rows={4}
-                  placeholder="Mô tả đặc điểm sản phẩm, chính sách bảo hành..."
+                  placeholder="Mô tả đặc điểm sản phẩm, kiểu dáng, hướng dẫn chọn size, chính sách bảo hành..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
@@ -342,7 +341,7 @@ export const SellerProductManagement: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Chuẩn Mặc Định (VND) *</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Bán Khởi Điểm (VND) *</label>
                   <input
                     type="number"
                     required
@@ -352,22 +351,22 @@ export const SellerProductManagement: React.FC = () => {
                   />
                 </div>
 
-                {/* CALL API GET /api/v1/categories - Hiển thị Dropdown Chọn Danh Mục Sản Phẩm */}
+                {/* Ô Chọn Danh Mục Sản Phẩm Mượt Mà (Không chứa ID thô) */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Danh Mục Sản Phẩm (Call API Backend) *
+                    Danh Mục Ngành Hàng *
                   </label>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
                   >
                     {categories.length === 0 ? (
-                      <option value={1}>Danh mục mặc định (#1)</option>
+                      <option value={1}>Chọn Ngành Hàng</option>
                     ) : (
                       categories.map((cat) => (
                         <option key={cat.id} value={cat.id}>
-                          {cat.name} (ID #{cat.id})
+                          {cat.name}
                         </option>
                       ))
                     )}
@@ -377,11 +376,11 @@ export const SellerProductManagement: React.FC = () => {
             </div>
           </div>
 
-          {/* Section 2: Nhóm Phân Loại Biến Thể 2 Tầng (Variant Groups) */}
+          {/* Section 2: Phân loại sản phẩm (Màu sắc, Kích cỡ...) */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-gray-100">
               <h2 className="text-sm font-bold text-gray-800 uppercase flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#ee4d2d]" /> 2. Cấu Hình Phân Loại Hàng 2 Tầng (Variant Groups)
+                <Layers className="w-4 h-4 text-[#ee4d2d]" /> 2. Phân Loại Hàng (Màu Sắc, Kích Thước...)
               </h2>
               {variantGroups.length < 2 && (
                 <button
@@ -389,7 +388,7 @@ export const SellerProductManagement: React.FC = () => {
                   onClick={handleAddVariantGroup}
                   className="text-xs text-[#ee4d2d] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Thêm Nhóm Phân Loại 2
+                  <Plus className="w-3.5 h-3.5" /> Thêm Phân Loại 2 (VD: Kích cỡ)
                 </button>
               )}
             </div>
@@ -397,19 +396,19 @@ export const SellerProductManagement: React.FC = () => {
             {variantGroups.map((group, gIdx) => (
               <div key={gIdx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-700">Nhóm Phân Loại {gIdx + 1} (Ví dụ: Màu sắc, Dung lượng)</span>
+                  <span className="text-xs font-bold text-gray-700">Nhóm Phân Loại {gIdx + 1} (Ví dụ: Màu sắc, Dung lượng, Kích cỡ)</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveVariantGroup(gIdx)}
                     className="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> Xóa nhóm
+                    <Trash2 className="w-3.5 h-3.5" /> Xóa nhóm này
                   </button>
                 </div>
 
                 <input
                   type="text"
-                  placeholder={`Tên Nhóm Phân Loại ${gIdx + 1}`}
+                  placeholder={`Tên Nhóm Phân Loại ${gIdx + 1} (VD: Màu sắc)`}
                   value={group.name}
                   onChange={(e) => {
                     const newG = [...variantGroups];
@@ -420,7 +419,7 @@ export const SellerProductManagement: React.FC = () => {
                 />
 
                 <div className="space-y-2 pt-1">
-                  <span className="text-[11px] font-semibold text-gray-500">Các Tùy Chọn Phân Loại (Gõ/Sửa trực tiếp bên dưới):</span>
+                  <span className="text-[11px] font-semibold text-gray-500">Các Tùy Chọn Trong Nhóm:</span>
                   <div className="flex flex-wrap gap-2 items-center">
                     {group.options.map((opt, oIdx) => (
                       <div key={oIdx} className="flex items-center gap-1 bg-white border border-gray-300 rounded px-2 py-1 shadow-xs focus-within:border-[#ee4d2d]">
@@ -428,7 +427,7 @@ export const SellerProductManagement: React.FC = () => {
                           type="text"
                           value={opt}
                           onChange={(e) => handleOptionChange(gIdx, oIdx, e.target.value)}
-                          placeholder="Tên tùy chọn..."
+                          placeholder="Tùy chọn..."
                           className="w-28 text-xs font-medium text-gray-800 bg-transparent focus:outline-none"
                         />
                         <button
@@ -454,19 +453,19 @@ export const SellerProductManagement: React.FC = () => {
             ))}
           </div>
 
-          {/* Section 3: Ma Trận SKUs Tự Động Sinh */}
+          {/* Section 3: Bảng giá & Tồn kho theo từng phân loại */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-[#ee4d2d]" /> 3. Ma Trận SKUs Phân Loại Tự Động ({skus.length} SKUs)
+              <Layers className="w-4 h-4 text-[#ee4d2d]" /> 3. Bảng Giá & Tồn Kho Theo Phân Loại ({skus.length} Phân Loại)
             </h2>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
-                    <th className="p-3">Biến Thể Phân Loại</th>
+                    <th className="p-3">Mẫu Phân Loại</th>
                     <th className="p-3">Giá Bán (VND)</th>
-                    <th className="p-3">Tồn Kho</th>
+                    <th className="p-3">Số Lượng Tồn Kho</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -512,7 +511,7 @@ export const SellerProductManagement: React.FC = () => {
               className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm px-8 py-3 rounded-lg shadow-md transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
-              {loading ? 'Đang lưu...' : `Lưu & Đăng ${skus.length} Biến Thể SKU`}
+              {loading ? 'Đang lưu...' : 'Lưu & Đăng Sản Phẩm'}
             </button>
           </div>
         </form>

@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Plus, Edit, Trash2, Search, Filter, Layers, RefreshCw } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
-import { ProductSPU } from '../../types/catalog';
+import { ProductSPU, Category } from '../../types/catalog';
 import { formatVND } from '../../utils/format-currency';
 import { SellerProductEditModal } from './SellerProductEditModal';
 
 export const SellerProductListPage: React.FC = () => {
   const [products, setProducts] = useState<ProductSPU[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -20,8 +21,23 @@ export const SellerProductListPage: React.FC = () => {
   const fetchSellerProducts = async () => {
     setLoading(true);
     try {
-      const data = await CatalogService.getSellerProducts();
-      setProducts(data);
+      const [prodData, catData] = await Promise.all([
+        CatalogService.getSellerProducts(),
+        CatalogService.getCategories(),
+      ]);
+      setProducts(prodData);
+
+      const flattenList: Category[] = [];
+      const extractAll = (items: Category[]) => {
+        items.forEach(c => {
+          flattenList.push(c);
+          if (c.children && c.children.length > 0) {
+            extractAll(c.children);
+          }
+        });
+      };
+      extractAll(catData);
+      setCategories(flattenList);
     } finally {
       setLoading(false);
     }
@@ -32,7 +48,7 @@ export const SellerProductListPage: React.FC = () => {
   }, []);
 
   const handleDeleteProduct = async (id: number) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa sản phẩm SPU #${id} khỏi gian hàng?`)) return;
+    if (!window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi gian hàng?')) return;
 
     try {
       await CatalogService.deleteSellerProduct(id);
@@ -60,10 +76,10 @@ export const SellerProductListPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-lg shadow-xs border border-gray-100">
         <div>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-6 h-6 text-[#ee4d2d]" /> Quản Lý Danh Sách Sản Phẩm (SPU & SKUs)
+            <Package className="w-6 h-6 text-[#ee4d2d]" /> Quản Lý Danh Sách Sản Phẩm
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Tổng cộng <span className="font-bold text-[#ee4d2d]">{products.length}</span> sản phẩm đang hoạt động trên Kênh Người Bán
+            Tổng cộng <span className="font-bold text-[#ee4d2d]">{products.length}</span> sản phẩm đang hiển thị bán trên Shopew
           </p>
         </div>
 
@@ -102,13 +118,14 @@ export const SellerProductListPage: React.FC = () => {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
+            className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
           >
-            <option value="ALL">Tất Cả Danh Mục</option>
-            <option value="11">Áo Thun Nam (Cat #11)</option>
-            <option value="21">Điện Thoại Di Động (Cat #21)</option>
-            <option value="22">Tai Nghe Bluetooth (Cat #22)</option>
-            <option value="32">Kẹp Tóc & Phụ Kiện (Cat #32)</option>
+            <option value="ALL">Tất Cả Danh Mục Ngành Hàng</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -122,7 +139,7 @@ export const SellerProductListPage: React.FC = () => {
             <Package className="w-12 h-12 text-gray-300 mx-auto" />
             <p className="text-sm font-bold text-gray-700">Chưa tìm thấy sản phẩm nào</p>
             <p className="text-xs text-gray-500 max-w-sm mx-auto">
-              Bạn chưa có sản phẩm nào phù hợp với bộ lọc. Hãy bấm Đăng Sản Phẩm Mới để thêm hàng.
+              Bạn chưa có sản phẩm nào trong danh mục này. Hãy bấm Đăng Sản Phẩm Mới để đăng bán.
             </p>
           </div>
         ) : (
@@ -130,10 +147,10 @@ export const SellerProductListPage: React.FC = () => {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase font-bold">
-                  <th className="p-3.5">SPU ID</th>
+                  <th className="p-3.5">Mã Sản Phẩm</th>
                   <th className="p-3.5">Thông Tin Sản Phẩm</th>
                   <th className="p-3.5">Giá Bán (VND)</th>
-                  <th className="p-3.5">Phân Loại Biến Thể</th>
+                  <th className="p-3.5">Phân Loại Hàng</th>
                   <th className="p-3.5">Đã Bán</th>
                   <th className="p-3.5 text-center">Thao Tác</th>
                 </tr>
@@ -142,6 +159,7 @@ export const SellerProductListPage: React.FC = () => {
                 {filteredProducts.map((p) => {
                   const skuCount = p.skus?.length || 0;
                   const totalStock = p.skus?.reduce((acc, curr) => acc + curr.stock, 0) || 0;
+                  const catObj = categories.find(c => c.id === p.categoryId);
 
                   return (
                     <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
@@ -156,7 +174,11 @@ export const SellerProductListPage: React.FC = () => {
                           <div className="space-y-0.5">
                             <h3 className="font-bold text-gray-900 line-clamp-1 max-w-xs">{p.name}</h3>
                             <div className="flex items-center gap-2">
-                              <span className="text-[11px] text-gray-500">Cat ID: #{p.categoryId}</span>
+                              {catObj && (
+                                <span className="text-[11px] text-gray-500 font-medium">
+                                  {catObj.name}
+                                </span>
+                              )}
                               {p.isMall && (
                                 <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.2 rounded">
                                   Shopee Mall
@@ -179,14 +201,14 @@ export const SellerProductListPage: React.FC = () => {
                       <td className="p-3.5">
                         <div className="space-y-1">
                           <span className="inline-flex items-center gap-1 font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
-                            <Layers className="w-3 h-3 text-[#ee4d2d]" /> {skuCount} SKUs ({totalStock} tồn)
+                            <Layers className="w-3 h-3 text-[#ee4d2d]" /> {skuCount} Phân loại ({totalStock} tồn)
                           </span>
                           {skuCount > 0 && (
                             <button
                               onClick={() => setSelectedProductForSkus(p)}
-                              className="block text-[11px] text-[#ee4d2d] hover:underline cursor-pointer"
+                              className="block text-[11px] text-[#ee4d2d] hover:underline cursor-pointer font-medium"
                             >
-                              Xem ma trận SKU
+                              Xem chi tiết phân loại
                             </button>
                           )}
                         </div>
@@ -219,13 +241,13 @@ export const SellerProductListPage: React.FC = () => {
         )}
       </div>
 
-      {/* Modal Chi Tiết SKUs */}
+      {/* Modal Chi Tiết Phân Loại Hàng */}
       {selectedProductForSkus && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-gray-100 pb-2">
               <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                <Layers className="w-4 h-4 text-[#ee4d2d]" /> Ma Trận SKUs #{selectedProductForSkus.id}
+                <Layers className="w-4 h-4 text-[#ee4d2d]" /> Chi Tiết Phân Loại Hàng
               </h3>
               <button
                 onClick={() => setSelectedProductForSkus(null)}
@@ -240,22 +262,22 @@ export const SellerProductListPage: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700">
-                    <th className="p-2">Tên Phân Loại SKU</th>
+                    <th className="p-2">Mẫu Phân Loại</th>
                     <th className="p-2">Giá Bán</th>
-                    <th className="p-2">Tồn Kho</th>
+                    <th className="p-2">Số Lượng Tồn Kho</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {selectedProductForSkus.skus?.map((sku, idx) => {
                     const label1 = selectedProductForSkus.variantGroups?.[0]?.options[sku.tierIndex[0]] || '';
                     const label2 = selectedProductForSkus.variantGroups?.[1]?.options[sku.tierIndex[1]] || '';
-                    const label = [label1, label2].filter(Boolean).join(' - ') || 'Default SKU';
+                    const label = [label1, label2].filter(Boolean).join(' - ') || 'Mẫu Mặc Định';
 
                     return (
                       <tr key={idx}>
                         <td className="p-2 font-semibold text-gray-800">{label}</td>
                         <td className="p-2 font-bold text-[#ee4d2d]">{formatVND(sku.price)}</td>
-                        <td className="p-2">{sku.stock} phần</td>
+                        <td className="p-2">{sku.stock} sản phẩm</td>
                       </tr>
                     );
                   })}

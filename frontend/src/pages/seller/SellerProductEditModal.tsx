@@ -112,12 +112,12 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto font-['Roboto',sans-serif]">
       <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6 space-y-5 border border-gray-100 max-h-[90vh] overflow-y-auto">
         {/* Header Modal */}
         <div className="flex items-center justify-between pb-3 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-5 h-5 text-[#ee4d2d]" /> Cập Nhật Sản Phẩm SPU #{product.id}
+            <Package className="w-5 h-5 text-[#ee4d2d]" /> Cập Nhật Thông Tin Sản Phẩm
           </h2>
           <button
             onClick={onClose}
@@ -134,7 +134,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Thông tin SPU Gốc */}
+          {/* Thông tin cơ bản */}
           <div className="space-y-3">
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">Tên Sản Phẩm *</label>
@@ -148,7 +148,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Mô Tả Chi Tiết</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1">Mô Tả Chi Tiết Sản Phẩm</label>
               <textarea
                 rows={3}
                 value={description}
@@ -159,7 +159,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Giá Chuẩn Mặc Định (VND) *</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Giá Bán Khởi Điểm (VND) *</label>
                 <input
                   type="number"
                   required
@@ -170,18 +170,18 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Danh Mục Sản Phẩm (Call API) *</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Danh Mục Ngành Hàng *</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(Number(e.target.value))}
-                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
                 >
                   {categories.length === 0 ? (
-                    <option value={product.categoryId || 1}>Danh mục #{product.categoryId || 1}</option>
+                    <option value={product.categoryId || 1}>Chọn Ngành Hàng</option>
                   ) : (
                     categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
-                        {cat.name} (ID #{cat.id})
+                        {cat.name}
                       </option>
                     ))
                   )}
@@ -190,26 +190,26 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
             </div>
           </div>
 
-          {/* Ma trận Biến Thể SKU */}
+          {/* Bảng phân loại hàng */}
           {skus.length > 0 && (
             <div className="space-y-3 pt-2 border-t border-gray-100">
               <h3 className="text-xs font-bold text-gray-800 uppercase flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-[#ee4d2d]" /> Danh Sách Biến Thể SKUs ({skus.length} SKUs)
+                <Layers className="w-4 h-4 text-[#ee4d2d]" /> Bảng Giá & Tồn Kho Phân Loại Hàng ({skus.length} Phân Loại)
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
-                      <th className="p-2.5">Biến Thể SKU</th>
+                      <th className="p-2.5">Mẫu Phân Loại</th>
                       <th className="p-2.5">Giá Bán (VND)</th>
-                      <th className="p-2.5">Tồn Kho</th>
+                      <th className="p-2.5">Số Lượng Tồn Kho</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {skus.map((sku, sIdx) => {
                       const label1 = product.variantGroups?.[0]?.options[sku.tierIndex[0]] || '';
                       const label2 = product.variantGroups?.[1]?.options[sku.tierIndex[1]] || '';
-                      const variantLabel = [label1, label2].filter(Boolean).join(' - ') || `SKU #${sku.id}`;
+                      const variantLabel = [label1, label2].filter(Boolean).join(' - ') || `Mẫu #${sku.id}`;
 
                       return (
                         <tr key={sIdx} className="hover:bg-gray-50">
