@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Plus, Edit, Trash2, Search, Filter, Layers, RefreshCw, Tag } from 'lucide-react';
+import { Package, Plus, Edit, Trash2, Search, Filter, Layers, Tag } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { ProductSPU, Category } from '../../types/catalog';
 import { formatVND } from '../../utils/format-currency';
@@ -83,13 +83,6 @@ export const SellerProductListPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={fetchSellerProducts}
-            className="p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer"
-            title="Làm mới danh sách"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
           <Link
             to="/seller/products/new"
             className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"

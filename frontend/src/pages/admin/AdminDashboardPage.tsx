@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
-import { ShieldAlert, Users, Store, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ShieldAlert, Users, Store, RotateCcw, AlertTriangle } from 'lucide-react';
 import { formatVND } from '../../utils/format-currency';
 import { adminService, AdminDashboardData } from '../../services/admin-service';
 
@@ -46,12 +46,6 @@ export const AdminDashboardPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={fetchDashboardData}
-              className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded transition-colors"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Tải lại API
-            </button>
             <span className="text-xs bg-slate-900 text-white font-bold px-3 py-1.5 rounded shadow">
               Super Admin View
             </span>
