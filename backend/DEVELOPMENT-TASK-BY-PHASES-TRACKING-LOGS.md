@@ -16,13 +16,19 @@
 
 ## Phase 2: Core E-Commerce API (Role-based)
 
-### 2.1. Categories Management (Admin / System)
-- [x] Define Nested Set or Adjacency List schema for Category Tree.
-- [x] `POST /api/v1/categories`: API tạo category mới (Chỉ Admin).
-- [x] `GET /api/v1/categories`: API lấy danh sách Category Tree (cho Home & Search).
-- [x] `GET /api/v1/categories/:id`: API tìm chi tiết category theo ID.
-- [x] `PUT /api/v1/categories/:id`: API sửa thông tin category (Chỉ Admin).
-- [x] `DELETE /api/v1/categories/:id`: API xóa category (Chỉ Admin).
+### 2.1. Role Admin (System & Management)
+- [x] **Categories Management:**
+  - [x] Define Nested Set or Adjacency List schema for Category Tree.
+  - [x] `POST /api/v1/categories`: API tạo category mới.
+  - [x] `GET /api/v1/categories`: API lấy danh sách Category Tree.
+  - [x] `GET /api/v1/categories/:id`: API tìm chi tiết category theo ID.
+  - [x] `PUT /api/v1/categories/:id`: API sửa thông tin category.
+  - [x] `DELETE /api/v1/categories/:id`: API xóa category.
+- [x] **Dashboard & Data Viewing:**
+  - [x] `GET /api/v1/admin/dashboard`: View overall statistics (Total Users, Total Shops, Active Disputes, Total GMV).
+  - [x] `GET /api/v1/admin/users`: View user list.
+  - [x] `GET /api/v1/admin/shops`: View shop list.
+  - [x] `GET /api/v1/admin/products`: View all products across platform.
 
 ### 2.2. Product Management (Role Seller)
 - [x] **Shop Profile:** API to manage Shop profiles (create, update, view).
@@ -51,13 +57,7 @@
   - [x] `GET /api/v1/products/:id`: API get product detail (full SPU, SKU, Variant Groups, Shop info).
   - [x] `POST /api/v1/products/:id/like`: Toggle Wishlist (Like/Unlike) product.
 
-### 2.4. Role Admin (View Only)
-- [x] **Dashboard:**
-  - [x] `GET /api/v1/admin/dashboard`: View overall statistics (Total Users, Total Shops, Active Disputes, Total GMV).
-- [x] **Data Viewing:**
-  - [x] `GET /api/v1/admin/users`: View user list.
-  - [x] `GET /api/v1/admin/shops`: View shop list.
-  - [x] `GET /api/v1/admin/products`: View all products across platform.
+
 
 ## Phase 3: Advanced Search (Elasticsearch) *[Optional / Future]*
 - [ ] Sync PostgreSQL `Product` data to Elasticsearch index.
