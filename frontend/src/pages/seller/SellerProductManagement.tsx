@@ -275,6 +275,8 @@ export const SellerProductManagement: React.FC = () => {
         price: s.price,
         originalPrice: s.originalPrice,
         stock: s.stock,
+        isDiscount: s.isDiscountActive,
+        discountPercentage: s.discountPercentage,
       })),
     });
 

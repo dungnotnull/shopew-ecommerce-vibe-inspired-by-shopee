@@ -210,6 +210,8 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
           price: s.price,
           originalPrice: s.originalPrice,
           stock: s.stock,
+          isDiscount: s.isDiscountActive,
+          discountPercentage: s.discountPercentage,
         })),
       });
 
