@@ -226,42 +226,18 @@ export const CatalogService = {
     }
   },
 
-  // 2. Lấy danh sách Flash Sale Trang Chủ: GET /api/v1/home/flash-sale
+  // 2. Lấy danh sách Flash Sale Trang Chủ: GET /api/v1/home/flash-sale (100% Real API Data)
   async getFlashSale(): Promise<FlashSaleItem[]> {
     try {
       const response = await apiClient.get('/v1/home/flash-sale');
       const resData = response.data;
-      let items: FlashSaleItem[] = [];
-      if (Array.isArray(resData)) items = resData;
-      else if (Array.isArray(resData?.data) && Array.isArray(resData.data)) items = resData.data;
-      else if (Array.isArray(resData?.data?.data)) items = resData.data.data;
-
-      if (items && items.length > 0) return items;
-
-      // Fallback hiển thị sản phẩm Flash Sale nếu DB chưa có sản phẩm giảm giá
-      return mockProducts.map(p => ({
-        id: p.id,
-        name: p.name,
-        priceMin: p.priceMin,
-        priceMax: p.priceMax,
-        promotionalPrice: p.promotionalPrice,
-        discountPercentage: p.discountPercentage || 20,
-        soldCount: p.soldCount || 45,
-        stock: 100,
-        thumbnailUrl: p.images?.[0] || '',
-      }));
-    } catch {
-      return mockProducts.map(p => ({
-        id: p.id,
-        name: p.name,
-        priceMin: p.priceMin,
-        priceMax: p.priceMax,
-        promotionalPrice: p.promotionalPrice,
-        discountPercentage: p.discountPercentage || 20,
-        soldCount: p.soldCount || 45,
-        stock: 100,
-        thumbnailUrl: p.images?.[0] || '',
-      }));
+      if (Array.isArray(resData)) return resData;
+      if (Array.isArray(resData?.data) && Array.isArray(resData.data)) return resData.data;
+      if (Array.isArray(resData?.data?.data)) return resData.data.data;
+      return [];
+    } catch (error) {
+      console.error('Lỗi khi gọi API Flash Sale:', error);
+      return [];
     }
   },
 
