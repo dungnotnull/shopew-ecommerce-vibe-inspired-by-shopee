@@ -10,12 +10,20 @@ export const Navbar: React.FC = () => {
   return (
     <div className="bg-[#ee4d2d] text-white text-xs py-1.5 border-b border-orange-600/30 font-['Roboto',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-        {/* Phân vùng trái: Liên kết điều hướng Kênh Người Bán */}
+        {/* Phân vùng trái: Liên kết điều hướng Kênh Người Bán (Chỉ dành cho SELLER hoặc ADMIN) */}
         <div className="flex items-center space-x-3">
-          <Link to="/seller" className="hover:opacity-80 flex items-center gap-1 font-medium">
-            <Store className="w-3.5 h-3.5" />
-            Kênh Người Bán
-          </Link>
+          {isAuthenticated && (user?.role === 'SELLER' || user?.role === 'ADMIN') && (
+            <Link to="/seller" className="hover:opacity-80 flex items-center gap-1 font-medium">
+              <Store className="w-3.5 h-3.5" />
+              Kênh Người Bán
+            </Link>
+          )}
+          {isAuthenticated && user?.role === 'ADMIN' && (
+            <Link to="/admin" className="hover:opacity-80 flex items-center gap-1 font-medium text-amber-200">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Cổng Quản Trị Admin
+            </Link>
+          )}
         </div>
 
         {/* Phân vùng phải: Thông báo, Hỗ trợ, Ngôn ngữ & User Profile */}
