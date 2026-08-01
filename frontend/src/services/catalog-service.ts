@@ -285,7 +285,7 @@ export const CatalogService = {
     }
   },
 
-  // Cập nhật Danh mục sản phẩm
+  // Cập nhật Danh mục sản phẩm (Role Admin)
   async updateCategory(id: number, data: { name?: string; parentId?: number | null; attributes?: any }): Promise<Category> {
     try {
       const response = await apiClient.put(`/v1/categories/${id}`, data);
@@ -293,6 +293,12 @@ export const CatalogService = {
     } catch {
       return { id, name: data.name || 'Danh Mục', parentId: data.parentId || null, children: [] };
     }
+  },
+
+  // Xóa Danh mục sản phẩm (Role Admin)
+  async deleteCategory(id: number): Promise<{ success: boolean }> {
+    const response = await apiClient.delete(`/v1/categories/${id}`);
+    return response.data;
   },
 
   // 5. Tìm kiếm sản phẩm nâng cao
@@ -355,11 +361,34 @@ export const CatalogService = {
     }
   },
 
-  // 6. Lấy chi tiết SPU và các SKU phân loại
+  // 6. Lấy chi tiết SPU và các SKU phân loại: GET /api/v1/products/:id
   async getProductById(id: number): Promise<ProductSPU | null> {
     try {
       const response = await apiClient.get(`/v1/products/${id}`);
-      return response.data;
+      const data = response.data;
+      if (data) {
+        // Chuẩn hóa tên Shop từ relation shop { id, name }
+        if (data.shop && data.shop.name && !data.shopName) {
+          data.shopName = data.shop.name;
+        }
+        // Chuẩn hóa variantGroups nếu backend trả về options dưới dạng mảng object { value }
+        if (data.variantGroups && Array.isArray(data.variantGroups)) {
+          data.variantGroups = data.variantGroups.map((vg: any) => ({
+            name: vg.name,
+            options: (vg.options || []).map((opt: any) =>
+              typeof opt === 'object' && opt !== null ? opt.value : opt
+            ),
+          }));
+        }
+        // Chuẩn hóa tierIndex nếu backend lưu dạng JSON String
+        if (data.skus && Array.isArray(data.skus)) {
+          data.skus = data.skus.map((sku: any) => ({
+            ...sku,
+            tierIndex: typeof sku.tierIndex === 'string' ? JSON.parse(sku.tierIndex) : sku.tierIndex || [],
+          }));
+        }
+      }
+      return data;
     } catch {
       const found = mockProducts.find(p => p.id === Number(id));
       return found || mockProducts[0];

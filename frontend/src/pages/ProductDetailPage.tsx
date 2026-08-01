@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, Heart, Star, ShoppingCart, Store, Check, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Heart, Star, ShoppingCart, Store, Check, AlertCircle, Eye } from 'lucide-react';
 import { ProductSPU, SKU } from '../types/catalog';
 import { formatVND } from '../utils/format-currency';
 import CatalogService from '../services/catalog-service';
@@ -50,10 +50,13 @@ export const ProductDetailPage: React.FC = () => {
   // Tìm SKU khớp chính xác với mảng tierIndex được chọn
   const findMatchingSku = (skus: SKU[], tiers: number[]) => {
     const match = skus.find(sku => {
-      if (sku.tierIndex.length !== tiers.length) return false;
+      if (!sku.tierIndex || sku.tierIndex.length !== tiers.length) return false;
       return sku.tierIndex.every((val, idx) => val === tiers[idx]);
     });
     setActiveSku(match || null);
+    if (match?.thumbnailUrl) {
+      setSelectedImage(match.thumbnailUrl);
+    }
   };
 
   const handleSelectOption = (groupIndex: number, optionIndex: number) => {
@@ -168,8 +171,8 @@ export const ProductDetailPage: React.FC = () => {
               {product.name}
             </h1>
 
-            {/* Metrics: Đánh giá, Lượt bán, Lượt yêu thích */}
-            <div className="flex items-center gap-4 text-xs divide-x divide-gray-200 pt-1">
+            {/* Metrics: Đánh giá, Lượt bán, Lượt yêu thích, Lượt xem */}
+            <div className="flex flex-wrap items-center gap-4 text-xs divide-x divide-gray-200 pt-1">
               <div className="flex items-center gap-1 text-amber-500 font-bold">
                 <span className="underline">{product.rating}</span>
                 <div className="flex text-amber-400">
@@ -186,16 +189,21 @@ export const ProductDetailPage: React.FC = () => {
               <div className="pl-4">
                 <button
                   onClick={handleToggleLike}
-                  className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors font-medium"
+                  className="flex items-center gap-1 text-gray-500 hover:text-red-500 transition-colors font-medium cursor-pointer"
                 >
                   <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
                   <span>{likeCount} Đã thích</span>
                 </button>
               </div>
+
+              <div className="pl-4 text-gray-500 flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5 text-gray-400" />
+                <span>{product.viewCount || 0} Lượt xem</span>
+              </div>
             </div>
 
-            {/* Khối Giá Tiền VND & Voucher */}
-            <div className="bg-gray-50 p-4 rounded-lg flex items-baseline gap-3">
+            {/* Khối Giá Tiền VND & Discount/Promotion */}
+            <div className="bg-gray-50 p-4 rounded-lg flex flex-wrap items-baseline gap-3">
               <span className="text-3xl font-extrabold text-[#ee4d2d]">
                 {formatVND(displayPrice)}
               </span>
@@ -206,9 +214,21 @@ export const ProductDetailPage: React.FC = () => {
                 </span>
               )}
 
-              {!!product.discountPercentage && product.discountPercentage > 0 && (
+              {!!product.promotionalPrice && product.promotionalPrice > 0 && product.promotionalPrice < displayPrice && (
+                <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-xs uppercase shadow-xs">
+                  Khuyến mãi đặc biệt: {formatVND(product.promotionalPrice)}
+                </span>
+              )}
+
+              {((activeSku && activeSku.discountPercentage && activeSku.discountPercentage > 0) || (product.discountPercentage && product.discountPercentage > 0)) && (
                 <span className="bg-[#ee4d2d] text-white text-xs font-bold px-2 py-0.5 rounded-xs uppercase">
-                  -{product.discountPercentage}% GIẢM
+                  -{activeSku?.discountPercentage || product.discountPercentage}% GIẢM
+                </span>
+              )}
+
+              {activeSku?.skuCode && (
+                <span className="ml-auto text-[11px] font-mono text-gray-400 bg-gray-200/60 px-2 py-0.5 rounded">
+                  SKU: {activeSku.skuCode}
                 </span>
               )}
             </div>

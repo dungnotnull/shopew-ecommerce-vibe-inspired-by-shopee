@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Store, Package, ShoppingBag, BarChart2, Ticket, MessageSquare, ArrowLeft, LogOut, Layers } from 'lucide-react';
+import { Store, Package, ShoppingBag, BarChart2, Ticket, MessageSquare, ArrowLeft, LogOut } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 interface SellerLayoutProps {
@@ -15,7 +15,6 @@ export const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
   const menuItems = [
     { label: 'Tổng Quan Shop', path: '/seller', icon: BarChart2 },
     { label: 'Quản Lý Sản Phẩm', path: '/seller/products', icon: Package },
-    { label: 'Quản Lý Danh Mục', path: '/seller/categories', icon: Layers },
     { label: 'Quản Lý Đơn Hàng', path: '/seller/orders', icon: ShoppingBag },
     { label: 'Kênh Marketing / Voucher', path: '/seller/vouchers', icon: Ticket },
     { label: 'Chat Với Khách Hàng', path: '/seller/chat', icon: MessageSquare },

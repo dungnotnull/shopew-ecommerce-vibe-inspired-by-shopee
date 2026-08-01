@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Package, Layers, CheckSquare, Square, Percent } from 'lucide-react';
+import { X, Save, Package, Layers, CheckSquare, Square, Percent, RefreshCw } from 'lucide-react';
 import { ProductSPU, Category } from '../../types/catalog';
 import CatalogService from '../../services/catalog-service';
 
@@ -20,6 +20,23 @@ interface SellerProductEditModalProps {
   onSuccess: () => void;
 }
 
+interface FlattenCategoryOption {
+  id: number;
+  label: string;
+}
+
+const buildCategorySelectOptions = (cats: Category[], depth = 0): FlattenCategoryOption[] => {
+  let options: FlattenCategoryOption[] = [];
+  cats.forEach((c) => {
+    const prefix = depth > 0 ? `${'-- '.repeat(depth)}` : '';
+    options.push({ id: c.id, label: `${prefix}${c.name}` });
+    if (c.children && c.children.length > 0) {
+      options = options.concat(buildCategorySelectOptions(c.children, depth + 1));
+    }
+  });
+  return options;
+};
+
 export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
   product,
   isOpen,
@@ -31,32 +48,31 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
   const [priceMin, setPriceMin] = useState<number>(product.priceMin || 0);
   const [categoryId, setCategoryId] = useState<number>(product.categoryId || 1);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [skus, setSkus] = useState<ExtendedEditSKU[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
   // Call API GET /api/v1/categories nạp danh sách Danh Mục cho Modal Edit
-  useEffect(() => {
-    const fetchCats = async () => {
-      try {
-        const catData = await CatalogService.getCategories();
-        if (catData && catData.length > 0) {
-          const flattenList: Category[] = [];
-          const extractAll = (items: Category[]) => {
-            items.forEach(c => {
-              flattenList.push(c);
-              if (c.children && c.children.length > 0) {
-                extractAll(c.children);
-              }
-            });
-          };
-          extractAll(catData);
-          setCategories(flattenList);
-        }
-      } catch {
-        // Fallback default
+  const fetchCats = async () => {
+    setCategoriesLoading(true);
+    setCategoriesError(null);
+    try {
+      const catData = await CatalogService.getCategories();
+      if (catData && catData.length > 0) {
+        setCategories(catData);
+      } else {
+        setCategories([]);
       }
-    };
+    } catch {
+      setCategoriesError('Không thể tải danh sách ngành hàng.');
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCats();
   }, []);
 
@@ -265,22 +281,43 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Danh Mục Ngành Hàng *</label>
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(Number(e.target.value))}
-                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
-                >
-                  {categories.length === 0 ? (
-                    <option value={product.categoryId || 1}>Chọn Ngành Hàng</option>
-                  ) : (
-                    categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700">Danh Mục Ngành Hàng *</label>
+                  {categoriesError && (
+                    <button
+                      type="button"
+                      onClick={fetchCats}
+                      className="text-[11px] text-[#ee4d2d] hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                    >
+                      <RefreshCw className="w-3 h-3" /> Thử lại
+                    </button>
                   )}
-                </select>
+                </div>
+                {categoriesLoading ? (
+                  <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-400 animate-pulse">
+                    Đang tải danh mục...
+                  </div>
+                ) : categoriesError ? (
+                  <div className="w-full p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 font-medium">
+                    {categoriesError}
+                  </div>
+                ) : (
+                  <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(Number(e.target.value))}
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
+                  >
+                    {buildCategorySelectOptions(categories).length === 0 ? (
+                      <option value={product.categoryId || 1}>Chưa có ngành hàng</option>
+                    ) : (
+                      buildCategorySelectOptions(categories).map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                )}
               </div>
             </div>
           </div>

@@ -19,6 +19,8 @@ export interface SKU {
   tierIndex: number[]; // e.g. [0, 1] -> VariantGroup 0 option 0, VariantGroup 1 option 1
   price: number;
   originalPrice?: number;
+  discountPercentage?: number;
+  isDiscount?: boolean;
   stock: number;
   thumbnailUrl?: string;
   skuCode?: string;
@@ -31,12 +33,14 @@ export interface ProductSPU {
   categoryId?: number;
   priceMin: number;
   priceMax: number;
+  promotionalPrice?: number;
   discountPercentage?: number;
   isMall: boolean;
   isPreferred: boolean;
   soldCount: number;
   rating: number;
   likeCount: number;
+  viewCount?: number;
   isLiked?: boolean;
   images?: string[];
   attributes?: Record<string, string>;

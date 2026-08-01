@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, Percent, CheckSquare, Square } from 'lucide-react';
+import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, Percent, CheckSquare, Square, RefreshCw } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { sellerService } from '../../services/seller-service';
 import { VariantGroup, Category } from '../../types/catalog';
@@ -16,6 +16,24 @@ interface ExtendedFormSKU {
   stock: number;
 }
 
+// Helper dựng danh sách danh mục phẳng có ký tự phân cấp cho dropdown select
+interface FlattenCategoryOption {
+  id: number;
+  label: string;
+}
+
+const buildCategorySelectOptions = (cats: Category[], depth = 0): FlattenCategoryOption[] => {
+  let options: FlattenCategoryOption[] = [];
+  cats.forEach((c) => {
+    const prefix = depth > 0 ? `${'-- '.repeat(depth)}` : '';
+    options.push({ id: c.id, label: `${prefix}${c.name}` });
+    if (c.children && c.children.length > 0) {
+      options = options.concat(buildCategorySelectOptions(c.children, depth + 1));
+    }
+  });
+  return options;
+};
+
 export const SellerProductManagement: React.FC = () => {
   const navigate = useNavigate();
 
@@ -25,6 +43,8 @@ export const SellerProductManagement: React.FC = () => {
   const [priceMin, setPriceMin] = useState<number>(100000);
   const [categoryId, setCategoryId] = useState<number>(1);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -35,31 +55,29 @@ export const SellerProductManagement: React.FC = () => {
   const [shopDescription, setShopDescription] = useState<string>('Cửa hàng phân phối sản phẩm chính hãng trên Shopew.');
   const [creatingShop, setCreatingShop] = useState<boolean>(false);
 
-  // Call API nạp danh sách Danh mục sản phẩm thực tế: GET /api/v1/categories
-  useEffect(() => {
-    const fetchCategoriesFromAPI = async () => {
-      try {
-        const catData = await CatalogService.getCategories();
-        if (catData && catData.length > 0) {
-          const flattenList: Category[] = [];
-          const extractAll = (items: Category[]) => {
-            items.forEach(c => {
-              flattenList.push(c);
-              if (c.children && c.children.length > 0) {
-                extractAll(c.children);
-              }
-            });
-          };
-          extractAll(catData);
-          setCategories(flattenList);
-          if (flattenList.length > 0) {
-            setCategoryId(flattenList[0].id);
-          }
+  // Call API nạp danh sách Danh mục sản phẩm từ Backend: GET /api/v1/categories
+  const fetchCategoriesFromAPI = async () => {
+    setCategoriesLoading(true);
+    setCategoriesError(null);
+    try {
+      const catData = await CatalogService.getCategories();
+      if (catData && catData.length > 0) {
+        setCategories(catData);
+        const options = buildCategorySelectOptions(catData);
+        if (options.length > 0) {
+          setCategoryId(options[0].id);
         }
-      } catch {
-        // Fallback default
+      } else {
+        setCategories([]);
       }
-    };
+    } catch {
+      setCategoriesError('Không thể tải danh sách ngành hàng từ API.');
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCategoriesFromAPI();
   }, []);
 
@@ -441,24 +459,45 @@ export const SellerProductManagement: React.FC = () => {
 
                 {/* Ô Chọn Danh Mục Sản Phẩm */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Danh Mục Ngành Hàng *
-                  </label>
-                  <select
-                    value={categoryId}
-                    onChange={(e) => setCategoryId(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
-                  >
-                    {categories.length === 0 ? (
-                      <option value={1}>Chọn Ngành Hàng</option>
-                    ) : (
-                      categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-gray-700">
+                      Danh Mục Ngành Hàng *
+                    </label>
+                    {categoriesError && (
+                      <button
+                        type="button"
+                        onClick={fetchCategoriesFromAPI}
+                        className="text-[11px] text-[#ee4d2d] hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                      >
+                        <RefreshCw className="w-3 h-3" /> Thử lại
+                      </button>
                     )}
-                  </select>
+                  </div>
+                  {categoriesLoading ? (
+                    <div className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs text-gray-400 animate-pulse">
+                      Đang tải danh mục từ hệ thống...
+                    </div>
+                  ) : categoriesError ? (
+                    <div className="w-full p-2.5 bg-red-50 border border-red-200 rounded text-xs text-red-600 font-medium">
+                      {categoriesError}
+                    </div>
+                  ) : (
+                    <select
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(Number(e.target.value))}
+                      className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
+                    >
+                      {buildCategorySelectOptions(categories).length === 0 ? (
+                        <option value={1}>Chưa có ngành hàng</option>
+                      ) : (
+                        buildCategorySelectOptions(categories).map((opt) => (
+                          <option key={opt.id} value={opt.id}>
+                            {opt.label}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  )}
                 </div>
               </div>
             </div>

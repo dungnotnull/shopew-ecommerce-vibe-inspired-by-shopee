@@ -16,6 +16,7 @@ import { ProfilePage } from './pages/user/ProfilePage';
 import { AddressPage } from './pages/user/AddressPage';
 import { SellerDashboardPage } from './pages/seller/SellerDashboardPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { AdminCategoryListPage } from './pages/admin/AdminCategoryListPage';
 
 // Phase 2 & 3 Catalog & Shop Pages
 import { ProductDetailPage } from './pages/ProductDetailPage';
@@ -23,7 +24,6 @@ import { SearchPage } from './pages/SearchPage';
 import { ShopDetailPage } from './pages/ShopDetailPage';
 import { SellerProductManagement } from './pages/seller/SellerProductManagement';
 import { SellerProductListPage } from './pages/seller/SellerProductListPage';
-import { SellerCategoryListPage } from './pages/seller/SellerCategoryListPage';
 
 // Khởi tạo React Query Client
 const queryClient = new QueryClient({
@@ -116,16 +116,7 @@ export const App: React.FC = () => {
               </RoleGuard>
             }
           />
-          <Route
-            path="/seller/categories"
-            element={
-              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
-                <SellerLayout>
-                  <SellerCategoryListPage />
-                </SellerLayout>
-              </RoleGuard>
-            }
-          />
+
           <Route
             path="/seller/*"
             element={
@@ -141,6 +132,14 @@ export const App: React.FC = () => {
             element={
               <RoleGuard allowedRoles={['ADMIN']}>
                 <AdminDashboardPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/admin/categories"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminCategoryListPage />
               </RoleGuard>
             }
           />
