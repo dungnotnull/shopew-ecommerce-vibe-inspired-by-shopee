@@ -342,34 +342,14 @@ export const ProductDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Dynamic Attributes & Môt tả sản phẩm */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 space-y-6">
-          <div>
-            <h3 className="text-base font-bold text-gray-900 uppercase bg-gray-50 p-3 rounded mb-4">
-              CHI TIẾT SẢN PHẨM
-            </h3>
-            {product.attributes && Object.keys(product.attributes).length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {Object.entries(product.attributes).map(([key, val]) => (
-                  <div key={key} className="flex border-b border-gray-100 pb-2">
-                    <span className="text-gray-400 w-36 font-medium">{key}</span>
-                    <span className="text-gray-800 font-semibold">{val}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-gray-500">Đang cập nhật thuộc tính kỹ thuật.</p>
-            )}
-          </div>
-
-          <div>
-            <h3 className="text-base font-bold text-gray-900 uppercase bg-gray-50 p-3 rounded mb-4">
-              MÔ TẢ SẢN PHẨM
-            </h3>
-            <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
-              {product.description || 'Sản phẩm chính hãng chất lượng cao phân phối chính thức trên Shopew.'}
-            </p>
-          </div>
+        {/* Môt tả sản phẩm */}
+        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+          <h3 className="text-base font-bold text-gray-900 uppercase bg-gray-50 p-3 rounded mb-4">
+            MÔ TẢ SẢN PHẨM
+          </h3>
+          <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
+            {product.description || 'Sản phẩm chính hãng chất lượng cao phân phối chính thức trên Shopew.'}
+          </p>
         </div>
       </div>
     </CustomerLayout>
