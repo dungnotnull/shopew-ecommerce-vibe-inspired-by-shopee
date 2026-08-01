@@ -16,40 +16,48 @@
 
 ## Phase 2: Core E-Commerce API (Role-based)
 
-### 2.1. Role Seller (Product Management)
+### 2.1. Categories Management (Admin / System)
+- [x] Define Nested Set or Adjacency List schema for Category Tree.
+- [x] `POST /api/v1/categories`: API tạo category mới (Chỉ Admin).
+- [x] `GET /api/v1/categories`: API lấy danh sách Category Tree (cho Home & Search).
+- [x] `GET /api/v1/categories/:id`: API tìm chi tiết category theo ID.
+- [x] `PUT /api/v1/categories/:id`: API sửa thông tin category (Chỉ Admin).
+- [x] `DELETE /api/v1/categories/:id`: API xóa category (Chỉ Admin).
+
+### 2.2. Product Management (Role Seller)
 - [x] **Shop Profile:** API to manage Shop profiles (create, update, view).
 - [x] **CRUD Products (SPU & SKU Architecture):**
-  - [x] `POST /api/seller/products`: Create SPU, Variant Groups (e.g., "Màu sắc", "Kích thước"), and SKUs (price, stock, tierIndex).
+  - [x] `POST /api/seller/products`: API tạo SPU, Variant Groups và SKUs.
   - [x] Logic: Auto-generation of a "Default SKU" if SPU is created without variant groups.
-  - [x] `GET /api/seller/products`: List all products belonging to the seller.
-  - [x] `PUT /api/seller/products/:id`: Update SPU & SKUs.
-  - [x] `DELETE /api/seller/products/:id`: Delete SPU and its SKUs.
+  - [x] `GET /api/seller/products`: API danh sách products của seller.
+  - [x] `GET /api/seller/products/:id`: API tìm chi tiết product cho seller để sửa.
+  - [x] `PUT /api/seller/products/:id`: API sửa SPU & SKUs.
+  - [x] `DELETE /api/seller/products/:id`: API xóa SPU and SKUs.
   - [x] Setup `isMall`, `isPreferred` flags for the shop's products.
+  - [x] Thêm Upload API (`POST /api/v1/upload`) và trường `images` cho SPU.
 
-### 2.2. Role Customer (Discovery & Shopping)
-- [x] **Categories Master Data:**
-  - [x] Define Nested Set or Adjacency List schema for Category Tree.
-  - [x] `GET /api/v1/categories`: Fetch Category Tree (for Home & Search pages).
-- [ ] **Home Page APIs:**
-  - [ ] `GET /api/v1/home/banners`: Fetch active promotional banners for the slider.
-  - [ ] `GET /api/v1/home/flash-sale`: Fetch active flash sale items with countdown and progress bar data.
-  - [ ] `GET /api/v1/home/daily-discover`: Fetch paginated "Gợi ý hôm nay" products.
-- [ ] **Search & Filter API (Catalog):**
-  - [ ] `GET /api/v1/products/search`: Search products by keyword (`q`).
-  - [ ] Implement filtering by `category_id`, `price_min`, `price_max`, `rating`, `isMall`, `isPreferred`.
-  - [ ] Implement sorting by `relevance`, `sold`, `newest`, `price` (asc/desc).
-  - [ ] *Note: Each product card response must contain necessary fields mapped to FE (`name`, `priceMin`, `priceMax`, `discountPercentage`, `rating`, `soldCount`, `likeCount`, `thumbnailUrl`, `isMall`, `isPreferred`).*
+### 2.3. Discovery & Shopping (Role Customer)
+- [x] **Home Page & Flash Sale APIs:**
+  - [x] `GET /api/v1/home/banners`: Fetch active promotional banners cho slider.
+  - [x] `GET /api/v1/home/flash-sale`: API lấy danh sách flash sale items với countdown và progress.
+  - [x] `GET /api/v1/home/daily-discover`: Fetch paginated "Gợi ý hôm nay" products.
+- [x] **Search & Filter API (Catalog):**
+  - [x] `GET /api/v1/products`: API get products (danh sách chung, có pagination).
+  - [x] `GET /api/v1/products/search`: API tìm kiếm products bằng từ khóa (`q`).
+  - [x] `GET /api/v1/products/filter`: API filter products theo category, price, rating, isMall, v.v. (Có thể thiết kế gộp chung query params vào API search/list).
+  - [x] Implement sorting by `relevance`, `sold`, `newest`, `price` (asc/desc).
+  - [x] *Note: Each product card response must contain necessary fields mapped to FE.*
 - [x] **Product Details & Interactive:**
-  - [x] `GET /api/v1/products/:id`: Fetch full SPU details, variant groups, SKUs, and Shop info.
+  - [x] `GET /api/v1/products/:id`: API get product detail (full SPU, SKU, Variant Groups, Shop info).
   - [x] `POST /api/v1/products/:id/like`: Toggle Wishlist (Like/Unlike) product.
 
-### 2.3. Role Admin (View Only)
-- [ ] **Dashboard:**
-  - [ ] `GET /api/admin/dashboard`: View overall statistics (Total Users, Total Shops, Active Disputes, Total GMV).
-- [ ] **Data Viewing:**
-  - [ ] `GET /api/admin/users`: View user list.
-  - [ ] `GET /api/admin/shops`: View shop list.
-  - [ ] `GET /api/admin/products`: View all products across platform.
+### 2.4. Role Admin (View Only)
+- [x] **Dashboard:**
+  - [x] `GET /api/v1/admin/dashboard`: View overall statistics (Total Users, Total Shops, Active Disputes, Total GMV).
+- [x] **Data Viewing:**
+  - [x] `GET /api/v1/admin/users`: View user list.
+  - [x] `GET /api/v1/admin/shops`: View shop list.
+  - [x] `GET /api/v1/admin/products`: View all products across platform.
 
 ## Phase 3: Advanced Search (Elasticsearch) *[Optional / Future]*
 - [ ] Sync PostgreSQL `Product` data to Elasticsearch index.

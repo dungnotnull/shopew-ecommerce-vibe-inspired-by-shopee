@@ -13,6 +13,11 @@ async function bootstrap() {
   // Global prefix
   app.setGlobalPrefix('api');
   
+  // Serve static files for uploads
+  const express = require('express');
+  const { join } = require('path');
+  app.use('/uploads', express.static(join(process.cwd(), 'public/uploads')));
+
   // Enable CORS
   app.enableCors();
 

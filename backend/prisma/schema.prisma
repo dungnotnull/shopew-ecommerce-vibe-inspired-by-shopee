@@ -82,6 +82,7 @@ model Product {
   priceMin           Int       @default(0)
   priceMax           Int       @default(0)
   promotionalPrice   Int       @default(0)
+  images             String[]  @default([])
   rating             Float     @default(0.0)
   soldCount          Int       @default(0)
   likeCount          Int       @default(0)

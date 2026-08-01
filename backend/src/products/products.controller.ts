@@ -14,6 +14,12 @@ import { SearchProductsDto } from './dto/search-products.dto';
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Get products list (alias for search)' })
+  async getProductsList(@Query() query: SearchProductsDto) {
+    return this.productsService.searchProducts(query);
+  }
+
   @Get('search')
   @ApiOperation({ summary: 'Search and filter products' })
   async searchProducts(@Query() query: SearchProductsDto) {
@@ -47,6 +53,13 @@ export class SellerProductsController {
   @ApiOperation({ summary: 'Get list of SPU and SKUs for the current seller' })
   async getProducts(@Request() req: any) {
     return this.productsService.getSellerProducts(req.user.id);
+  }
+
+  @Get(':id')
+  @Roles(Role.SELLER)
+  @ApiOperation({ summary: 'Get product details for the current seller' })
+  async getProduct(@Request() req: any, @Param('id') id: string) {
+    return this.productsService.getSellerProductById(req.user.id, +id);
   }
 
   @Post()

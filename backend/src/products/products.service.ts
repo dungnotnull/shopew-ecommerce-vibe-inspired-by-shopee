@@ -93,6 +93,24 @@ export class ProductsService {
     });
   }
 
+  async getSellerProductById(userId: number, productId: number) {
+    const shop = await this.prisma.shop.findUnique({ where: { userId } });
+    if (!shop) throw new ForbiddenException();
+    
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        variantGroups: { include: { options: true } },
+        skus: true,
+      },
+    });
+
+    if (!product) throw new NotFoundException();
+    if (product.shopId !== shop.id) throw new ForbiddenException();
+
+    return product;
+  }
+
   async toggleLike(userId: number, productId: number) {
     const existing = await this.prisma.productLike.findUnique({
       where: { userId_productId: { userId, productId } },
@@ -124,6 +142,7 @@ export class ProductsService {
           priceMin: data.priceMin || 0,
           priceMax: data.priceMax || 0,
           promotionalPrice: data.promotionalPrice || 0,
+          images: data.images || [],
         },
       });
 
@@ -194,6 +213,7 @@ export class ProductsService {
         priceMin: data.priceMin,
         priceMax: data.priceMax,
         promotionalPrice: data.promotionalPrice,
+        images: data.images,
       },
     });
     

@@ -74,6 +74,12 @@ export class CreateProductDto {
   @IsOptional()
   description?: string;
 
+  @ApiPropertyOptional({ example: ['/uploads/image1.jpg'] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  images?: string[];
+
   @ApiPropertyOptional({ example: { brand: 'Shopew', material: 'Cotton' } })
   @IsObject()
   @IsOptional()

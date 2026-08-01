@@ -18,6 +18,15 @@ export class CategoriesService {
     });
   }
 
+  async getCategoryById(id: number) {
+    return this.prisma.category.findUnique({
+      where: { id },
+      include: {
+        children: true,
+      }
+    });
+  }
+
   async createCategory(data: any) {
     return this.prisma.category.create({
       data: {

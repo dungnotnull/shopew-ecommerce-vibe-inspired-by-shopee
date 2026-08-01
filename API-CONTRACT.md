@@ -131,6 +131,9 @@
 - **Response:** Paginated products (similar to search results)
 
 ## Search & Filter
+### `GET /api/v1/products`
+*(Alias for `/api/v1/products/search`)*
+
 ### `GET /api/v1/products/search`
 - **Query:** `?q=iphone&category_id=10&price_min=10000000&price_max=20000000&rating=4&isMall=true&isPreferred=true&sort=price&order=asc&page=1&limit=20`
 - **Response:** 
@@ -238,6 +241,50 @@
 ]
 ```
 
+### `GET /api/v1/categories/:id`
+- **Response:** *(Similar to single item in category tree)*
+
+### `POST /api/v1/categories`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Body:** `{ "name": "Category Name", "parentId": 1, "attributes": {} }`
+
+### `PUT /api/v1/categories/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Body:** `{ "name": "Updated Name", "parentId": 1, "attributes": {} }`
+
+### `DELETE /api/v1/categories/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** `{ "success": true }`
+
+## Admin
+### `GET /api/v1/admin/dashboard`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:**
+```json
+{
+  "totalUsers": 150,
+  "totalShops": 20,
+  "totalProducts": 500,
+  "totalGMV": 0,
+  "activeDisputes": 0
+}
+```
+
+### `GET /api/v1/admin/users`
+- **Query:** `?page=1&limit=20`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Paginated list of users.
+
+### `GET /api/v1/admin/shops`
+- **Query:** `?page=1&limit=20`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Paginated list of shops.
+
+### `GET /api/v1/admin/products`
+- **Query:** `?page=1&limit=20`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Paginated list of all products.
+
 ## Cart & Checkout
 ### `GET /api/v1/cart`
 - **Response:** 
@@ -253,6 +300,16 @@
       ]
     }
   ]
+}
+```
+
+## Uploads
+### `POST /api/v1/upload`
+- **Request:** `multipart/form-data` with field `file` (image).
+- **Response:**
+```json
+{
+  "url": "/uploads/1700000000000-123456789.jpg"
 }
 ```
 
@@ -280,6 +337,10 @@
 - **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
 - **Response:** Array of SPU and SKU details (similar to `GET /api/v1/products/:id`)
 
+### `GET /api/seller/products/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Single SPU and SKU details for the seller.
+
 ### `POST /api/seller/products`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
 - **Body:**
@@ -294,6 +355,7 @@
   "stock": 100,
   "skuCode": "SPU-AO-THUN",
   "attributes": { "Chất liệu": "Cotton" },
+  "images": ["/uploads/image1.jpg", "/uploads/image2.jpg"],
   "variantGroups": [
     { "name": "Màu sắc", "options": ["Đen", "Trắng"] },
     { "name": "Kích cỡ", "options": ["M", "L"] }
