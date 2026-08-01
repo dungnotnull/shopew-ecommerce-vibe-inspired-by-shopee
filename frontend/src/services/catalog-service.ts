@@ -15,10 +15,11 @@ export interface FlashSaleItem {
   name: string;
   priceMin: number;
   priceMax: number;
+  promotionalPrice?: number;
   discountPercentage: number;
   soldCount: number;
   stock: number;
-  thumbnailUrl: string;
+  thumbnailUrl: string | null;
 }
 
 // Mock Categories Tree Fallback

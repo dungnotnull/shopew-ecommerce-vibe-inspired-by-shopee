@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, Tag } from 'lucide-react';
+import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, Percent, CheckSquare, Square } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { sellerService } from '../../services/seller-service';
-import { VariantGroup, SKU, Category } from '../../types/catalog';
+import { VariantGroup, Category } from '../../types/catalog';
+
+// Interface Mới Cho Dòng SKU Trong Form Quản Lý (Có Hỗ Trợ Checkbox Ap Dụng Discount)
+interface ExtendedFormSKU {
+  id: number;
+  tierIndex: number[];
+  price: number;
+  originalPrice: number;
+  discountPercentage: number;
+  isDiscountActive: boolean; // Checkbox chọn áp dụng giảm giá hay không
+  stock: number;
+}
 
 export const SellerProductManagement: React.FC = () => {
   const navigate = useNavigate();
 
-  // State Form Sản Phẩm
+  // State Form Sản Phẩm Cơ Bản (Mục 1)
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
-  const [discountPercentage, setDiscountPercentage] = useState<number>(10);
   const [categoryId, setCategoryId] = useState<number>(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
@@ -59,18 +69,23 @@ export const SellerProductManagement: React.FC = () => {
     { name: 'Kích cỡ', options: ['M', 'L'] },
   ]);
 
-  // State Bảng Tồn Kho & Giá Phân Loại
-  const [skus, setSkus] = useState<SKU[]>([]);
+  // State Bảng Phân Loại SKUs (Mục 3: Có checkbox áp dụng discount)
+  const [skus, setSkus] = useState<ExtendedFormSKU[]>([]);
 
-  // Tự động tính Bảng Phân Loại Hàng
+  // Tự động khởi tạo Bảng Phân Loại Hàng khi thay đổi Nhóm Phân Loại hoặc Giá Mặc Định
   useEffect(() => {
+    const defaultDiscount = 15;
+    const calcOriginal = Math.round(priceMin * 1.2);
+
     if (!variantGroups || variantGroups.length === 0) {
       setSkus([
         {
           id: 1,
           tierIndex: [],
           price: priceMin,
-          originalPrice: Math.round(priceMin * 1.25),
+          originalPrice: calcOriginal,
+          discountPercentage: defaultDiscount,
+          isDiscountActive: true,
           stock: 100,
         },
       ]);
@@ -78,11 +93,13 @@ export const SellerProductManagement: React.FC = () => {
     }
 
     if (variantGroups.length === 1) {
-      const generatedSkus: SKU[] = variantGroups[0].options.map((_opt, idx) => ({
+      const generatedSkus: ExtendedFormSKU[] = variantGroups[0].options.map((_opt, idx) => ({
         id: idx + 1,
         tierIndex: [idx],
         price: priceMin,
-        originalPrice: Math.round(priceMin * 1.25),
+        originalPrice: calcOriginal,
+        discountPercentage: defaultDiscount,
+        isDiscountActive: true,
         stock: 50,
       }));
       setSkus(generatedSkus);
@@ -92,7 +109,7 @@ export const SellerProductManagement: React.FC = () => {
     if (variantGroups.length === 2) {
       const group1 = variantGroups[0];
       const group2 = variantGroups[1];
-      const generatedSkus: SKU[] = [];
+      const generatedSkus: ExtendedFormSKU[] = [];
       let skuId = 1;
 
       group1.options.forEach((_, idx1) => {
@@ -101,7 +118,9 @@ export const SellerProductManagement: React.FC = () => {
             id: skuId++,
             tierIndex: [idx1, idx2],
             price: priceMin,
-            originalPrice: Math.round(priceMin * 1.25),
+            originalPrice: calcOriginal,
+            discountPercentage: defaultDiscount,
+            isDiscountActive: true,
             stock: 50,
           });
         });
@@ -139,21 +158,67 @@ export const SellerProductManagement: React.FC = () => {
     setVariantGroups(newGroups);
   };
 
-  const handleSkuPriceChange = (skuIndex: number, newPrice: number) => {
+  // --- THAO TÁC TRÊN BẢNG MỤC 3 (GIÁ BÁN, CHECKBOX KHUYẾN MÃI, PHẦN TRĂM GIẢM) ---
+
+  // Xử lý bật/tắt Checkbox Áp Dụng Giảm Giá cho từng phân loại
+  const handleToggleDiscountActive = (skuIndex: number) => {
     setSkus(prev => {
       const updated = [...prev];
-      updated[skuIndex].price = newPrice;
-      if (!updated[skuIndex].originalPrice || updated[skuIndex].originalPrice! < newPrice) {
-        updated[skuIndex].originalPrice = Math.round(newPrice * 1.25);
+      const item = { ...updated[skuIndex] };
+      item.isDiscountActive = !item.isDiscountActive;
+
+      if (!item.isDiscountActive) {
+        // Tắt discount: Giá bán = Giá gốc
+        item.price = item.originalPrice;
+      } else {
+        // Bật discount: Áp dụng lại % giảm giá
+        item.price = Math.round(item.originalPrice * (1 - item.discountPercentage / 100));
       }
+      updated[skuIndex] = item;
       return updated;
     });
   };
 
+  // Thay đổi % Giảm giá cho từng dòng SKU ở Mục 3
+  const handleSkuDiscountChange = (skuIndex: number, newDiscount: number) => {
+    setSkus(prev => {
+      const updated = [...prev];
+      const item = { ...updated[skuIndex] };
+      item.discountPercentage = newDiscount;
+      if (item.isDiscountActive) {
+        item.price = Math.round(item.originalPrice * (1 - newDiscount / 100));
+      }
+      updated[skuIndex] = item;
+      return updated;
+    });
+  };
+
+  // Thay đổi Giá Gốc ở Mục 3
   const handleSkuOriginalPriceChange = (skuIndex: number, newOriginalPrice: number) => {
     setSkus(prev => {
       const updated = [...prev];
-      updated[skuIndex].originalPrice = newOriginalPrice;
+      const item = { ...updated[skuIndex] };
+      item.originalPrice = newOriginalPrice;
+      if (item.isDiscountActive) {
+        item.price = Math.round(newOriginalPrice * (1 - item.discountPercentage / 100));
+      } else {
+        item.price = newOriginalPrice;
+      }
+      updated[skuIndex] = item;
+      return updated;
+    });
+  };
+
+  // Thay đổi Giá Bán Trực Tiếp ở Mục 3
+  const handleSkuPriceChange = (skuIndex: number, newPrice: number) => {
+    setSkus(prev => {
+      const updated = [...prev];
+      const item = { ...updated[skuIndex] };
+      item.price = newPrice;
+      if (item.originalPrice < newPrice) {
+        item.originalPrice = newPrice;
+      }
+      updated[skuIndex] = item;
       return updated;
     });
   };
@@ -166,11 +231,15 @@ export const SellerProductManagement: React.FC = () => {
     });
   };
 
-  // Hàm xử lý gửi API tạo sản phẩm (Có truyền discountPercentage & originalPrice)
+  // Hàm xử lý gửi API tạo sản phẩm
   const executeCreateProduct = async () => {
     const prices = skus.map(s => s.price);
     const computedPriceMin = prices.length > 0 ? Math.min(...prices) : priceMin;
     const computedPriceMax = prices.length > 0 ? Math.max(...prices) : priceMin;
+
+    // Tìm phần trăm giảm giá lớn nhất trong các SKU được tick chọn làm discountPercentage đại diện
+    const activeDiscounts = skus.filter(s => s.isDiscountActive).map(s => s.discountPercentage);
+    const maxDiscountPercentage = activeDiscounts.length > 0 ? Math.max(...activeDiscounts) : 0;
 
     await CatalogService.createSellerProduct({
       name,
@@ -178,11 +247,17 @@ export const SellerProductManagement: React.FC = () => {
       categoryId,
       priceMin: computedPriceMin,
       priceMax: computedPriceMax,
-      discountPercentage,
+      discountPercentage: maxDiscountPercentage,
       isMall: false,
       isPreferred: true,
       variantGroups,
-      skus,
+      skus: skus.map(s => ({
+        id: s.id,
+        tierIndex: s.tierIndex,
+        price: s.price,
+        originalPrice: s.originalPrice,
+        stock: s.stock,
+      })),
     });
 
     setIsSuccess(true);
@@ -206,7 +281,7 @@ export const SellerProductManagement: React.FC = () => {
       await executeCreateProduct();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể tạo sản phẩm. Vui lòng kiểm tra lại dữ liệu.';
-      
+
       if (typeof msg === 'string' && (msg.includes('chưa tạo gian hàng') || msg.includes('Shop'))) {
         setShowShopModal(true);
         setErrorMsg('Tài khoản của bạn chưa có Gian hàng trên Shopew. Vui lòng xác nhận tạo gian hàng bên dưới.');
@@ -244,7 +319,7 @@ export const SellerProductManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-['Roboto',sans-serif]">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Header Navigation */}
         <div className="flex items-center justify-between">
           <button
@@ -325,7 +400,7 @@ export const SellerProductManagement: React.FC = () => {
           {/* Section 1: Thông tin sản phẩm cơ bản */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Cơ Bản & Giá Giảm
+              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Cơ Bản
             </h2>
 
             <div className="space-y-3">
@@ -352,34 +427,16 @@ export const SellerProductManagement: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Bán Khởi Điểm (VND) *</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Mặc Định Gợi Ý (VND) *</label>
                   <input
                     type="number"
                     required
                     value={priceMin}
                     onChange={(e) => setPriceMin(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
                   />
-                </div>
-
-                {/* Ô NHẬP PHẦN TRĂM GIẢM GIÁ (discountPercentage) */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                    <Tag className="w-3.5 h-3.5 text-[#ee4d2d]" /> Khuyến Mãi (% Giảm Giá)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={discountPercentage}
-                      onChange={(e) => setDiscountPercentage(Number(e.target.value))}
-                      className="w-full p-2.5 pr-8 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-xs text-gray-500">%</span>
-                  </div>
                 </div>
 
                 {/* Ô Chọn Danh Mục Sản Phẩm */}
@@ -484,10 +541,10 @@ export const SellerProductManagement: React.FC = () => {
             ))}
           </div>
 
-          {/* Section 3: Bảng giá, giá gốc & Tồn kho theo từng phân loại */}
+          {/* Section 3: Bảng giá, Checkbox áp dụng giảm giá & Tồn kho theo từng phân loại */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-[#ee4d2d]" /> 3. Bảng Giá Bán, Giá Gốc & Tồn Kho Theo Phân Loại ({skus.length} Phân Loại)
+              <Layers className="w-4 h-4 text-[#ee4d2d]" /> 3. Bảng Giá, Cấu Hình Khuyến Mãi & Tồn Kho ({skus.length} Phân Loại)
             </h2>
 
             <div className="overflow-x-auto">
@@ -495,9 +552,11 @@ export const SellerProductManagement: React.FC = () => {
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
                     <th className="p-3">Mẫu Phân Loại</th>
-                    <th className="p-3">Giá Bán Khuyến Mãi (VND)</th>
                     <th className="p-3">Giá Gốc Niêm Yết (VND)</th>
-                    <th className="p-3">Số Lượng Tồn Kho</th>
+                    <th className="p-3 text-center">Áp Dụng Giảm Giá</th>
+                    <th className="p-3">% Giảm Giá</th>
+                    <th className="p-3">Giá Bán Thực Tế (VND)</th>
+                    <th className="p-3">Tồn Kho</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -507,32 +566,65 @@ export const SellerProductManagement: React.FC = () => {
                     const variantLabel = [label1, label2].filter(Boolean).join(' - ') || 'Mặc định';
 
                     return (
-                      <tr key={idx} className="hover:bg-gray-50">
+                      <tr key={idx} className={`hover:bg-gray-50/80 transition-colors ${!sku.isDiscountActive ? 'bg-gray-50/50' : ''}`}>
                         <td className="p-3 font-bold text-gray-800">
                           {variantLabel}
                         </td>
+                        {/* 1. Giá Gốc Niêm Yết */}
+                        <td className="p-3">
+                          <input
+                            type="number"
+                            value={sku.originalPrice}
+                            onChange={(e) => handleSkuOriginalPriceChange(idx, Number(e.target.value))}
+                            className="w-28 p-1.5 border border-gray-300 rounded font-medium text-gray-600 focus:outline-none focus:border-[#ee4d2d]"
+                          />
+                        </td>
+                        {/* 2. CHECKBOX STICK CHỌN ÁP DỤNG DISCOUNT */}
+                        <td className="p-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleDiscountActive(idx)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold cursor-pointer select-none"
+                          >
+                            {sku.isDiscountActive ? (
+                              <CheckSquare className="w-5 h-5 text-[#ee4d2d]" />
+                            ) : (
+                              <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />
+                            )}
+                          </button>
+                        </td>
+                        {/* 3. % Giảm Giá */}
+                        <td className="p-3">
+                          <div className="relative w-20">
+                            <input
+                              type="number"
+                              disabled={!sku.isDiscountActive}
+                              min={0}
+                              max={99}
+                              value={sku.discountPercentage}
+                              onChange={(e) => handleSkuDiscountChange(idx, Number(e.target.value))}
+                              className="w-full p-1.5 pr-5 border border-gray-300 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d] disabled:bg-gray-100 disabled:text-gray-400"
+                            />
+                            <Percent className="w-3 h-3 absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                          </div>
+                        </td>
+                        {/* 4. Giá Bán Thực Tế (Tự động tính từ Giá gốc * (1 - % Giảm)) */}
                         <td className="p-3">
                           <input
                             type="number"
                             value={sku.price}
                             onChange={(e) => handleSkuPriceChange(idx, Number(e.target.value))}
-                            className="w-32 p-1.5 border border-gray-300 rounded font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
+                            className={`w-28 p-1.5 border rounded font-bold text-xs focus:outline-none ${sku.isDiscountActive ? 'border-red-300 bg-orange-50/50 text-[#ee4d2d]' : 'border-gray-300 text-gray-900'
+                              }`}
                           />
                         </td>
-                        <td className="p-3">
-                          <input
-                            type="number"
-                            value={sku.originalPrice || Math.round(sku.price * 1.25)}
-                            onChange={(e) => handleSkuOriginalPriceChange(idx, Number(e.target.value))}
-                            className="w-32 p-1.5 border border-gray-300 rounded font-semibold text-gray-500 focus:outline-none focus:border-[#ee4d2d]"
-                          />
-                        </td>
+                        {/* 5. Tồn Kho */}
                         <td className="p-3">
                           <input
                             type="number"
                             value={sku.stock}
                             onChange={(e) => handleSkuStockChange(idx, Number(e.target.value))}
-                            className="w-24 p-1.5 border border-gray-300 rounded font-semibold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
+                            className="w-20 p-1.5 border border-gray-300 rounded font-semibold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
                           />
                         </td>
                       </tr>
