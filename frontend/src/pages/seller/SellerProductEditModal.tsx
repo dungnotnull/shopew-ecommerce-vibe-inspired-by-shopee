@@ -77,7 +77,8 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
   }, []);
 
   useEffect(() => {
-    setName(product.name);
+    if (!product) return;
+    setName(product.name || '');
     setDescription(product.description || '');
     setPriceMin(product.priceMin || 0);
     setCategoryId(product.categoryId || 1);
@@ -92,7 +93,7 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
 
           return {
             id: s.id,
-            tierIndex: s.tierIndex,
+            tierIndex: typeof s.tierIndex === 'string' ? JSON.parse(s.tierIndex) : (s.tierIndex || []),
             price: s.price,
             originalPrice: orig,
             discountPercentage: computedDiscount,

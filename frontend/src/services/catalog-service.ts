@@ -230,7 +230,11 @@ export const CatalogService = {
   async getFlashSale(): Promise<FlashSaleItem[]> {
     try {
       const response = await apiClient.get('/v1/home/flash-sale');
-      return response.data.data || response.data;
+      const resData = response.data;
+      if (Array.isArray(resData)) return resData;
+      if (Array.isArray(resData?.data)) return resData.data;
+      if (Array.isArray(resData?.data?.data)) return resData.data.data;
+      return [];
     } catch {
       return mockProducts.map(p => ({
         id: p.id,
@@ -263,7 +267,7 @@ export const CatalogService = {
   async getCategories(): Promise<Category[]> {
     try {
       const response = await apiClient.get('/v1/categories');
-      return response.data;
+      return response.data.data || response.data;
     } catch {
       return mockCategories;
     }
@@ -273,7 +277,7 @@ export const CatalogService = {
   async createCategory(data: { name: string; parentId?: number | null; attributes?: any }): Promise<Category> {
     try {
       const response = await apiClient.post('/v1/categories', data);
-      return response.data;
+      return response.data.data || response.data;
     } catch {
       const newCat: Category = {
         id: Date.now(),
@@ -289,7 +293,7 @@ export const CatalogService = {
   async updateCategory(id: number, data: { name?: string; parentId?: number | null; attributes?: any }): Promise<Category> {
     try {
       const response = await apiClient.put(`/v1/categories/${id}`, data);
-      return response.data;
+      return response.data.data || response.data;
     } catch {
       return { id, name: data.name || 'Danh Mục', parentId: data.parentId || null, children: [] };
     }
@@ -365,7 +369,7 @@ export const CatalogService = {
   async getProductById(id: number): Promise<ProductSPU | null> {
     try {
       const response = await apiClient.get(`/v1/products/${id}`);
-      const data = response.data;
+      const data = response.data.data || response.data;
       if (data) {
         // Chuẩn hóa tên Shop từ relation shop { id, name }
         if (data.shop && data.shop.name && !data.shopName) {
@@ -399,7 +403,11 @@ export const CatalogService = {
   async getSellerProducts(): Promise<ProductSPU[]> {
     try {
       const response = await apiClient.get('/seller/products');
-      return response.data;
+      const resData = response.data;
+      if (Array.isArray(resData)) return resData;
+      if (Array.isArray(resData?.data)) return resData.data;
+      if (Array.isArray(resData?.data?.data)) return resData.data.data;
+      return [];
     } catch {
       return mockProducts;
     }
@@ -409,7 +417,7 @@ export const CatalogService = {
   async updateSellerProduct(id: number, data: Partial<ProductSPU>): Promise<ProductSPU> {
     try {
       const response = await apiClient.put(`/seller/products/${id}`, data);
-      return response.data;
+      return response.data.data || response.data;
     } catch {
       return { id, ...data } as ProductSPU;
     }
@@ -419,7 +427,7 @@ export const CatalogService = {
   async deleteSellerProduct(id: number): Promise<{ success: boolean }> {
     try {
       const response = await apiClient.delete(`/seller/products/${id}`);
-      return response.data;
+      return response.data.data || response.data;
     } catch {
       return { success: true };
     }
@@ -429,7 +437,7 @@ export const CatalogService = {
   async toggleLikeProduct(productId: number): Promise<{ liked: boolean }> {
     try {
       const response = await apiClient.post(`/v1/products/${productId}/like`);
-      return response.data;
+      return response.data.data || response.data;
     } catch {
       const p = mockProducts.find(item => item.id === productId);
       if (p) {
@@ -445,7 +453,7 @@ export const CatalogService = {
   async getShopById(shopId: number): Promise<ShopProfile | null> {
     try {
       const response = await apiClient.get(`/v1/shops/${shopId}`);
-      return response.data;
+      return response.data.data || response.data;
     } catch {
       return {
         id: shopId,
@@ -466,7 +474,7 @@ export const CatalogService = {
   // Seller tạo SPU & SKUs mới: POST /api/seller/products
   async createSellerProduct(data: Partial<ProductSPU>): Promise<ProductSPU> {
     const response = await apiClient.post('/seller/products', data);
-    return response.data;
+    return response.data.data || response.data;
   },
 };
 
