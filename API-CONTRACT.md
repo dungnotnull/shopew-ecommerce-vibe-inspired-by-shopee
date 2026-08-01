@@ -87,37 +87,77 @@
 }
 ```
 
-## Search & Discovery
-### `GET /api/v1/search`
-- **Query:** `?q=iphone&category_id=10&price_min=10000000&rating=4&isMall=true&sort=price&order=asc&attributes={"RAM":"8GB"}`
+## Home (Discovery)
+### `GET /api/v1/home/banners`
+- **Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "title": "Siêu Sale Thời Trang",
+      "imageUrl": "https://images.unsplash.com/...",
+      "linkUrl": "/search?category_id=1",
+      "isActive": true,
+      "sortOrder": 1
+    }
+  ]
+}
+```
+
+### `GET /api/v1/home/flash-sale`
+- **Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 101,
+      "name": "Kẹp Tóc 15 Chi Tiết",
+      "priceMin": 19000,
+      "priceMax": 60000,
+      "discountPercentage": 14,
+      "soldCount": 55,
+      "stock": 150,
+      "thumbnailUrl": "..."
+    }
+  ]
+}
+```
+
+### `GET /api/v1/home/daily-discover`
+- **Query:** `?page=1&limit=20`
+- **Response:** Paginated products (similar to search results)
+
+## Search & Filter
+### `GET /api/v1/products/search`
+- **Query:** `?q=iphone&category_id=10&price_min=10000000&price_max=20000000&rating=4&isMall=true&isPreferred=true&sort=price&order=asc&page=1&limit=20`
 - **Response:** 
 ```json
 {
+  "success": true,
   "data": [
     {
-      "productId": 101,
+      "id": 101,
       "name": "iPhone 15 Pro 8GB",
-      "price": 25000000,
+      "priceMin": 25000000,
+      "priceMax": 25000000,
       "discountPercentage": 10,
+      "rating": 4.9,
       "soldCount": 5400,
+      "likeCount": 120,
       "isMall": true,
       "isPreferred": false,
-      "rating": 4.9
+      "thumbnailUrl": "...",
+      "shopId": 1,
+      "shopName": "Apple Official Store"
     }
   ],
-  "facets": { 
-    "brands": ["Apple", "Samsung"], 
-    "locations": ["Hà Nội", "TP.HCM"],
-    "dynamicAttributes": [
-      { "name": "RAM", "values": ["4GB", "8GB", "12GB"] },
-      { "name": "Thương hiệu", "values": ["Apple"] }
-    ]
-  },
-  "categoryBreadcrumbs": [
-    { "id": 1, "name": "Điện thoại & Phụ kiện" },
-    { "id": 10, "name": "Điện thoại di động" }
-  ],
-  "total": 1500
+  "total": 1500,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 75
 }
 ```
 
@@ -130,7 +170,7 @@
   "name": "Kẹp Tóc 15 Chi Tiết hellokitty",
   "priceMin": 19000,
   "priceMax": 60000,
-  "discountPercentage": 14,
+  "promotionalPrice": 15000,
   "isPreferred": true,
   "rating": 4.8,
   "soldCount": 55,
@@ -152,6 +192,8 @@
       "tierIndex": [0], 
       "price": 19000,
       "originalPrice": 22000,
+      "discountPercentage": 14,
+      "isDiscount": true,
       "stock": 150,
       "thumbnailUrl": "..."
     },
@@ -160,6 +202,8 @@
       "tierIndex": [1], 
       "price": 60000,
       "originalPrice": 65000,
+      "discountPercentage": 8,
+      "isDiscount": true,
       "stock": 5,
       "thumbnailUrl": "..."
     }
@@ -232,6 +276,10 @@
 }
 ```
 
+### `GET /api/seller/products`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Array of SPU and SKU details (similar to `GET /api/v1/products/:id`)
+
 ### `POST /api/seller/products`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
 - **Body:**
@@ -242,7 +290,7 @@
   "description": "Áo thun 100% cotton",
   "priceMin": 150000,
   "priceMax": 150000,
-  "discountPercentage": 10,
+  "promotionalPrice": 135000,
   "stock": 100,
   "skuCode": "SPU-AO-THUN",
   "attributes": { "Chất liệu": "Cotton" },
@@ -251,7 +299,7 @@
     { "name": "Kích cỡ", "options": ["M", "L"] }
   ],
   "skus": [
-    { "price": 150000, "originalPrice": 200000, "stock": 50, "tierIndex": [0, 0], "skuCode": "SKU-DEN-M" }
+    { "price": 150000, "originalPrice": 200000, "discountPercentage": 10, "isDiscount": true, "stock": 50, "tierIndex": [0, 0], "skuCode": "SKU-DEN-M" }
   ]
 }
 ```

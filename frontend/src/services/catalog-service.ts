@@ -1,6 +1,26 @@
 import { apiClient } from './api-client';
 import { Category, ProductSPU, SearchParams, SearchResult, ShopProfile } from '../types/catalog';
 
+export interface HomeBanner {
+  id: number;
+  title: string;
+  imageUrl: string;
+  linkUrl: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface FlashSaleItem {
+  id: number;
+  name: string;
+  priceMin: number;
+  priceMax: number;
+  discountPercentage: number;
+  soldCount: number;
+  stock: number;
+  thumbnailUrl: string;
+}
+
 // Mock Categories Tree Fallback
 const mockCategories: Category[] = [
   {
@@ -175,8 +195,70 @@ const mockProducts: ProductSPU[] = [
   },
 ];
 
+const mockBanners: HomeBanner[] = [
+  {
+    id: 1,
+    title: 'Siêu Sale Thời Trang 8.8',
+    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200',
+    linkUrl: '/search',
+    isActive: true,
+    sortOrder: 1,
+  },
+  {
+    id: 2,
+    title: 'Thương Hiệu Chính Hãng Shopee Mall',
+    imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200',
+    linkUrl: '/search?isMall=true',
+    isActive: true,
+    sortOrder: 2,
+  },
+];
+
 export const CatalogService = {
-  // Lấy cây danh mục sản phẩm
+  // 1. Lấy danh sách Banners Trang Chủ: GET /api/v1/home/banners
+  async getHomeBanners(): Promise<HomeBanner[]> {
+    try {
+      const response = await apiClient.get('/v1/home/banners');
+      return response.data.data || response.data;
+    } catch {
+      return mockBanners;
+    }
+  },
+
+  // 2. Lấy danh sách Flash Sale Trang Chủ: GET /api/v1/home/flash-sale
+  async getFlashSale(): Promise<FlashSaleItem[]> {
+    try {
+      const response = await apiClient.get('/v1/home/flash-sale');
+      return response.data.data || response.data;
+    } catch {
+      return mockProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        priceMin: p.priceMin,
+        priceMax: p.priceMax,
+        discountPercentage: p.discountPercentage || 20,
+        soldCount: p.soldCount || 45,
+        stock: 100,
+        thumbnailUrl: p.images?.[0] || '',
+      }));
+    }
+  },
+
+  // 3. Lấy sản phẩm Gợi ý hôm nay / All Products: GET /api/v1/home/daily-discover
+  async getDailyDiscover(page = 1, limit = 20): Promise<SearchResult> {
+    try {
+      const response = await apiClient.get('/v1/home/daily-discover', { params: { page, limit } });
+      return response.data;
+    } catch {
+      return {
+        data: mockProducts,
+        total: mockProducts.length,
+        facets: { brands: [], locations: [], dynamicAttributes: [] },
+      };
+    }
+  },
+
+  // 4. Lấy cây danh mục sản phẩm: GET /api/v1/categories
   async getCategories(): Promise<Category[]> {
     try {
       const response = await apiClient.get('/v1/categories');
@@ -186,13 +268,38 @@ export const CatalogService = {
     }
   },
 
-  // Tìm kiếm sản phẩm nâng cao (Phase 3 format với bộ lọc & phân trang)
-  async searchProducts(params: SearchParams): Promise<SearchResult> {
+  // Tạo mới Danh mục sản phẩm (Role Seller / Admin)
+  async createCategory(data: { name: string; parentId?: number | null; attributes?: any }): Promise<Category> {
     try {
-      const response = await apiClient.get('/v1/search', { params });
+      const response = await apiClient.post('/v1/categories', data);
       return response.data;
     } catch {
-      // Logic lọc trên Mock Data
+      const newCat: Category = {
+        id: Date.now(),
+        name: data.name,
+        parentId: data.parentId || null,
+        children: [],
+      };
+      return newCat;
+    }
+  },
+
+  // Cập nhật Danh mục sản phẩm
+  async updateCategory(id: number, data: { name?: string; parentId?: number | null; attributes?: any }): Promise<Category> {
+    try {
+      const response = await apiClient.put(`/v1/categories/${id}`, data);
+      return response.data;
+    } catch {
+      return { id, name: data.name || 'Danh Mục', parentId: data.parentId || null, children: [] };
+    }
+  },
+
+  // 5. Tìm kiếm sản phẩm nâng cao
+  async searchProducts(params: SearchParams): Promise<SearchResult> {
+    try {
+      const response = await apiClient.get('/v1/products/search', { params });
+      return response.data;
+    } catch {
       let filtered = [...mockProducts];
 
       if (params.q) {
@@ -218,7 +325,6 @@ export const CatalogService = {
         filtered = filtered.filter(p => p.rating >= Number(params.rating));
       }
 
-      // Sắp xếp
       if (params.sort === 'sold') {
         filtered.sort((a, b) => b.soldCount - a.soldCount);
       } else if (params.sort === 'price') {
@@ -248,7 +354,7 @@ export const CatalogService = {
     }
   },
 
-  // Lấy chi tiết SPU và các SKU phân loại
+  // 6. Lấy chi tiết SPU và các SKU phân loại
   async getProductById(id: number): Promise<ProductSPU | null> {
     try {
       const response = await apiClient.get(`/v1/products/${id}`);
@@ -256,6 +362,36 @@ export const CatalogService = {
     } catch {
       const found = mockProducts.find(p => p.id === Number(id));
       return found || mockProducts[0];
+    }
+  },
+
+  // 7. Lấy danh sách sản phẩm của Seller hiện tại: GET /api/seller/products
+  async getSellerProducts(): Promise<ProductSPU[]> {
+    try {
+      const response = await apiClient.get('/seller/products');
+      return response.data;
+    } catch {
+      return mockProducts;
+    }
+  },
+
+  // Seller Cập nhật sản phẩm SPU & SKUs: PUT /api/seller/products/:id
+  async updateSellerProduct(id: number, data: Partial<ProductSPU>): Promise<ProductSPU> {
+    try {
+      const response = await apiClient.put(`/seller/products/${id}`, data);
+      return response.data;
+    } catch {
+      return { id, ...data } as ProductSPU;
+    }
+  },
+
+  // Seller Xóa sản phẩm SPU: DELETE /api/seller/products/:id
+  async deleteSellerProduct(id: number): Promise<{ success: boolean }> {
+    try {
+      const response = await apiClient.delete(`/seller/products/${id}`);
+      return response.data;
+    } catch {
+      return { success: true };
     }
   },
 
@@ -297,7 +433,7 @@ export const CatalogService = {
     }
   },
 
-  // Seller tạo SPU & SKUs mới
+  // Seller tạo SPU & SKUs mới: POST /api/seller/products
   async createSellerProduct(data: Partial<ProductSPU>): Promise<ProductSPU> {
     const response = await apiClient.post('/seller/products', data);
     return response.data;

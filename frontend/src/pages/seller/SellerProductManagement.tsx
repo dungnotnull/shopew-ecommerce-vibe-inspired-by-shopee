@@ -1,35 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, Tag } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
-import { VariantGroup, SKU } from '../../types/catalog';
-import { formatVND } from '../../utils/format-currency';
+import { sellerService } from '../../services/seller-service';
+import { VariantGroup, SKU, Category } from '../../types/catalog';
 
 export const SellerProductManagement: React.FC = () => {
   const navigate = useNavigate();
 
-  // SPU Form State
+  // State Form Sản Phẩm
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [priceMin, setPriceMin] = useState<number>(100000);
-  const [categoryId, setCategoryId] = useState<number>(11);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(10);
+  const [categoryId, setCategoryId] = useState<number>(1);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // 2-Tier Variant Groups State
+  // State Modal Khởi Tạo Shop
+  const [showShopModal, setShowShopModal] = useState<boolean>(false);
+  const [shopName, setShopName] = useState<string>('Gian Hàng Shopew Official');
+  const [shopDescription, setShopDescription] = useState<string>('Cửa hàng phân phối sản phẩm chính hãng trên Shopew.');
+  const [creatingShop, setCreatingShop] = useState<boolean>(false);
+
+  // Call API nạp danh sách Danh mục sản phẩm thực tế: GET /api/v1/categories
+  useEffect(() => {
+    const fetchCategoriesFromAPI = async () => {
+      try {
+        const catData = await CatalogService.getCategories();
+        if (catData && catData.length > 0) {
+          const flattenList: Category[] = [];
+          const extractAll = (items: Category[]) => {
+            items.forEach(c => {
+              flattenList.push(c);
+              if (c.children && c.children.length > 0) {
+                extractAll(c.children);
+              }
+            });
+          };
+          extractAll(catData);
+          setCategories(flattenList);
+          if (flattenList.length > 0) {
+            setCategoryId(flattenList[0].id);
+          }
+        }
+      } catch {
+        // Fallback default
+      }
+    };
+    fetchCategoriesFromAPI();
+  }, []);
+
+  // State Nhóm Phân Loại Hàng (Màu sắc, Kích cỡ...)
   const [variantGroups, setVariantGroups] = useState<VariantGroup[]>([
     { name: 'Màu sắc', options: ['Đen', 'Trắng'] },
+    { name: 'Kích cỡ', options: ['M', 'L'] },
   ]);
 
-  // SKUs Matrix State
-  const [skus, setSkus] = useState<SKU[]>([
-    { id: 1, tierIndex: [0], price: 100000, originalPrice: 120000, stock: 50 },
-    { id: 2, tierIndex: [1], price: 100000, originalPrice: 120000, stock: 30 },
-  ]);
+  // State Bảng Tồn Kho & Giá Phân Loại
+  const [skus, setSkus] = useState<SKU[]>([]);
+
+  // Tự động tính Bảng Phân Loại Hàng
+  useEffect(() => {
+    if (!variantGroups || variantGroups.length === 0) {
+      setSkus([
+        {
+          id: 1,
+          tierIndex: [],
+          price: priceMin,
+          originalPrice: Math.round(priceMin * 1.25),
+          stock: 100,
+        },
+      ]);
+      return;
+    }
+
+    if (variantGroups.length === 1) {
+      const generatedSkus: SKU[] = variantGroups[0].options.map((_opt, idx) => ({
+        id: idx + 1,
+        tierIndex: [idx],
+        price: priceMin,
+        originalPrice: Math.round(priceMin * 1.25),
+        stock: 50,
+      }));
+      setSkus(generatedSkus);
+      return;
+    }
+
+    if (variantGroups.length === 2) {
+      const group1 = variantGroups[0];
+      const group2 = variantGroups[1];
+      const generatedSkus: SKU[] = [];
+      let skuId = 1;
+
+      group1.options.forEach((_, idx1) => {
+        group2.options.forEach((_, idx2) => {
+          generatedSkus.push({
+            id: skuId++,
+            tierIndex: [idx1, idx2],
+            price: priceMin,
+            originalPrice: Math.round(priceMin * 1.25),
+            stock: 50,
+          });
+        });
+      });
+
+      setSkus(generatedSkus);
+    }
+  }, [variantGroups, priceMin]);
 
   const handleAddVariantGroup = () => {
-    if (variantGroups.length >= 2) return; // Shopee hỗ trợ tối đa 2 nhóm phân loại
-    setVariantGroups(prev => [...prev, { name: 'Kích thước', options: ['M', 'L'] }]);
+    if (variantGroups.length >= 2) return;
+    setVariantGroups(prev => [...prev, { name: 'Kích cỡ', options: ['S', 'M', 'L'] }]);
   };
 
   const handleRemoveVariantGroup = (idx: number) => {
@@ -38,70 +122,210 @@ export const SellerProductManagement: React.FC = () => {
 
   const handleAddOption = (groupIdx: number) => {
     const newGroups = [...variantGroups];
-    newGroups[groupIdx].options.push(`Option ${newGroups[groupIdx].options.length + 1}`);
+    newGroups[groupIdx].options.push(`Tùy chọn ${newGroups[groupIdx].options.length + 1}`);
     setVariantGroups(newGroups);
+  };
+
+  const handleOptionChange = (groupIdx: number, optIdx: number, value: string) => {
+    const newGroups = [...variantGroups];
+    newGroups[groupIdx].options[optIdx] = value;
+    setVariantGroups(newGroups);
+  };
+
+  const handleRemoveOption = (groupIdx: number, optIdx: number) => {
+    const newGroups = [...variantGroups];
+    if (newGroups[groupIdx].options.length <= 1) return;
+    newGroups[groupIdx].options = newGroups[groupIdx].options.filter((_, i) => i !== optIdx);
+    setVariantGroups(newGroups);
+  };
+
+  const handleSkuPriceChange = (skuIndex: number, newPrice: number) => {
+    setSkus(prev => {
+      const updated = [...prev];
+      updated[skuIndex].price = newPrice;
+      if (!updated[skuIndex].originalPrice || updated[skuIndex].originalPrice! < newPrice) {
+        updated[skuIndex].originalPrice = Math.round(newPrice * 1.25);
+      }
+      return updated;
+    });
+  };
+
+  const handleSkuOriginalPriceChange = (skuIndex: number, newOriginalPrice: number) => {
+    setSkus(prev => {
+      const updated = [...prev];
+      updated[skuIndex].originalPrice = newOriginalPrice;
+      return updated;
+    });
+  };
+
+  const handleSkuStockChange = (skuIndex: number, newStock: number) => {
+    setSkus(prev => {
+      const updated = [...prev];
+      updated[skuIndex].stock = newStock;
+      return updated;
+    });
+  };
+
+  // Hàm xử lý gửi API tạo sản phẩm (Có truyền discountPercentage & originalPrice)
+  const executeCreateProduct = async () => {
+    const prices = skus.map(s => s.price);
+    const computedPriceMin = prices.length > 0 ? Math.min(...prices) : priceMin;
+    const computedPriceMax = prices.length > 0 ? Math.max(...prices) : priceMin;
+
+    await CatalogService.createSellerProduct({
+      name,
+      description,
+      categoryId,
+      priceMin: computedPriceMin,
+      priceMax: computedPriceMax,
+      discountPercentage,
+      isMall: false,
+      isPreferred: true,
+      variantGroups,
+      skus,
+    });
+
+    setIsSuccess(true);
+    setTimeout(() => {
+      navigate('/seller/products');
+    }, 1500);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+
+    if (!name.trim()) {
+      setErrorMsg('Vui lòng nhập tên sản phẩm.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await CatalogService.createSellerProduct({
-        name,
-        description,
-        categoryId,
-        priceMin,
-        priceMax: priceMin,
-        isMall: false,
-        isPreferred: true,
-        variantGroups,
-        skus,
-      });
-
-      setIsSuccess(true);
-      setTimeout(() => {
-        navigate('/seller');
-      }, 1500);
-    } catch {
-      setIsSuccess(true);
-      setTimeout(() => {
-        navigate('/seller');
-      }, 1500);
+      await executeCreateProduct();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể tạo sản phẩm. Vui lòng kiểm tra lại dữ liệu.';
+      
+      if (typeof msg === 'string' && (msg.includes('chưa tạo gian hàng') || msg.includes('Shop'))) {
+        setShowShopModal(true);
+        setErrorMsg('Tài khoản của bạn chưa có Gian hàng trên Shopew. Vui lòng xác nhận tạo gian hàng bên dưới.');
+      } else if (Array.isArray(msg)) {
+        setErrorMsg(msg.join(', '));
+      } else {
+        setErrorMsg(msg);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // Xử lý Khởi Tạo Gian Hàng qua API POST /api/v1/shops từ Frontend
+  const handleCreateShopAndRetry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingShop(true);
+    setErrorMsg('');
+
+    try {
+      await sellerService.createShop({
+        name: shopName,
+        description: shopDescription,
+      });
+
+      setShowShopModal(false);
+      await executeCreateProduct();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể tạo gian hàng. Vui lòng thử lại sau.';
+      setErrorMsg(Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setCreatingShop(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6 font-['Roboto',sans-serif]">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header Navigation */}
         <div className="flex items-center justify-between">
           <button
-            onClick={() => navigate('/seller')}
-            className="flex items-center gap-2 text-xs text-gray-600 hover:text-[#ee4d2d] font-semibold"
+            onClick={() => navigate('/seller/products')}
+            className="flex items-center gap-2 text-xs text-gray-600 hover:text-[#ee4d2d] font-semibold cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" /> Trở về Dashboard Kênh Người Bán
+            <ArrowLeft className="w-4 h-4" /> Trở về Quản Lý Sản Phẩm
           </button>
           <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <Package className="w-5 h-5 text-[#ee4d2d]" /> Thêm Sản Phẩm SPU & Biến Thể SKU
+            <Package className="w-5 h-5 text-[#ee4d2d]" /> Thêm Sản Phẩm Mới
           </h1>
         </div>
 
-        {/* Thông báo Thành công */}
+        {/* Thông báo Thành công hoặc Lỗi */}
         {isSuccess && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-lg flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            <span className="font-bold text-sm">Đã tạo sản phẩm thành công! Đang chuyển hướng...</span>
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span className="font-bold text-sm">Đã đăng sản phẩm thành công! Đang chuyển hướng về danh sách...</span>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg text-xs">
+            {errorMsg}
+          </div>
+        )}
+
+        {/* Modal Tự Động Khởi Tạo Gian Hàng Nếu Backend Yêu Cầu */}
+        {showShopModal && (
+          <div className="bg-orange-50 border-2 border-[#ee4d2d] p-5 rounded-lg space-y-3 shadow-md">
+            <h3 className="text-sm font-bold text-[#ee4d2d] flex items-center gap-2">
+              <Store className="w-5 h-5" /> Kích Hoạt Gian Hàng Người Bán (Shopew Seller Shop)
+            </h3>
+            <p className="text-xs text-gray-600">
+              Tài khoản của bạn chưa có Gian hàng để bán hàng. Vui lòng nhập tên Shop để kích hoạt:
+            </p>
+            <form onSubmit={handleCreateShopAndRetry} className="space-y-3 pt-1">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Tên Gian Hàng *</label>
+                <input
+                  type="text"
+                  required
+                  value={shopName}
+                  onChange={(e) => setShopName(e.target.value)}
+                  className="w-full p-2 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Mô Tả Gian Hàng</label>
+                <input
+                  type="text"
+                  value={shopDescription}
+                  onChange={(e) => setShopDescription(e.target.value)}
+                  className="w-full p-2 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowShopModal(false)}
+                  className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-semibold rounded cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingShop}
+                  className="px-4 py-1.5 bg-[#ee4d2d] hover:bg-orange-600 text-white text-xs font-bold rounded cursor-pointer disabled:opacity-50"
+                >
+                  {creatingShop ? 'Đang kích hoạt...' : 'Kích Hoạt Gian Hàng & Đăng Sản Phẩm'}
+                </button>
+              </div>
+            </form>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Section 1: Thông tin SPU cơ bản */}
+          {/* Section 1: Thông tin sản phẩm cơ bản */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
-            <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100">
-              1. Thông Tin Cơ Bản (SPU)
+            <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
+              <Package className="w-4 h-4 text-[#ee4d2d]" /> 1. Thông Tin Cơ Bản & Giá Giảm
             </h2>
 
             <div className="space-y-3">
@@ -110,7 +334,7 @@ export const SellerProductManagement: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="VD: Áo Phông Nam Cotton Co Giãn..."
+                  placeholder="Ví dụ: Áo Phông Nam Oversize Cotton 100% Co Giãn"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
@@ -118,19 +342,19 @@ export const SellerProductManagement: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Mô Tả Sản Phẩm</label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Mô Tả Chi Tiết Sản Phẩm</label>
                 <textarea
                   rows={4}
-                  placeholder="Mô tả chi tiết đặc điểm sản phẩm..."
+                  placeholder="Mô tả đặc điểm sản phẩm, kiểu dáng, hướng dẫn chọn size, chính sách bảo hành..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Tiêu Chuẩn (VND) *</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Bán Khởi Điểm (VND) *</label>
                   <input
                     type="number"
                     required
@@ -140,32 +364,62 @@ export const SellerProductManagement: React.FC = () => {
                   />
                 </div>
 
+                {/* Ô NHẬP PHẦN TRĂM GIẢM GIÁ (discountPercentage) */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">ID Danh Mục</label>
-                  <input
-                    type="number"
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5 text-[#ee4d2d]" /> Khuyến Mãi (% Giảm Giá)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={discountPercentage}
+                      onChange={(e) => setDiscountPercentage(Number(e.target.value))}
+                      className="w-full p-2.5 pr-8 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-xs text-gray-500">%</span>
+                  </div>
+                </div>
+
+                {/* Ô Chọn Danh Mục Sản Phẩm */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Danh Mục Ngành Hàng *
+                  </label>
+                  <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
-                  />
+                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-semibold text-gray-800 focus:outline-none focus:border-[#ee4d2d]"
+                  >
+                    {categories.length === 0 ? (
+                      <option value={1}>Chọn Ngành Hàng</option>
+                    ) : (
+                      categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Section 2: Nhóm Phân Loại Biến Thể 2 Tầng (Variant Groups) */}
+          {/* Section 2: Phân loại sản phẩm (Màu sắc, Kích cỡ...) */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-              <h2 className="text-sm font-bold text-gray-800 uppercase">
-                2. Phân Loại Hàng 2 Tầng (Variant Groups)
+              <h2 className="text-sm font-bold text-gray-800 uppercase flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#ee4d2d]" /> 2. Phân Loại Hàng (Màu Sắc, Kích Thước...)
               </h2>
               {variantGroups.length < 2 && (
                 <button
                   type="button"
                   onClick={handleAddVariantGroup}
-                  className="text-xs text-[#ee4d2d] hover:underline font-bold flex items-center gap-1"
+                  className="text-xs text-[#ee4d2d] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Thêm Nhóm Phân Loại 2
+                  <Plus className="w-3.5 h-3.5" /> Thêm Phân Loại 2 (VD: Kích cỡ)
                 </button>
               )}
             </div>
@@ -173,62 +427,119 @@ export const SellerProductManagement: React.FC = () => {
             {variantGroups.map((group, gIdx) => (
               <div key={gIdx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-700">Nhóm Phân Loại {gIdx + 1}</span>
+                  <span className="text-xs font-bold text-gray-700">Nhóm Phân Loại {gIdx + 1} (Ví dụ: Màu sắc, Dung lượng, Kích cỡ)</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveVariantGroup(gIdx)}
-                    className="text-xs text-red-500 hover:underline flex items-center gap-1"
+                    className="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5" /> Xóa nhóm
+                    <Trash2 className="w-3.5 h-3.5" /> Xóa nhóm này
                   </button>
                 </div>
 
                 <input
                   type="text"
+                  placeholder={`Tên Nhóm Phân Loại ${gIdx + 1} (VD: Màu sắc)`}
                   value={group.name}
                   onChange={(e) => {
                     const newG = [...variantGroups];
                     newG[gIdx].name = e.target.value;
                     setVariantGroups(newG);
                   }}
-                  className="w-full p-2 bg-white border border-gray-300 rounded text-xs"
+                  className="w-full p-2 bg-white border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
                 />
 
-                {/* Tùy chọn (Options) */}
-                <div className="flex flex-wrap gap-2 items-center pt-1">
-                  {group.options.map((opt, oIdx) => (
-                    <span key={oIdx} className="bg-white border border-gray-300 px-3 py-1 rounded text-xs font-medium text-gray-800">
-                      {opt}
-                    </span>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => handleAddOption(gIdx)}
-                    className="text-xs text-gray-600 hover:text-[#ee4d2d] bg-white border border-dashed border-gray-300 px-3 py-1 rounded"
-                  >
-                    + Thêm tùy chọn
-                  </button>
+                <div className="space-y-2 pt-1">
+                  <span className="text-[11px] font-semibold text-gray-500">Các Tùy Chọn Trong Nhóm:</span>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {group.options.map((opt, oIdx) => (
+                      <div key={oIdx} className="flex items-center gap-1 bg-white border border-gray-300 rounded px-2 py-1 shadow-xs focus-within:border-[#ee4d2d]">
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => handleOptionChange(gIdx, oIdx, e.target.value)}
+                          placeholder="Tùy chọn..."
+                          className="w-28 text-xs font-medium text-gray-800 bg-transparent focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveOption(gIdx, oIdx)}
+                          className="text-gray-400 hover:text-red-500 font-bold px-1 text-sm cursor-pointer"
+                          title="Xóa tùy chọn này"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => handleAddOption(gIdx)}
+                      className="text-xs text-[#ee4d2d] font-semibold bg-white border border-dashed border-[#ee4d2d] px-3 py-1.5 rounded hover:bg-orange-50 cursor-pointer"
+                    >
+                      + Thêm tùy chọn
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Section 3: Danh Sách SKUs */}
+          {/* Section 3: Bảng giá, giá gốc & Tồn kho theo từng phân loại */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
-            <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100">
-              3. Ma Trận SKUs Phân Loại
+            <h2 className="text-sm font-bold text-gray-800 uppercase pb-2 border-b border-gray-100 flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#ee4d2d]" /> 3. Bảng Giá Bán, Giá Gốc & Tồn Kho Theo Phân Loại ({skus.length} Phân Loại)
             </h2>
 
-            <div className="space-y-2">
-              {skus.map((sku, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded border border-gray-200 text-xs">
-                  <span className="font-bold text-gray-800">SKU #{sku.id} (Tier {sku.tierIndex.join(',')})</span>
-                  <div className="flex items-center gap-4">
-                    <span className="text-gray-600">Giá: <strong>{formatVND(sku.price)}</strong></span>
-                    <span className="text-gray-600">Tồn kho: <strong>{sku.stock}</strong></span>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
+                    <th className="p-3">Mẫu Phân Loại</th>
+                    <th className="p-3">Giá Bán Khuyến Mãi (VND)</th>
+                    <th className="p-3">Giá Gốc Niêm Yết (VND)</th>
+                    <th className="p-3">Số Lượng Tồn Kho</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {skus.map((sku, idx) => {
+                    const label1 = variantGroups[0]?.options[sku.tierIndex[0]] || '';
+                    const label2 = variantGroups[1]?.options[sku.tierIndex[1]] || '';
+                    const variantLabel = [label1, label2].filter(Boolean).join(' - ') || 'Mặc định';
+
+                    return (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="p-3 font-bold text-gray-800">
+                          {variantLabel}
+                        </td>
+                        <td className="p-3">
+                          <input
+                            type="number"
+                            value={sku.price}
+                            onChange={(e) => handleSkuPriceChange(idx, Number(e.target.value))}
+                            className="w-32 p-1.5 border border-gray-300 rounded font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d]"
+                          />
+                        </td>
+                        <td className="p-3">
+                          <input
+                            type="number"
+                            value={sku.originalPrice || Math.round(sku.price * 1.25)}
+                            onChange={(e) => handleSkuOriginalPriceChange(idx, Number(e.target.value))}
+                            className="w-32 p-1.5 border border-gray-300 rounded font-semibold text-gray-500 focus:outline-none focus:border-[#ee4d2d]"
+                          />
+                        </td>
+                        <td className="p-3">
+                          <input
+                            type="number"
+                            value={sku.stock}
+                            onChange={(e) => handleSkuStockChange(idx, Number(e.target.value))}
+                            className="w-24 p-1.5 border border-gray-300 rounded font-semibold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -237,7 +548,7 @@ export const SellerProductManagement: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm px-8 py-3 rounded-lg shadow-md transition-colors flex items-center gap-2"
+              className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm px-8 py-3 rounded-lg shadow-md transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {loading ? 'Đang lưu...' : 'Lưu & Đăng Sản Phẩm'}

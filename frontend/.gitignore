@@ -13,6 +13,11 @@ dist-ssr
 *.local
 .vite
 
+# Biến môi trường (mỗi dev tự tạo theo .env.example)
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

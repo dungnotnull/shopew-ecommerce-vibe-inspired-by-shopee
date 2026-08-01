@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -19,8 +19,17 @@ export class ShopsService {
   }
 
   async getShopByUserId(userId: number) {
-    const shop = await this.prisma.shop.findUnique({ where: { userId } });
-    if (!shop) throw new NotFoundException('Shop not found.');
+    let shop = await this.prisma.shop.findUnique({ where: { userId } });
+    if (!shop) {
+      // Tự động khởi tạo Shop mặc định cho Seller nếu chưa có
+      shop = await this.prisma.shop.create({
+        data: {
+          userId,
+          name: 'Gian Hàng Kênh Người Bán',
+          description: 'Cửa hàng phân phối sản phẩm chính hãng trên Shopew Enterprise.',
+        },
+      });
+    }
     return shop;
   }
 

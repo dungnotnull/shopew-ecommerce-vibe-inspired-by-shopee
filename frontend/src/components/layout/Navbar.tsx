@@ -10,16 +10,11 @@ export const Navbar: React.FC = () => {
   return (
     <div className="bg-[#ee4d2d] text-white text-xs py-1.5 border-b border-orange-600/30 font-['Roboto',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-        {/* Phân vùng trái: Liên kết điều hướng theo Role thực tế của User */}
+        {/* Phân vùng trái: Liên kết điều hướng Kênh Người Bán */}
         <div className="flex items-center space-x-3">
           <Link to="/seller" className="hover:opacity-80 flex items-center gap-1 font-medium">
             <Store className="w-3.5 h-3.5" />
             Kênh Người Bán
-          </Link>
-          <span className="opacity-40">|</span>
-          <Link to="/admin" className="hover:opacity-80 flex items-center gap-1 font-medium text-yellow-200">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            Cổng Admin
           </Link>
         </div>
 

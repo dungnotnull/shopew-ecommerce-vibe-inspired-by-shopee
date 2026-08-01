@@ -8,6 +8,7 @@ import { RoleGuard } from './components/auth/RoleGuard';
 
 // Layouts & Pages
 import { CustomerLayout } from './components/layout/CustomerLayout';
+import { SellerLayout } from './components/layout/SellerLayout';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
@@ -21,6 +22,8 @@ import { ProductDetailPage } from './pages/ProductDetailPage';
 import { SearchPage } from './pages/SearchPage';
 import { ShopDetailPage } from './pages/ShopDetailPage';
 import { SellerProductManagement } from './pages/seller/SellerProductManagement';
+import { SellerProductListPage } from './pages/seller/SellerProductListPage';
+import { SellerCategoryListPage } from './pages/seller/SellerCategoryListPage';
 
 // Khởi tạo React Query Client
 const queryClient = new QueryClient({
@@ -100,6 +103,26 @@ export const App: React.FC = () => {
             element={
               <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
                 <SellerProductManagement />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/seller/products"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerLayout>
+                  <SellerProductListPage />
+                </SellerLayout>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/seller/categories"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerLayout>
+                  <SellerCategoryListPage />
+                </SellerLayout>
               </RoleGuard>
             }
           />

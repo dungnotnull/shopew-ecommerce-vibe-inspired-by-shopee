@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, ValidateNested, IsObject, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsArray, ValidateNested, IsObject, Min, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class VariantGroupDto {
@@ -15,6 +15,11 @@ export class VariantGroupDto {
 }
 
 export class SkuDto {
+  @ApiPropertyOptional({ example: 1 })
+  @IsNumber()
+  @IsOptional()
+  id?: number;
+
   @ApiProperty({ example: 100000 })
   @IsNumber()
   @Min(0)
@@ -30,6 +35,17 @@ export class SkuDto {
   @IsNumber()
   @Min(0)
   stock: number;
+
+  @ApiPropertyOptional({ example: 10 })
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  discountPercentage?: number;
+
+  @ApiPropertyOptional({ example: false })
+  @IsBoolean()
+  @IsOptional()
+  isDiscount?: boolean;
 
   @ApiProperty({ example: [0, 1] })
   @IsArray()
@@ -75,11 +91,11 @@ export class CreateProductDto {
   @Min(0)
   priceMax?: number;
 
-  @ApiPropertyOptional({ example: 10 })
+  @ApiPropertyOptional({ example: 150000 })
   @IsNumber()
   @IsOptional()
   @Min(0)
-  discountPercentage?: number;
+  promotionalPrice?: number;
 
   @ApiPropertyOptional({ example: 100 })
   @IsNumber()
