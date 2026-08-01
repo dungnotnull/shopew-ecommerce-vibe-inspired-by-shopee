@@ -31,7 +31,7 @@ export const AdminCategoryListPage: React.FC = () => {
       const data = await CatalogService.getCategories();
       setCategories(data || []);
     } catch (err: any) {
-      setErrorMsg('Không thể tải danh sách ngành hàng từ server Backend.');
+      setErrorMsg('Không thể tải danh sách ngành hàng. Vui lòng thử lại sau.');
     } finally {
       setLoading(false);
     }

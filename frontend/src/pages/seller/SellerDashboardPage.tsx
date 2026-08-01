@@ -23,7 +23,7 @@ export const SellerDashboardPage: React.FC = () => {
       if (err.response?.status === 403) {
         setErrorMsg('Tài khoản của bạn chưa có quyền Kênh Người Bán (Role SELLER) để xem thống kê này.');
       } else {
-        setErrorMsg('Không thể kết nối đến API Seller Backend. Vui lòng kiểm tra lại server.');
+        setErrorMsg('Không thể kết nối đến máy chủ gian hàng. Vui lòng thử lại sau.');
       }
     } finally {
       setIsLoading(false);
@@ -44,7 +44,7 @@ export const SellerDashboardPage: React.FC = () => {
               {data?.shopName || 'Gian Hàng Kênh Người Bán'}
             </h1>
             <p className="text-xs text-gray-500 mt-1">
-              Dữ liệu thời gian thực được đồng bộ từ Backend NestJS API (`GET /api/seller/dashboard`)
+              Tổng quan chỉ số kinh doanh và hiệu suất cửa hàng của bạn
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -58,12 +58,12 @@ export const SellerDashboardPage: React.FC = () => {
               onClick={() => navigate('/seller/products/new')}
               className="inline-flex items-center gap-1.5 bg-[#ee4d2d] hover:bg-[#d03e20] text-white text-xs font-bold px-4 py-2 rounded shadow-sm transition-colors cursor-pointer"
             >
-              <Plus className="w-4 h-4" /> Đăng Sản Phẩm Mới (SPU/SKU)
+              <Plus className="w-4 h-4" /> Đăng Sản Phẩm Mới
             </button>
           </div>
         </div>
 
-        {/* Cảnh báo lỗi API nếu có */}
+        {/* Cảnh báo lỗi nếu có */}
         {errorMsg && (
           <div className="p-4 bg-red-50 text-red-600 rounded-lg text-xs flex items-center gap-2 border border-red-200">
             <AlertCircle className="w-5 h-5 shrink-0" />
@@ -71,7 +71,7 @@ export const SellerDashboardPage: React.FC = () => {
           </div>
         )}
 
-        {/* Thống kê 4 Chỉ số Kinh doanh từ API Backend */}
+        {/* Thống kê 4 Chỉ số Kinh doanh */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-orange-50/50 border border-orange-100 p-4 rounded-lg flex items-center gap-4">
             <div className="bg-[#ee4d2d] text-white p-3 rounded-lg shadow-sm">
@@ -102,7 +102,7 @@ export const SellerDashboardPage: React.FC = () => {
               <Package className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs text-gray-500 font-medium">Tổng Sản Phẩm SPU</span>
+              <span className="text-xs text-gray-500 font-medium">Tổng Sản Phẩm</span>
               <h3 className="text-lg font-extrabold text-gray-800">
                 {isLoading ? '...' : `${data?.totalSPUs || 0} Mặt Hàng`}
               </h3>
@@ -122,10 +122,10 @@ export const SellerDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Việc Cần Làm (To-do List từ API Backend) */}
+        {/* Việc Cần Làm */}
         <div className="border border-gray-100 rounded-lg p-5 bg-gray-50/50 space-y-3">
           <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-[#ee4d2d]" /> Danh Sách Việc Cần Làm (Backend API Sync)
+            <AlertCircle className="w-4 h-4 text-[#ee4d2d]" /> Danh Sách Việc Cần Làm
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div className="bg-white p-3 rounded border border-gray-200">

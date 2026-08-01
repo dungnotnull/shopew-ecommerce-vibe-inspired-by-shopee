@@ -150,7 +150,11 @@ export const SellerProductManagement: React.FC = () => {
 
   const handleAddVariantGroup = () => {
     if (variantGroups.length >= 2) return;
-    setVariantGroups(prev => [...prev, { name: 'Kích cỡ', options: ['S', 'M', 'L'] }]);
+    if (variantGroups.length === 0) {
+      setVariantGroups([{ name: 'Màu sắc', options: ['Đen', 'Trắng'] }]);
+    } else {
+      setVariantGroups(prev => [...prev, { name: 'Kích cỡ', options: ['S', 'M', 'L'] }]);
+    }
   };
 
   const handleRemoveVariantGroup = (idx: number) => {
@@ -511,16 +515,29 @@ export const SellerProductManagement: React.FC = () => {
               <h2 className="text-sm font-bold text-gray-800 uppercase flex items-center gap-2">
                 <Layers className="w-4 h-4 text-[#ee4d2d]" /> 2. Phân Loại Hàng (Màu Sắc, Kích Thước...)
               </h2>
-              {variantGroups.length < 2 && (
+              {variantGroups.length > 0 && variantGroups.length < 2 && (
                 <button
                   type="button"
                   onClick={handleAddVariantGroup}
-                  className="text-xs text-[#ee4d2d] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  className="text-xs text-[#ee4d2d] font-bold flex items-center gap-1 cursor-pointer bg-orange-50 border border-dashed border-[#ee4d2d] px-2.5 py-1 rounded hover:bg-orange-100 transition-colors"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Thêm Phân Loại 2 (VD: Kích cỡ)
+                  <Plus className="w-3.5 h-3.5" /> + Thêm Nhóm Phân Loại 2 (VD: Kích thước)
                 </button>
               )}
             </div>
+
+            {variantGroups.length === 0 && (
+              <div className="p-6 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center space-y-2">
+                <p className="text-xs text-gray-600 font-medium">Sản phẩm này chưa được thiết lập nhóm phân loại (màu sắc, kích thước, dung lượng...)</p>
+                <button
+                  type="button"
+                  onClick={handleAddVariantGroup}
+                  className="px-4 py-2 bg-[#ee4d2d] text-white text-xs font-bold rounded shadow-xs hover:bg-orange-600 inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> Thêm Nhóm Phân Loại Đầu Tiên (VD: Màu sắc)
+                </button>
+              </div>
+            )}
 
             {variantGroups.map((group, gIdx) => (
               <div key={gIdx} className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-3">

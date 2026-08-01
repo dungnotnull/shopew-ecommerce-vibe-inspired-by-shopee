@@ -84,7 +84,7 @@ export const RegisterPage: React.FC = () => {
       } else if (typeof backendMsg === 'string') {
         setErrorMsg(backendMsg);
       } else if (err.code === 'ERR_NETWORK' || err.message?.includes('Network Error')) {
-        setErrorMsg('Không thể kết nối đến máy chủ Backend NestJS (http://localhost:3000/api). Vui lòng đảm bảo Server Backend đang khởi chạy.');
+        setErrorMsg('Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.');
       } else {
         setErrorMsg('Đăng ký thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau.');
       }

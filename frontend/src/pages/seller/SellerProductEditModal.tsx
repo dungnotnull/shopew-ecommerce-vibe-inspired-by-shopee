@@ -345,8 +345,18 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {skus.map((sku, sIdx) => {
-                      const label1 = product.variantGroups?.[0]?.options[sku.tierIndex[0]] || '';
-                      const label2 = product.variantGroups?.[1]?.options[sku.tierIndex[1]] || '';
+                      const getOptVal = (vg: any, tierIdx: any) => {
+                        if (!vg || !vg.options || tierIdx === undefined || tierIdx === null) return '';
+                        const opt = vg.options[Number(tierIdx)];
+                        if (typeof opt === 'object' && opt !== null) {
+                          return opt.value !== undefined ? String(opt.value) : String(opt);
+                        }
+                        return String(opt || '');
+                      };
+
+                      const tierArr = typeof sku.tierIndex === 'string' ? JSON.parse(sku.tierIndex) : (sku.tierIndex || []);
+                      const label1 = getOptVal(product.variantGroups?.[0], tierArr[0]);
+                      const label2 = getOptVal(product.variantGroups?.[1], tierArr[1]);
                       const variantLabel = [label1, label2].filter(Boolean).join(' - ') || `Mẫu #${sku.id}`;
 
                       return (

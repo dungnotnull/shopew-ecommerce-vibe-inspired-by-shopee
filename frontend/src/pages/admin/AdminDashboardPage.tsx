@@ -19,9 +19,9 @@ export const AdminDashboardPage: React.FC = () => {
       setData(res);
     } catch (err: any) {
       if (err.response?.status === 403) {
-        setErrorMsg('Tài khoản của bạn chưa có quyền Super Admin (Role ADMIN) để xem dữ liệu này.');
+        setErrorMsg('Tài khoản của bạn chưa có quyền Quản Trị Viên (ADMIN) để xem trang này.');
       } else {
-        setErrorMsg('Không thể kết nối đến API Admin Backend. Vui lòng kiểm tra lại server.');
+        setErrorMsg('Không thể kết nối đến máy chủ quản trị. Vui lòng thử lại sau.');
       }
     } finally {
       setIsLoading(false);
@@ -35,11 +35,14 @@ export const AdminDashboardPage: React.FC = () => {
   return (
     <AdminLayout>
       <div className="space-y-6 font-['Roboto',sans-serif]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-4">
+        {/* Header Admin */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-4 gap-4">
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Cổng Quản Trị Hệ Thống Shopew</h1>
-            <p className="text-xs text-slate-500 mt-1">
-              Dữ liệu thời gian thực được đồng bộ từ Backend NestJS API (`GET /api/admin/dashboard`)
+            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <ShieldAlert className="w-6 h-6 text-purple-600" /> Cổng Quản Trị Hệ Thống Shopew
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              Tổng quan chỉ số hoạt động và quản trị toàn hệ thống
             </p>
           </div>
           <div className="flex items-center gap-2">

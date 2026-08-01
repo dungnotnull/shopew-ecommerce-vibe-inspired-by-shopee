@@ -55,7 +55,6 @@ export const LoginPage: React.FC = () => {
         navigate('/');
       }
     } catch (err: any) {
-      // Trích xuất thông báo lỗi chính xác từ Backend NestJS
       const backendMsg = err.response?.data?.message;
       if (Array.isArray(backendMsg)) {
         setErrorMsg(backendMsg.join(', '));
@@ -64,7 +63,7 @@ export const LoginPage: React.FC = () => {
       } else if (err.response?.status === 401) {
         setErrorMsg('Email hoặc mật khẩu không chính xác.');
       } else {
-        setErrorMsg('Đã xảy ra lỗi kết nối tới máy chủ Backend. Vui lòng thử lại.');
+        setErrorMsg('Đã xảy ra lỗi kết nối tới máy chủ. Vui lòng thử lại.');
       }
     } finally {
       setIsSubmitting(false);
