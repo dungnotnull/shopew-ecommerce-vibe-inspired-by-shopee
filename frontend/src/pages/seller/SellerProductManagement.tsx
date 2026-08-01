@@ -22,16 +22,10 @@ interface FlattenCategoryOption {
   label: string;
 }
 
-const buildCategorySelectOptions = (cats: Category[], depth = 0): FlattenCategoryOption[] => {
-  let options: FlattenCategoryOption[] = [];
-  cats.forEach((c) => {
-    const prefix = depth > 0 ? `${'-- '.repeat(depth)}` : '';
-    options.push({ id: c.id, label: `${prefix}${c.name}` });
-    if (c.children && c.children.length > 0) {
-      options = options.concat(buildCategorySelectOptions(c.children, depth + 1));
-    }
-  });
-  return options;
+const buildCategorySelectOptions = (cats: Category[]): FlattenCategoryOption[] => {
+  return cats
+    .filter((c) => c.parentId === null || !c.parentId)
+    .map((c) => ({ id: c.id, label: c.name }));
 };
 
 export const SellerProductManagement: React.FC = () => {
@@ -110,51 +104,54 @@ export const SellerProductManagement: React.FC = () => {
       return;
     }
 
-    if (variantGroups.length === 1) {
-      const generatedSkus: ExtendedFormSKU[] = variantGroups[0].options.map((_opt, idx) => ({
-        id: idx + 1,
-        tierIndex: [idx],
-        price: priceMin,
-        originalPrice: calcOriginal,
-        discountPercentage: defaultDiscount,
-        isDiscountActive: true,
-        stock: 50,
-      }));
-      setSkus(generatedSkus);
-      return;
-    }
-
-    if (variantGroups.length === 2) {
-      const group1 = variantGroups[0];
-      const group2 = variantGroups[1];
-      const generatedSkus: ExtendedFormSKU[] = [];
-      let skuId = 1;
-
-      group1.options.forEach((_, idx1) => {
-        group2.options.forEach((_, idx2) => {
-          generatedSkus.push({
-            id: skuId++,
-            tierIndex: [idx1, idx2],
-            price: priceMin,
-            originalPrice: calcOriginal,
-            discountPercentage: defaultDiscount,
-            isDiscountActive: true,
-            stock: 50,
+    const optionIndicesPerGroup = variantGroups.map(g => g.options.map((_, i) => i));
+    const cartesian = (arrays: number[][]): number[][] => {
+      return arrays.reduce<number[][]>(
+        (acc, curr) => {
+          const res: number[][] = [];
+          acc.forEach(prev => {
+            curr.forEach(item => {
+              res.push([...prev, item]);
+            });
           });
-        });
-      });
+          return res;
+        },
+        [[]]
+      );
+    };
 
-      setSkus(generatedSkus);
-    }
+    const combinations = cartesian(optionIndicesPerGroup);
+    const generatedSkus: ExtendedFormSKU[] = combinations.map((tierIndex, idx) => ({
+      id: idx + 1,
+      tierIndex,
+      price: priceMin,
+      originalPrice: calcOriginal,
+      discountPercentage: defaultDiscount,
+      isDiscountActive: true,
+      stock: 50,
+    }));
+
+    setSkus(generatedSkus);
   }, [variantGroups, priceMin]);
 
   const handleAddVariantGroup = () => {
-    if (variantGroups.length >= 2) return;
-    if (variantGroups.length === 0) {
-      setVariantGroups([{ name: 'Màu sắc', options: ['Đen', 'Trắng'] }]);
-    } else {
-      setVariantGroups(prev => [...prev, { name: 'Kích cỡ', options: ['S', 'M', 'L'] }]);
-    }
+    if (variantGroups.length >= 5) return;
+    const defaultGroupNames = ['Màu sắc', 'Kích cỡ', 'Chất liệu', 'Kiểu dáng', 'Phân loại bổ sung'];
+    const defaultOptions = [
+      ['Đen', 'Trắng'],
+      ['S', 'M', 'L'],
+      ['Cotton', 'Nỉ'],
+      ['Oversize', 'Slimfit'],
+      ['Tùy chọn 1', 'Tùy chọn 2']
+    ];
+    const idx = variantGroups.length;
+    setVariantGroups(prev => [
+      ...prev,
+      {
+        name: defaultGroupNames[idx] || `Nhóm Phân Loại ${idx + 1}`,
+        options: defaultOptions[idx] || ['Tùy chọn 1', 'Tùy chọn 2']
+      }
+    ]);
   };
 
   const handleRemoveVariantGroup = (idx: number) => {
@@ -515,13 +512,13 @@ export const SellerProductManagement: React.FC = () => {
               <h2 className="text-sm font-bold text-gray-800 uppercase flex items-center gap-2">
                 <Layers className="w-4 h-4 text-[#ee4d2d]" /> 2. Phân Loại Hàng (Màu Sắc, Kích Thước...)
               </h2>
-              {variantGroups.length > 0 && variantGroups.length < 2 && (
+              {variantGroups.length > 0 && variantGroups.length < 5 && (
                 <button
                   type="button"
                   onClick={handleAddVariantGroup}
                   className="text-xs text-[#ee4d2d] font-bold flex items-center gap-1 cursor-pointer bg-orange-50 border border-dashed border-[#ee4d2d] px-2.5 py-1 rounded hover:bg-orange-100 transition-colors"
                 >
-                  <Plus className="w-3.5 h-3.5" /> + Thêm Nhóm Phân Loại 2 (VD: Kích thước)
+                  <Plus className="w-3.5 h-3.5" /> Thêm nhóm
                 </button>
               )}
             </div>
@@ -534,7 +531,7 @@ export const SellerProductManagement: React.FC = () => {
                   onClick={handleAddVariantGroup}
                   className="px-4 py-2 bg-[#ee4d2d] text-white text-xs font-bold rounded shadow-xs hover:bg-orange-600 inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                 >
-                  <Plus className="w-4 h-4" /> Thêm Nhóm Phân Loại Đầu Tiên (VD: Màu sắc)
+                  <Plus className="w-4 h-4" /> Thêm nhóm
                 </button>
               </div>
             )}
@@ -609,32 +606,33 @@ export const SellerProductManagement: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
-                    <th className="p-3">Mẫu Phân Loại</th>
-                    <th className="p-3">Giá Gốc Niêm Yết (VND)</th>
-                    <th className="p-3 text-center">Áp Dụng Giảm Giá</th>
-                    <th className="p-3">% Giảm Giá</th>
-                    <th className="p-3">Giá Bán Thực Tế (VND)</th>
-                    <th className="p-3">Tồn Kho</th>
+                    <th className="p-3 whitespace-nowrap">Mẫu Phân Loại</th>
+                    <th className="p-3 whitespace-nowrap text-right">Giá Gốc Niêm Yết (VND)</th>
+                    <th className="p-3 whitespace-nowrap text-center">Áp Dụng Giảm Giá</th>
+                    <th className="p-3 whitespace-nowrap text-right">% Giảm Giá</th>
+                    <th className="p-3 whitespace-nowrap text-right">Giá Bán Thực Tế (VND)</th>
+                    <th className="p-3 whitespace-nowrap text-right">Tồn Kho</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {skus.map((sku, idx) => {
-                    const label1 = variantGroups[0]?.options[sku.tierIndex[0]] || '';
-                    const label2 = variantGroups[1]?.options[sku.tierIndex[1]] || '';
-                    const variantLabel = [label1, label2].filter(Boolean).join(' - ') || 'Mặc định';
+                    const variantLabel = sku.tierIndex
+                      .map((tierIdx, groupIdx) => variantGroups[groupIdx]?.options[tierIdx])
+                      .filter(Boolean)
+                      .join(' - ') || 'Mặc định';
 
                     return (
                       <tr key={idx} className={`hover:bg-gray-50/80 transition-colors ${!sku.isDiscountActive ? 'bg-gray-50/50' : ''}`}>
-                        <td className="p-3 font-bold text-gray-800">
+                        <td className="p-3 whitespace-nowrap font-bold text-gray-800">
                           {variantLabel}
                         </td>
                         {/* 1. Giá Gốc Niêm Yết */}
-                        <td className="p-3">
+                        <td className="p-3 text-right">
                           <input
                             type="number"
                             value={sku.originalPrice}
                             onChange={(e) => handleSkuOriginalPriceChange(idx, Number(e.target.value))}
-                            className="w-28 p-1.5 border border-gray-300 rounded font-medium text-gray-600 focus:outline-none focus:border-[#ee4d2d]"
+                            className="w-28 p-1.5 border border-gray-300 rounded font-medium text-gray-600 focus:outline-none focus:border-[#ee4d2d] text-right"
                           />
                         </td>
                         {/* 2. CHECKBOX STICK CHỌN ÁP DỤNG DISCOUNT */}
@@ -652,8 +650,8 @@ export const SellerProductManagement: React.FC = () => {
                           </button>
                         </td>
                         {/* 3. % Giảm Giá */}
-                        <td className="p-3">
-                          <div className="relative w-20">
+                        <td className="p-3 text-right">
+                          <div className="relative w-20 ml-auto">
                             <input
                               type="number"
                               disabled={!sku.isDiscountActive}
@@ -661,28 +659,28 @@ export const SellerProductManagement: React.FC = () => {
                               max={99}
                               value={sku.discountPercentage}
                               onChange={(e) => handleSkuDiscountChange(idx, Number(e.target.value))}
-                              className="w-full p-1.5 pr-5 border border-gray-300 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d] disabled:bg-gray-100 disabled:text-gray-400"
+                              className="w-full p-1.5 pr-5 border border-gray-300 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d] disabled:bg-gray-100 disabled:text-gray-400 text-right"
                             />
                             <Percent className="w-3 h-3 absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400" />
                           </div>
                         </td>
                         {/* 4. Giá Bán Thực Tế (Tự động tính từ Giá gốc * (1 - % Giảm)) */}
-                        <td className="p-3">
+                        <td className="p-3 text-right">
                           <input
                             type="number"
                             value={sku.price}
                             onChange={(e) => handleSkuPriceChange(idx, Number(e.target.value))}
-                            className={`w-28 p-1.5 border rounded font-bold text-xs focus:outline-none ${sku.isDiscountActive ? 'border-red-300 bg-orange-50/50 text-[#ee4d2d]' : 'border-gray-300 text-gray-900'
+                            className={`w-28 p-1.5 border rounded font-bold text-xs focus:outline-none text-right ${sku.isDiscountActive ? 'border-red-300 bg-orange-50/50 text-[#ee4d2d]' : 'border-gray-300 text-gray-900'
                               }`}
                           />
                         </td>
                         {/* 5. Tồn Kho */}
-                        <td className="p-3">
+                        <td className="p-3 text-right">
                           <input
                             type="number"
                             value={sku.stock}
                             onChange={(e) => handleSkuStockChange(idx, Number(e.target.value))}
-                            className="w-20 p-1.5 border border-gray-300 rounded font-semibold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
+                            className="w-20 p-1.5 border border-gray-300 rounded font-semibold text-gray-900 focus:outline-none focus:border-[#ee4d2d] text-right"
                           />
                         </td>
                       </tr>

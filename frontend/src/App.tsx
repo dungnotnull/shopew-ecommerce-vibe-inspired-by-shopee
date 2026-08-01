@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/useAuthStore';
 
@@ -35,6 +35,17 @@ const queryClient = new QueryClient({
   },
 });
 
+// Component tự động cuộn lên đầu trang khi điều hướng Route hoặc mở chi tiết sản phẩm
+const ScrollToTop: React.FC = () => {
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, search]);
+
+  return null;
+};
+
 // Component bảo vệ Route cơ bản (Yêu cầu đăng nhập)
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -61,6 +72,7 @@ export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
+        <ScrollToTop />
         <Routes>
           {/* Public Routes - Khách hàng tự do xem trang chủ, sản phẩm, tìm kiếm & Auth */}
           <Route path="/" element={<CustomerLayout><HomePage /></CustomerLayout>} />

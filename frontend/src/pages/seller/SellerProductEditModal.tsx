@@ -25,16 +25,10 @@ interface FlattenCategoryOption {
   label: string;
 }
 
-const buildCategorySelectOptions = (cats: Category[], depth = 0): FlattenCategoryOption[] => {
-  let options: FlattenCategoryOption[] = [];
-  cats.forEach((c) => {
-    const prefix = depth > 0 ? `${'-- '.repeat(depth)}` : '';
-    options.push({ id: c.id, label: `${prefix}${c.name}` });
-    if (c.children && c.children.length > 0) {
-      options = options.concat(buildCategorySelectOptions(c.children, depth + 1));
-    }
-  });
-  return options;
+const buildCategorySelectOptions = (cats: Category[]): FlattenCategoryOption[] => {
+  return cats
+    .filter((c) => c.parentId === null || !c.parentId)
+    .map((c) => ({ id: c.id, label: c.name }));
 };
 
 export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
@@ -335,12 +329,12 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-gray-100 border-b border-gray-200 text-gray-700">
-                      <th className="p-2.5">Mẫu Phân Loại</th>
-                      <th className="p-2.5">Giá Gốc Niêm Yết</th>
-                      <th className="p-2.5 text-center">Áp Dụng Giảm Giá?</th>
-                      <th className="p-2.5">% Giảm</th>
-                      <th className="p-2.5">Giá Bán Thực Tế</th>
-                      <th className="p-2.5">Tồn Kho</th>
+                      <th className="p-2.5 whitespace-nowrap">Mẫu Phân Loại</th>
+                      <th className="p-2.5 whitespace-nowrap text-right">Giá Gốc Niêm Yết</th>
+                      <th className="p-2.5 whitespace-nowrap text-center">Áp Dụng Giảm Giá?</th>
+                      <th className="p-2.5 whitespace-nowrap text-right">% Giảm</th>
+                      <th className="p-2.5 whitespace-nowrap text-right">Giá Bán Thực Tế</th>
+                      <th className="p-2.5 whitespace-nowrap text-right">Tồn Kho</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -361,13 +355,13 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
 
                       return (
                         <tr key={sIdx} className={`hover:bg-gray-50/80 transition-colors ${!sku.isDiscountActive ? 'bg-gray-50/50' : ''}`}>
-                          <td className="p-2.5 font-bold text-gray-800">{variantLabel}</td>
-                          <td className="p-2.5">
+                          <td className="p-2.5 whitespace-nowrap font-bold text-gray-800">{variantLabel}</td>
+                          <td className="p-2.5 text-right">
                             <input
                               type="number"
                               value={sku.originalPrice}
                               onChange={(e) => handleSkuOriginalPriceChange(sIdx, Number(e.target.value))}
-                              className="w-24 p-1.5 border border-gray-300 rounded text-xs font-medium text-gray-600 focus:outline-none focus:border-[#ee4d2d]"
+                              className="w-24 p-1.5 border border-gray-300 rounded text-xs font-medium text-gray-600 focus:outline-none focus:border-[#ee4d2d] text-right"
                             />
                           </td>
                           <td className="p-2.5 text-center">
@@ -383,8 +377,8 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
                               )}
                             </button>
                           </td>
-                          <td className="p-2.5">
-                            <div className="relative w-16">
+                          <td className="p-2.5 text-right">
+                            <div className="relative w-16 ml-auto">
                               <input
                                 type="number"
                                 disabled={!sku.isDiscountActive}
@@ -392,27 +386,27 @@ export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({
                                 max={99}
                                 value={sku.discountPercentage}
                                 onChange={(e) => handleSkuDiscountChange(sIdx, Number(e.target.value))}
-                                className="w-full p-1 pr-4 border border-gray-300 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d] disabled:bg-gray-100 disabled:text-gray-400"
+                                className="w-full p-1 pr-4 border border-gray-300 rounded text-xs font-bold text-[#ee4d2d] focus:outline-none focus:border-[#ee4d2d] disabled:bg-gray-100 disabled:text-gray-400 text-right"
                               />
                               <Percent className="w-2.5 h-2.5 absolute right-1 top-1/2 -translate-y-1/2 text-gray-400" />
                             </div>
                           </td>
-                          <td className="p-2.5">
+                          <td className="p-2.5 text-right">
                             <input
                               type="number"
                               value={sku.price}
                               onChange={(e) => handleSkuPriceChange(sIdx, Number(e.target.value))}
-                              className={`w-24 p-1.5 border rounded text-xs font-bold focus:outline-none ${
+                              className={`w-24 p-1.5 border rounded text-xs font-bold focus:outline-none text-right ${
                                 sku.isDiscountActive ? 'border-red-300 bg-orange-50/50 text-[#ee4d2d]' : 'border-gray-300 text-gray-900'
                               }`}
                             />
                           </td>
-                          <td className="p-2.5">
+                          <td className="p-2.5 text-right">
                             <input
                               type="number"
                               value={sku.stock}
                               onChange={(e) => handleSkuStockChange(sIdx, Number(e.target.value))}
-                              className="w-20 p-1.5 border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-[#ee4d2d]"
+                              className="w-20 p-1.5 border border-gray-300 rounded text-xs font-semibold focus:outline-none focus:border-[#ee4d2d] text-right"
                             />
                           </td>
                         </tr>

@@ -18,6 +18,11 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({ categories }) => {
     return <ShoppingBag className="w-6 h-6 text-[#ee4d2d]" />;
   };
 
+  // Lọc chỉ lấy các danh mục ngành hàng cấp cha (parentId === null) để giao diện gọn gàng chuẩn Shopee
+  const displayCategories = React.useMemo(() => {
+    return categories.filter((c) => c.parentId === null || !c.parentId);
+  }, [categories]);
+
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 mb-6">
       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
@@ -26,7 +31,7 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({ categories }) => {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-        {categories.map((cat) => (
+        {displayCategories.map((cat) => (
           <Link
             key={cat.id}
             to={`/search?category_id=${cat.id}`}

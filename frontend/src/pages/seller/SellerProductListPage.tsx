@@ -27,17 +27,8 @@ export const SellerProductListPage: React.FC = () => {
       ]);
       setProducts(prodData);
 
-      const flattenList: Category[] = [];
-      const extractAll = (items: Category[]) => {
-        items.forEach(c => {
-          flattenList.push(c);
-          if (c.children && c.children.length > 0) {
-            extractAll(c.children);
-          }
-        });
-      };
-      extractAll(catData);
-      setCategories(flattenList);
+      const parentCats = catData.filter(c => c.parentId === null || !c.parentId);
+      setCategories(parentCats);
     } finally {
       setLoading(false);
     }
@@ -147,12 +138,12 @@ export const SellerProductListPage: React.FC = () => {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 uppercase font-bold">
-                  <th className="p-3.5">Mã SP</th>
-                  <th className="p-3.5">Thông Tin Sản Phẩm</th>
-                  <th className="p-3.5">Giá Bán Khuyến Mãi (VND)</th>
-                  <th className="p-3.5">Phân Loại Hàng</th>
-                  <th className="p-3.5">Đã Bán</th>
-                  <th className="p-3.5 text-center">Thao Tác</th>
+                  <th className="p-3.5 whitespace-nowrap text-center">Mã SP</th>
+                  <th className="p-3.5 whitespace-nowrap text-left">Thông Tin Sản Phẩm</th>
+                  <th className="p-3.5 whitespace-nowrap text-center">Giá Bán Khuyến Mãi (VND)</th>
+                  <th className="p-3.5 whitespace-nowrap text-center">Phân Loại Hàng</th>
+                  <th className="p-3.5 whitespace-nowrap text-center">Đã Bán</th>
+                  <th className="p-3.5 whitespace-nowrap text-center">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -164,7 +155,7 @@ export const SellerProductListPage: React.FC = () => {
 
                   return (
                     <tr key={p.id} className="hover:bg-gray-50/80 transition-colors">
-                      <td className="p-3.5 font-bold text-gray-500">#{p.id}</td>
+                      <td className="p-3.5 text-center font-bold text-gray-500">#{p.id}</td>
                       <td className="p-3.5">
                         <div className="flex items-center gap-3">
                           <img
@@ -199,37 +190,37 @@ export const SellerProductListPage: React.FC = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="p-3.5">
+                      <td className="p-3.5 text-center">
                         <div className="space-y-0.5">
-                          <div className="font-bold text-[#ee4d2d] text-sm">
+                          <div className="font-bold text-[#ee4d2d] text-sm whitespace-nowrap">
                             {p.priceMin === p.priceMax
                               ? formatVND(p.priceMin)
                               : `${formatVND(p.priceMin)} - ${formatVND(p.priceMax)}`}
                           </div>
                           {hasDiscount && (
-                            <div className="text-[11px] text-gray-400 line-through">
+                            <div className="text-[11px] text-gray-400 line-through whitespace-nowrap">
                               {formatVND(Math.round(p.priceMin * (1 + (p.discountPercentage || 0) / 100)))}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="p-3.5">
-                        <div className="space-y-1">
-                          <span className="inline-flex items-center gap-1 font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
+                      <td className="p-3.5 text-center whitespace-nowrap">
+                        <div className="space-y-1 inline-block text-center">
+                          <span className="inline-flex items-center gap-1 font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded whitespace-nowrap">
                             <Layers className="w-3 h-3 text-[#ee4d2d]" /> {skuCount} Phân loại ({totalStock} tồn)
                           </span>
                           {skuCount > 0 && (
                             <button
                               onClick={() => setSelectedProductForSkus(p)}
-                              className="block text-[11px] text-[#ee4d2d] hover:underline cursor-pointer font-medium"
+                              className="block text-[11px] text-[#ee4d2d] hover:underline cursor-pointer font-medium whitespace-nowrap mx-auto"
                             >
                               Xem chi tiết phân loại
                             </button>
                           )}
                         </div>
                       </td>
-                      <td className="p-3.5 font-semibold text-gray-700">{p.soldCount || 0}</td>
-                      <td className="p-3.5">
+                      <td className="p-3.5 text-center font-semibold text-gray-700 whitespace-nowrap">{p.soldCount || 0}</td>
+                      <td className="p-3.5 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleOpenEditModal(p)}
@@ -277,10 +268,10 @@ export const SellerProductListPage: React.FC = () => {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-gray-100 text-gray-700">
-                    <th className="p-2">Mẫu Phân Loại</th>
-                    <th className="p-2">Giá Khuyến Mãi</th>
-                    <th className="p-2">Giá Gốc</th>
-                    <th className="p-2">Tồn Kho</th>
+                    <th className="p-2 whitespace-nowrap">Mẫu Phân Loại</th>
+                    <th className="p-2 whitespace-nowrap text-center">Giá Khuyến Mãi</th>
+                    <th className="p-2 whitespace-nowrap text-center">Giá Gốc</th>
+                    <th className="p-2 whitespace-nowrap text-center">Tồn Kho</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -301,12 +292,12 @@ export const SellerProductListPage: React.FC = () => {
 
                     return (
                       <tr key={idx}>
-                        <td className="p-2 font-semibold text-gray-800">{label}</td>
-                        <td className="p-2 font-bold text-[#ee4d2d]">{formatVND(sku.price)}</td>
-                        <td className="p-2 text-gray-400 line-through">
+                        <td className="p-2 whitespace-nowrap font-semibold text-gray-800">{label}</td>
+                        <td className="p-2 text-center font-bold text-[#ee4d2d] whitespace-nowrap">{formatVND(sku.price)}</td>
+                        <td className="p-2 text-center text-gray-400 line-through whitespace-nowrap">
                           {formatVND(sku.originalPrice || Math.round(sku.price * 1.25))}
                         </td>
-                        <td className="p-2">{sku.stock} sản phẩm</td>
+                        <td className="p-2 text-center whitespace-nowrap">{sku.stock} sản phẩm</td>
                       </tr>
                     );
                   })}
