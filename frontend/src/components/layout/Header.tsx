@@ -1,12 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, ShoppingBag } from 'lucide-react';
 import { Navbar } from './Navbar';
+import CatalogService from '../../services/catalog-service';
+import { Category } from '../../types/catalog';
 
 // Header chính của hệ thống Shopew
 export const Header: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [quickCategories, setQuickCategories] = useState<Category[]>([]);
   const navigate = useNavigate();
+
+  // Nạp danh mục ngành hàng từ API Backend để hiển thị Tag tìm kiếm nhanh
+  useEffect(() => {
+    const fetchQuickCats = async () => {
+      try {
+        const catData = await CatalogService.getCategories();
+        if (catData && catData.length > 0) {
+          const allCats: Category[] = [];
+          catData.forEach(c => {
+            allCats.push(c);
+            if (c.children && c.children.length > 0) {
+              allCats.push(...c.children);
+            }
+          });
+          setQuickCategories(allCats.slice(0, 6));
+        }
+      } catch {
+        // Fallback giữ nguyên giao diện
+      }
+    };
+    fetchQuickCats();
+  }, []);
 
   // Xử lý gửi Form Tìm kiếm
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -49,12 +74,25 @@ export const Header: React.FC = () => {
             </button>
           </form>
 
-          {/* Tag Từ khóa gợi ý nhanh */}
+          {/* Tag Từ khóa/Danh mục gợi ý nhanh từ API thực tế */}
           <div className="flex items-center gap-3 text-xs text-white/90 mt-1.5 overflow-hidden whitespace-nowrap">
-            <Link to="/search?q=iphone" className="hover:underline">iPhone 15 Pro</Link>
-            <Link to="/search?q=ao-thun" className="hover:underline">Áo Thêu Local Brand</Link>
-            <Link to="/search?q=tai-nghe" className="hover:underline">Tai Nghe Bluetooth</Link>
-            <Link to="/search?q=vay-nu" className="hover:underline">Váy Nữ Dáng Xòe</Link>
+            {quickCategories.length > 0 ? (
+              quickCategories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  to={`/search?category_id=${cat.id}`}
+                  className="hover:underline opacity-95 hover:opacity-100 transition-opacity"
+                >
+                  {cat.name}
+                </Link>
+              ))
+            ) : (
+              <>
+                <Link to="/search?category_id=1" className="hover:underline">Thời Trang Nam</Link>
+                <Link to="/search?category_id=2" className="hover:underline">Điện Thoại & Phụ Kiện</Link>
+                <Link to="/search?category_id=3" className="hover:underline">Thời Trang Nữ</Link>
+              </>
+            )}
           </div>
         </div>
 
