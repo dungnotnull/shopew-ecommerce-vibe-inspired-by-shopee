@@ -285,8 +285,18 @@ export const SellerProductListPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {selectedProductForSkus.skus?.map((sku, idx) => {
-                    const label1 = selectedProductForSkus.variantGroups?.[0]?.options[sku.tierIndex[0]] || '';
-                    const label2 = selectedProductForSkus.variantGroups?.[1]?.options[sku.tierIndex[1]] || '';
+                    const getOptVal = (vg: any, tierIdx: any) => {
+                      if (!vg || !vg.options || tierIdx === undefined || tierIdx === null) return '';
+                      const opt = vg.options[Number(tierIdx)];
+                      if (typeof opt === 'object' && opt !== null) {
+                        return opt.value !== undefined ? String(opt.value) : String(opt);
+                      }
+                      return String(opt || '');
+                    };
+
+                    const tierArr = typeof sku.tierIndex === 'string' ? JSON.parse(sku.tierIndex) : (sku.tierIndex || []);
+                    const label1 = getOptVal(selectedProductForSkus.variantGroups?.[0], tierArr[0]);
+                    const label2 = getOptVal(selectedProductForSkus.variantGroups?.[1], tierArr[1]);
                     const label = [label1, label2].filter(Boolean).join(' - ') || 'Mẫu Mặc Định';
 
                     return (

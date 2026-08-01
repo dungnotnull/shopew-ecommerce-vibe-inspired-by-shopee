@@ -231,16 +231,32 @@ export const CatalogService = {
     try {
       const response = await apiClient.get('/v1/home/flash-sale');
       const resData = response.data;
-      if (Array.isArray(resData)) return resData;
-      if (Array.isArray(resData?.data)) return resData.data;
-      if (Array.isArray(resData?.data?.data)) return resData.data.data;
-      return [];
+      let items: FlashSaleItem[] = [];
+      if (Array.isArray(resData)) items = resData;
+      else if (Array.isArray(resData?.data) && Array.isArray(resData.data)) items = resData.data;
+      else if (Array.isArray(resData?.data?.data)) items = resData.data.data;
+
+      if (items && items.length > 0) return items;
+
+      // Fallback hiển thị sản phẩm Flash Sale nếu DB chưa có sản phẩm giảm giá
+      return mockProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        priceMin: p.priceMin,
+        priceMax: p.priceMax,
+        promotionalPrice: p.promotionalPrice,
+        discountPercentage: p.discountPercentage || 20,
+        soldCount: p.soldCount || 45,
+        stock: 100,
+        thumbnailUrl: p.images?.[0] || '',
+      }));
     } catch {
       return mockProducts.map(p => ({
         id: p.id,
         name: p.name,
         priceMin: p.priceMin,
         priceMax: p.priceMax,
+        promotionalPrice: p.promotionalPrice,
         discountPercentage: p.discountPercentage || 20,
         soldCount: p.soldCount || 45,
         stock: 100,
@@ -404,10 +420,25 @@ export const CatalogService = {
     try {
       const response = await apiClient.get('/seller/products');
       const resData = response.data;
-      if (Array.isArray(resData)) return resData;
-      if (Array.isArray(resData?.data)) return resData.data;
-      if (Array.isArray(resData?.data?.data)) return resData.data.data;
-      return [];
+      let rawList: any[] = [];
+      if (Array.isArray(resData)) rawList = resData;
+      else if (Array.isArray(resData?.data) && Array.isArray(resData.data)) rawList = resData.data;
+      else if (Array.isArray(resData?.data?.data)) rawList = resData.data.data;
+
+      return rawList.map((p: any) => ({
+        ...p,
+        name: p.name || 'Sản phẩm',
+        variantGroups: (p.variantGroups || []).map((vg: any) => ({
+          name: vg.name,
+          options: (vg.options || []).map((opt: any) =>
+            typeof opt === 'object' && opt !== null ? (opt.value !== undefined ? opt.value : opt) : opt
+          ),
+        })),
+        skus: (p.skus || []).map((sku: any) => ({
+          ...sku,
+          tierIndex: typeof sku.tierIndex === 'string' ? JSON.parse(sku.tierIndex) : (sku.tierIndex || []),
+        })),
+      }));
     } catch {
       return mockProducts;
     }
