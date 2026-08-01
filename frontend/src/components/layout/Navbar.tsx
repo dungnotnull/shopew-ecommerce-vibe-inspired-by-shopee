@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, HelpCircle, Globe, User, LogOut, ShieldAlert, Smartphone, Store } from 'lucide-react';
+import { Bell, HelpCircle, Globe, User, LogOut, ShieldAlert, Store } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 // Thanh Navbar phụ nằm phía trên cùng Header Shopee
@@ -10,31 +10,18 @@ export const Navbar: React.FC = () => {
   return (
     <div className="bg-[#ee4d2d] text-white text-xs py-1.5 border-b border-orange-600/30 font-['Roboto',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-        {/* Phân vùng trái: Tiện ích Shopew (Tải ứng dụng, Kết nối) & Admin Portal */}
-        <div className="flex items-center space-x-3 text-white/90">
-          <button className="hover:text-white flex items-center gap-1 transition-colors cursor-pointer">
-            <Smartphone className="w-3.5 h-3.5" />
-            Tải ứng dụng
-          </button>
-          <span className="opacity-30">|</span>
-          <div className="flex items-center gap-1.5">
-            <span>Kết nối</span>
-            <span className="font-bold hover:underline cursor-pointer">Shopew</span>
-          </div>
-
+        {/* Phân vùng trái: Chỉ hiển thị Cổng Quản Trị khi là Admin */}
+        <div className="flex items-center space-x-3">
           {isAuthenticated && user?.role === 'ADMIN' && (
-            <>
-              <span className="opacity-30">|</span>
-              <Link to="/admin" className="hover:text-amber-200 flex items-center gap-1 text-amber-200 font-bold">
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-300" />
-                Cổng Quản Trị Admin
-              </Link>
-            </>
+            <Link to="/admin" className="hover:text-amber-200 flex items-center gap-1 text-amber-200 font-bold">
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-300" />
+              Cổng Quản Trị Admin
+            </Link>
           )}
         </div>
 
         {/* Phân vùng phải: Thông báo, Hỗ trợ, Ngôn ngữ & User Profile */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 ml-auto">
           <button className="flex items-center gap-1 hover:opacity-80">
             <Bell className="w-3.5 h-3.5" />
             Thông Báo
