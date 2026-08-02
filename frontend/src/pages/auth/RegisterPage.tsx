@@ -29,6 +29,20 @@ export const RegisterPage: React.FC = () => {
       return;
     }
 
+    // Validate Email buộc có đuôi @gmail.com
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    if (!emailRegex.test(email.trim())) {
+      setErrorMsg('Địa chỉ Email phải bắt buộc @gmail.com');
+      return;
+    }
+
+    // Validate Số điện thoại buộc từ 10 đến 11 chữ số
+    const phoneRegex = /^\d{10,11}$/;
+    if (!phoneRegex.test(phone.trim())) {
+      setErrorMsg('Số điện thoại phải bao gồm từ 10 đến 11 chữ số.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setErrorMsg('Mật khẩu xác nhận không trùng khớp.');
       return;

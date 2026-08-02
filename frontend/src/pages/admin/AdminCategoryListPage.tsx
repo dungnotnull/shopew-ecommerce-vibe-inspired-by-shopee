@@ -222,9 +222,6 @@ export const AdminCategoryListPage: React.FC = () => {
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-bold text-sm text-slate-800">{pCat.name}</h3>
-                            <span className="text-[10px] font-extrabold bg-slate-900 text-white px-2 py-0.5 rounded-full">
-                              Cấp 1 (ID: #{pCat.id})
-                            </span>
                           </div>
                           <p className="text-xs text-slate-500 mt-0.5">
                             {subCount > 0 ? `Bao gồm ${subCount} ngành hàng con` : 'Chưa có ngành hàng con'}
@@ -238,7 +235,7 @@ export const AdminCategoryListPage: React.FC = () => {
                           className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-md flex items-center gap-1 cursor-pointer transition-colors"
                           title="Thêm danh mục con"
                         >
-                          <FolderPlus className="w-3.5 h-3.5" /> + Thêm Ngành Hàng Con
+                          <FolderPlus className="w-3.5 h-3.5" />Thêm Ngành Hàng Con
                         </button>
                         <button
                           onClick={() => handleOpenEditModal(pCat)}
@@ -269,7 +266,6 @@ export const AdminCategoryListPage: React.FC = () => {
                               <ChevronRight className="w-3.5 h-3.5 text-red-600 shrink-0" />
                               <div>
                                 <span className="text-xs font-bold text-slate-800 block">{subCat.name}</span>
-                                <span className="text-[10px] text-slate-400">ID: #{subCat.id}</span>
                               </div>
                             </div>
 
@@ -307,7 +303,7 @@ export const AdminCategoryListPage: React.FC = () => {
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
                   <Folder className="w-5 h-5 text-red-600" />
-                  {editingCategory ? `Chỉnh Sửa Danh Mục #${editingCategory.id}` : 'Thêm Danh Mục Ngành Hàng Mới'}
+                  {editingCategory ? 'Chỉnh Sửa Tên Danh Mục' : 'Thêm Danh Mục Ngành Hàng Mới'}
                 </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -336,21 +332,23 @@ export const AdminCategoryListPage: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Trực Thuộc Danh Mục Cha</label>
-                  <select
-                    value={parentId || ''}
-                    onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-red-600"
-                  >
-                    <option value="">-- Là Danh Mục Cấp 1 (Danh Mục Gốc) --</option>
-                    {getParentOptions(categories, editingCategory?.id).map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} (ID: #{c.id})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {!editingCategory && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Trực Thuộc Danh Mục Cha</label>
+                    <select
+                      value={parentId || ''}
+                      onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-red-600"
+                    >
+                      <option value="">-- Là Danh Mục Cấp 1 (Danh Mục Gốc) --</option>
+                      {getParentOptions(categories).map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                   <button
@@ -385,7 +383,7 @@ export const AdminCategoryListPage: React.FC = () => {
               <div>
                 <h3 className="font-bold text-slate-800 text-sm">Xác Nhận Xóa Danh Mục?</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Bạn có chắc chắn muốn xóa danh mục <span className="font-bold text-slate-800">"{deletingCategory.name}"</span> (ID: #{deletingCategory.id}) khỏi hệ thống không?
+                  Bạn có chắc chắn muốn xóa danh mục <span className="font-bold text-slate-800">"{deletingCategory.name}"</span> khỏi hệ thống không?
                 </p>
               </div>
 

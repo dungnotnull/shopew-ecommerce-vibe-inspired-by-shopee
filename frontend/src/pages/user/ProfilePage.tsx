@@ -11,10 +11,21 @@ export const ProfilePage: React.FC = () => {
   const [phone, setPhone] = useState(user?.phone || '');
   const [email] = useState(user?.email || '');
   const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   // Lưu thông tin hồ sơ
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    // Validate Số điện thoại buộc từ 10 đến 11 chữ số
+    const phoneRegex = /^\d{10,11}$/;
+    if (phone && !phoneRegex.test(phone.trim())) {
+      setErrorMsg('Số điện thoại phải bao gồm từ 10 đến 11 chữ số.');
+      return;
+    }
+
     updateUser({ fullName, phone });
     setSuccessMsg('Cập nhật hồ sơ cá nhân thành công!');
     setTimeout(() => setSuccessMsg(''), 3000);
@@ -27,6 +38,12 @@ export const ProfilePage: React.FC = () => {
           <h1 className="text-xl font-bold text-gray-800">Hồ Sơ Của Tôi</h1>
           <p className="text-xs text-gray-500 mt-1">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
         </div>
+
+        {errorMsg && (
+          <div className="mb-6 p-3 bg-red-50 text-red-600 rounded-md text-xs flex items-center gap-2 border border-red-200">
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
         {successMsg && (
           <div className="mb-6 p-3 bg-green-50 text-green-700 rounded-md text-xs flex items-center gap-2 border border-green-200">
