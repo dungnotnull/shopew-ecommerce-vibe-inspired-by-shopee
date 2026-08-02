@@ -27,16 +27,39 @@ export const ProductDetailPage: React.FC = () => {
       if (!id) return;
       const data = await CatalogService.getProductById(Number(id));
       if (data) {
+        // Chuẩn hóa danh sách ảnh của SPU
+        let parsedImages: string[] = [];
+        if (Array.isArray(data.images)) {
+          parsedImages = data.images;
+        } else if (typeof data.images === 'string') {
+          try {
+            parsedImages = JSON.parse(data.images);
+          } catch {
+            parsedImages = [];
+          }
+        }
+
+        // Nếu SPU chưa có mảng images, thu thập ảnh từ các SKU con
+        if (parsedImages.length === 0 && data.skus && data.skus.length > 0) {
+          const skuImages = data.skus.map(s => s.thumbnailUrl).filter(Boolean) as string[];
+          if (skuImages.length > 0) {
+            parsedImages = skuImages;
+          }
+        }
+
+        data.images = parsedImages;
         setProduct(data);
         setIsLiked(!!data.isLiked);
         setLikeCount(data.likeCount || 0);
-        setSelectedImage(data.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800');
+
+        const initialImage = parsedImages[0] || data.skus?.[0]?.thumbnailUrl || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800';
+        setSelectedImage(initialImage);
 
         // Khởi tạo mặc định chọn option đầu tiên cho mỗi Variant Group (nếu có)
         if (data.variantGroups && data.variantGroups.length > 0) {
           const initialTiers = data.variantGroups.map(() => 0);
           setSelectedTiers(initialTiers);
-          findMatchingSku(data.skus, initialTiers);
+          findMatchingSku(data.skus, initialTiers, initialImage);
         } else {
           // Default SKU fallback khi không có variant groups
           setSelectedTiers([]);
@@ -50,7 +73,7 @@ export const ProductDetailPage: React.FC = () => {
   }, [id]);
 
   // Tìm SKU khớp chính xác với mảng tierIndex được chọn
-  const findMatchingSku = (skus: SKU[], tiers: number[]) => {
+  const findMatchingSku = (skus: SKU[], tiers: number[], fallbackImg?: string) => {
     const match = skus.find(sku => {
       if (!sku.tierIndex || sku.tierIndex.length !== tiers.length) return false;
       return sku.tierIndex.every((val, idx) => val === tiers[idx]);
@@ -58,6 +81,8 @@ export const ProductDetailPage: React.FC = () => {
     setActiveSku(match || null);
     if (match?.thumbnailUrl) {
       setSelectedImage(match.thumbnailUrl);
+    } else if (fallbackImg) {
+      setSelectedImage(fallbackImg);
     }
   };
 
@@ -149,7 +174,7 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Sub-images thumbnail carousel */}
-            {product.images && product.images.length > 1 && (
+            {product.images && product.images.length > 0 && (
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {product.images.map((img, idx) => (
                   <button

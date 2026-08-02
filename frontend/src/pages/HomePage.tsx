@@ -212,7 +212,11 @@ export const HomePage: React.FC = () => {
                 >
                   <div className="relative aspect-square overflow-hidden rounded-md mb-2 bg-gray-50">
                     <img
-                      src={fs.thumbnailUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'}
+                      src={
+                        (Array.isArray((fs as any).images) && (fs as any).images.length > 0)
+                          ? (fs as any).images[0]
+                          : (fs.thumbnailUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400')
+                      }
                       alt={fs.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />

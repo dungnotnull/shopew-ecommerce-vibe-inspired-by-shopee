@@ -29,7 +29,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
-  const imageSrc = product.images?.[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
+  const getProductCardImage = () => {
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      return product.images[0];
+    }
+    if (typeof product.images === 'string') {
+      try {
+        const parsed = JSON.parse(product.images);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      } catch {
+        // Ignore
+      }
+    }
+    if (product.thumbnailUrl) {
+      return product.thumbnailUrl;
+    }
+    return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
+  };
+
+  const imageSrc = getProductCardImage();
 
   return (
     <Link

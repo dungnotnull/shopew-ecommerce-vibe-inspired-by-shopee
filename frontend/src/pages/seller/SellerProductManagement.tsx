@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, Percent, CheckSquare, Square, RefreshCw } from 'lucide-react';
+import { Package, Plus, Trash2, Save, ArrowLeft, CheckCircle2, Layers, Store, Percent, CheckSquare, Square, RefreshCw, Upload, Image as ImageIcon, Loader2, X } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
 import { sellerService } from '../../services/seller-service';
 import { VariantGroup, Category } from '../../types/catalog';
@@ -39,9 +39,38 @@ export const SellerProductManagement: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string>('');
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
+
+  // Xử lý Upload Ảnh qua API POST /api/v1/upload
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImage(true);
+    setUploadError('');
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const uploadedUrl = await sellerService.uploadImage(file);
+        setImages((prev) => [...prev, uploadedUrl]);
+      }
+    } catch {
+      setUploadError('Không thể tải tệp lên. Vui lòng chọn tệp hình ảnh hợp lệ (jpg, png, webp, gif).');
+    } finally {
+      setUploadingImage(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImages((prev) => prev.filter((_, idx) => idx !== index));
+  };
 
   // State Modal Khởi Tạo Shop
   const [showShopModal, setShowShopModal] = useState<boolean>(false);
@@ -269,6 +298,7 @@ export const SellerProductManagement: React.FC = () => {
       discountPercentage: maxDiscountPercentage,
       isMall: false,
       isPreferred: true,
+      images,
       variantGroups,
       skus: skus.map(s => ({
         id: s.id,
@@ -446,6 +476,56 @@ export const SellerProductManagement: React.FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs focus:outline-none focus:border-[#ee4d2d]"
                 />
+              </div>
+
+              {/* Upload Hình Ảnh Sản Phẩm qua API Backend /api/v1/upload */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4 text-[#ee4d2d]" /> Hình Ảnh Sản Phẩm (Tối đa 5 ảnh)
+                </label>
+                
+                {uploadError && (
+                  <div className="p-2 mb-2 bg-red-50 text-red-600 border border-red-200 rounded text-xs">
+                    {uploadError}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-3 items-center">
+                  {images.map((imgUrl, idx) => (
+                    <div key={idx} className="relative w-20 h-20 rounded-lg border border-gray-200 overflow-hidden group bg-gray-50 shadow-xs">
+                      <img src={imgUrl} alt={`Product ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(idx)}
+                        className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-90 hover:opacity-100 transition-opacity cursor-pointer shadow-sm"
+                        title="Xóa ảnh này"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {images.length < 5 && (
+                    <label className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 hover:border-[#ee4d2d] flex flex-col items-center justify-center cursor-pointer transition-colors bg-gray-50 hover:bg-orange-50/40 group">
+                      {uploadingImage ? (
+                        <Loader2 className="w-5 h-5 text-[#ee4d2d] animate-spin" />
+                      ) : (
+                        <>
+                          <Upload className="w-5 h-5 text-gray-400 group-hover:text-[#ee4d2d] mb-1 transition-colors" />
+                          <span className="text-[10px] font-semibold text-gray-500 group-hover:text-[#ee4d2d]">Tải ảnh lên</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        disabled={uploadingImage}
+                        onChange={handleImageFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

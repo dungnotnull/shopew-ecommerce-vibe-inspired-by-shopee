@@ -43,6 +43,7 @@ export interface ProductSPU {
   viewCount?: number;
   isLiked?: boolean;
   images?: string[];
+  thumbnailUrl?: string;
   attributes?: Record<string, string>;
   variantGroups: VariantGroup[];
   skus: SKU[];
