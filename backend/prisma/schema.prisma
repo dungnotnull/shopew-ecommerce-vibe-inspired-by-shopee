@@ -49,6 +49,7 @@ model Category {
   id          Int        @id @default(autoincrement())
   name        String
   parentId    Int?
+  imageUrl    String?
   attributes  Json?      // JSONB for dynamic attributes schema
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

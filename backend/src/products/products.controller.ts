@@ -8,6 +8,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { SearchProductsDto } from './dto/search-products.dto';
+import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 
 @ApiTags('Products')
 @Controller('v1/products')
@@ -15,21 +16,30 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get products list (alias for search)' })
-  async getProductsList(@Query() query: SearchProductsDto) {
-    return this.productsService.searchProducts(query);
+  async getProductsList(@Request() req: any, @Query() query: SearchProductsDto) {
+    const userId = req.user?.id;
+    return this.productsService.searchProducts(query, userId);
   }
 
   @Get('search')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Search and filter products' })
-  async searchProducts(@Query() query: SearchProductsDto) {
-    return this.productsService.searchProducts(query);
+  async searchProducts(@Request() req: any, @Query() query: SearchProductsDto) {
+    const userId = req.user?.id;
+    return this.productsService.searchProducts(query, userId);
   }
 
   @Get(':id')
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get SPU and its SKUs (public)' })
-  async getProduct(@Param('id') id: string) {
-    return this.productsService.getProductDetails(+id);
+  async getProduct(@Request() req: any, @Param('id') id: string) {
+    const userId = req.user?.id;
+    return this.productsService.getProductDetails(+id, userId);
   }
 
   @Post(':id/like')
