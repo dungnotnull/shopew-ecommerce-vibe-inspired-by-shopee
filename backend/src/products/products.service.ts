@@ -89,6 +89,7 @@ export class ProductsService {
       isMall: p.isMall,
       isPreferred: p.isPreferred,
       thumbnailUrl: p.skus[0]?.thumbnailUrl || null,
+      images: p.images,
       shopId: p.shopId,
       shopName: p.shop?.name
     }));

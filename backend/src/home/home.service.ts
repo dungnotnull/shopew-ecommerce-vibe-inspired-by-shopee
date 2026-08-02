@@ -35,6 +35,7 @@ export class HomeService {
         soldCount: product.soldCount,
         stock: totalStock, // Actual total stock instead of 100
         thumbnailUrl: product.skus[0]?.thumbnailUrl || null,
+        images: product.images,
       };
     });
   }
@@ -81,6 +82,7 @@ export class HomeService {
       isMall: p.isMall,
       isPreferred: p.isPreferred,
       thumbnailUrl: p.skus[0]?.thumbnailUrl || null,
+      images: p.images,
       shopId: p.shopId,
       shopName: p.shop?.name
     }));
