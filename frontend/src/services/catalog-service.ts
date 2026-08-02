@@ -376,6 +376,18 @@ export const CatalogService = {
             ),
           }));
         }
+        // Chuẩn hóa mảng images nếu backend trả về JSON String hoặc null/undefined
+        if (typeof data.images === 'string') {
+          try {
+            data.images = JSON.parse(data.images);
+          } catch {
+            data.images = [];
+          }
+        }
+        if (!Array.isArray(data.images)) {
+          data.images = [];
+        }
+
         // Chuẩn hóa tierIndex nếu backend lưu dạng JSON String
         if (data.skus && Array.isArray(data.skus)) {
           data.skus = data.skus.map((sku: any) => ({
@@ -482,6 +494,18 @@ export const CatalogService = {
   async createSellerProduct(data: Partial<ProductSPU>): Promise<ProductSPU> {
     const response = await apiClient.post('/seller/products', data);
     return response.data.data || response.data;
+  },
+
+  // Upload hình ảnh sản phẩm: POST /api/v1/upload
+  async uploadImage(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/v1/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.url;
   },
 };
 

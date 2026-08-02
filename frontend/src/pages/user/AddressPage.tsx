@@ -53,9 +53,20 @@ export const AddressPage: React.FC = () => {
     setAddresses((prev) => prev.filter((addr) => addr.id !== id));
   };
 
+  const [errorMsg, setErrorMsg] = useState('');
+
   // Thêm địa chỉ mới
   const handleAddAddress = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
+
+    // Validate Số điện thoại buộc từ 10 đến 11 chữ số
+    const phoneRegex = /^\d{10,11}$/;
+    if (!phoneRegex.test(phone.trim())) {
+      setErrorMsg('Số điện thoại nhận hàng phải bao gồm từ 10 đến 11 chữ số.');
+      return;
+    }
+
     const newAddr: ShippingAddress = {
       id: Date.now(),
       fullName,
@@ -149,6 +160,12 @@ export const AddressPage: React.FC = () => {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Địa Chỉ Mới</h3>
+
+              {errorMsg && (
+                <div className="mb-3 p-2.5 bg-red-50 text-red-600 border border-red-200 rounded text-xs">
+                  {errorMsg}
+                </div>
+              )}
               <form onSubmit={handleAddAddress} className="space-y-3">
                 <input
                   type="text"

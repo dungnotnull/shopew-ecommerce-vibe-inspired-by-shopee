@@ -27,4 +27,16 @@ export const sellerService = {
     const response = await apiClient.post('/v1/shops', data);
     return response.data;
   },
+
+  // Gọi API Tải Ảnh Sản Phẩm cho Seller: POST /api/v1/upload
+  uploadImage: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/v1/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data.url;
+  },
 };

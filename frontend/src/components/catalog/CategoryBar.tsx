@@ -37,8 +37,16 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({ categories }) => {
             to={`/search?category_id=${cat.id}`}
             className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-100 hover:border-[#ee4d2d] hover:shadow-md transition-all group bg-gray-50/50 hover:bg-white text-center"
           >
-            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform">
-              {getCategoryIcon(cat.name)}
+            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform overflow-hidden">
+              {cat.iconUrl || cat.attributes?.imageUrl ? (
+                <img
+                  src={cat.iconUrl || cat.attributes?.imageUrl}
+                  alt={cat.name}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              ) : (
+                getCategoryIcon(cat.name)
+              )}
             </div>
             <span className="text-xs font-semibold text-gray-700 group-hover:text-[#ee4d2d] line-clamp-2">
               {cat.name}

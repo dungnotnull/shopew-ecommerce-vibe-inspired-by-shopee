@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, HelpCircle, Globe, User, LogOut, Store, ShieldAlert } from 'lucide-react';
+import { Bell, HelpCircle, Globe, User, LogOut, ShieldAlert, Store } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 // Thanh Navbar phụ nằm phía trên cùng Header Shopee
@@ -10,16 +10,18 @@ export const Navbar: React.FC = () => {
   return (
     <div className="bg-[#ee4d2d] text-white text-xs py-1.5 border-b border-orange-600/30 font-['Roboto',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-        {/* Phân vùng trái: Liên kết điều hướng Kênh Người Bán */}
+        {/* Phân vùng trái: Chỉ hiển thị Cổng Quản Trị khi là Admin */}
         <div className="flex items-center space-x-3">
-          <Link to="/seller" className="hover:opacity-80 flex items-center gap-1 font-medium">
-            <Store className="w-3.5 h-3.5" />
-            Kênh Người Bán
-          </Link>
+          {isAuthenticated && user?.role === 'ADMIN' && (
+            <Link to="/admin" className="hover:text-amber-200 flex items-center gap-1 text-amber-200 font-bold">
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-300" />
+              Cổng Quản Trị Admin
+            </Link>
+          )}
         </div>
 
         {/* Phân vùng phải: Thông báo, Hỗ trợ, Ngôn ngữ & User Profile */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 ml-auto">
           <button className="flex items-center gap-1 hover:opacity-80">
             <Bell className="w-3.5 h-3.5" />
             Thông Báo

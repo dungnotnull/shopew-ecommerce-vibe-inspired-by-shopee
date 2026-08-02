@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SellerLayout } from '../../components/layout/SellerLayout';
-import { ShoppingBag, Package, TrendingUp, AlertCircle, Plus, CheckCircle, RefreshCw } from 'lucide-react';
+import { ShoppingBag, Package, TrendingUp, AlertCircle, Plus, CheckCircle } from 'lucide-react';
 import { formatVND } from '../../utils/format-currency';
 import { sellerService, SellerDashboardData } from '../../services/seller-service';
 
@@ -48,12 +48,6 @@ export const SellerDashboardPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={fetchDashboardData}
-              className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-2 rounded transition-colors cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} /> Làm mới
-            </button>
             <button
               onClick={() => navigate('/seller/products/new')}
               className="inline-flex items-center gap-1.5 bg-[#ee4d2d] hover:bg-[#d03e20] text-white text-xs font-bold px-4 py-2 rounded shadow-sm transition-colors cursor-pointer"

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
-import { Layers, Plus, Edit, FolderPlus, Folder, RefreshCw, X, Save, ChevronRight, Trash2, Search, AlertTriangle } from 'lucide-react';
+import { Layers, Plus, Edit, FolderPlus, Folder, X, Save, ChevronRight, Trash2, Search, AlertTriangle, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import CatalogService from '../../services/catalog-service';
+import { sellerService } from '../../services/seller-service';
 import { Category } from '../../types/catalog';
 
 export const AdminCategoryListPage: React.FC = () => {
@@ -15,6 +16,8 @@ export const AdminCategoryListPage: React.FC = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState<string>('');
   const [parentId, setParentId] = useState<number | null>(null);
+  const [iconUrl, setIconUrl] = useState<string>('');
+  const [uploadingIcon, setUploadingIcon] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [modalError, setModalError] = useState<string>('');
 
@@ -41,11 +44,30 @@ export const AdminCategoryListPage: React.FC = () => {
     fetchCategories();
   }, []);
 
+  // Xử lý Upload Ảnh/Icon Danh Mục qua API POST /api/v1/upload
+  const handleCategoryIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingIcon(true);
+    setModalError('');
+    try {
+      const uploadedUrl = await sellerService.uploadImage(file);
+      setIconUrl(uploadedUrl);
+    } catch {
+      setModalError('Không thể tải tệp ảnh icon. Vui lòng chọn file hình ảnh hợp lệ (jpg, png, webp, gif).');
+    } finally {
+      setUploadingIcon(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
   // Mở modal tạo mới
   const handleOpenCreateModal = (pId: number | null = null) => {
     setEditingCategory(null);
     setCategoryName('');
     setParentId(pId);
+    setIconUrl('');
     setModalError('');
     setIsModalOpen(true);
   };
@@ -55,6 +77,7 @@ export const AdminCategoryListPage: React.FC = () => {
     setEditingCategory(cat);
     setCategoryName(cat.name);
     setParentId(cat.parentId || null);
+    setIconUrl(cat.iconUrl || cat.attributes?.imageUrl || '');
     setModalError('');
     setIsModalOpen(true);
   };
@@ -67,16 +90,16 @@ export const AdminCategoryListPage: React.FC = () => {
     setSaving(true);
     setModalError('');
     try {
+      const payload: any = {
+        name: categoryName,
+        parentId,
+        iconUrl,
+        attributes: { imageUrl: iconUrl },
+      };
       if (editingCategory) {
-        await CatalogService.updateCategory(editingCategory.id, {
-          name: categoryName,
-          parentId,
-        });
+        await CatalogService.updateCategory(editingCategory.id, payload);
       } else {
-        await CatalogService.createCategory({
-          name: categoryName,
-          parentId,
-        });
+        await CatalogService.createCategory(payload);
       }
       await fetchCategories();
       setIsModalOpen(false);
@@ -165,13 +188,6 @@ export const AdminCategoryListPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchCategories}
-              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors cursor-pointer"
-              title="Làm mới danh sách"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-            <button
               onClick={() => handleOpenCreateModal(null)}
               className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer"
             >
@@ -223,15 +239,16 @@ export const AdminCategoryListPage: React.FC = () => {
                     {/* Danh Mục Cấp 1 */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-red-50 text-red-600 rounded-lg border border-red-100">
-                          <Folder className="w-5 h-5" />
+                        <div className="w-10 h-10 bg-red-50 text-red-600 rounded-lg border border-red-100 flex items-center justify-center overflow-hidden shrink-0">
+                          {pCat.iconUrl || pCat.attributes?.imageUrl ? (
+                            <img src={pCat.iconUrl || pCat.attributes?.imageUrl} alt={pCat.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Folder className="w-5 h-5" />
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
                             <h3 className="font-bold text-sm text-slate-800">{pCat.name}</h3>
-                            <span className="text-[10px] font-extrabold bg-slate-900 text-white px-2 py-0.5 rounded-full">
-                              Cấp 1 (ID: #{pCat.id})
-                            </span>
                           </div>
                           <p className="text-xs text-slate-500 mt-0.5">
                             {subCount > 0 ? `Bao gồm ${subCount} ngành hàng con` : 'Chưa có ngành hàng con'}
@@ -245,7 +262,7 @@ export const AdminCategoryListPage: React.FC = () => {
                           className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-md flex items-center gap-1 cursor-pointer transition-colors"
                           title="Thêm danh mục con"
                         >
-                          <FolderPlus className="w-3.5 h-3.5" /> + Thêm Ngành Hàng Con
+                          <FolderPlus className="w-3.5 h-3.5" />Thêm Ngành Hàng Con
                         </button>
                         <button
                           onClick={() => handleOpenEditModal(pCat)}
@@ -276,7 +293,6 @@ export const AdminCategoryListPage: React.FC = () => {
                               <ChevronRight className="w-3.5 h-3.5 text-red-600 shrink-0" />
                               <div>
                                 <span className="text-xs font-bold text-slate-800 block">{subCat.name}</span>
-                                <span className="text-[10px] text-slate-400">ID: #{subCat.id}</span>
                               </div>
                             </div>
 
@@ -314,7 +330,7 @@ export const AdminCategoryListPage: React.FC = () => {
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
                   <Folder className="w-5 h-5 text-red-600" />
-                  {editingCategory ? `Chỉnh Sửa Danh Mục #${editingCategory.id}` : 'Thêm Danh Mục Ngành Hàng Mới'}
+                  {editingCategory ? 'Chỉnh Sửa Tên Danh Mục' : 'Thêm Danh Mục Ngành Hàng Mới'}
                 </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -343,21 +359,63 @@ export const AdminCategoryListPage: React.FC = () => {
                   />
                 </div>
 
+                {/* Upload Icon/Ảnh Danh Mục */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Trực Thuộc Danh Mục Cha</label>
-                  <select
-                    value={parentId || ''}
-                    onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-red-600"
-                  >
-                    <option value="">-- Là Danh Mục Cấp 1 (Danh Mục Gốc) --</option>
-                    {getParentOptions(categories, editingCategory?.id).map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} (ID: #{c.id})
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                    <ImageIcon className="w-3.5 h-3.5 text-red-600" /> Icon / Hình Ảnh Danh Mục
+                  </label>
+                  <div className="flex items-center gap-3">
+                    {iconUrl ? (
+                      <div className="relative w-12 h-12 rounded-lg border border-slate-200 overflow-hidden bg-slate-50 shrink-0">
+                        <img src={iconUrl} alt="Category Icon" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setIconUrl('')}
+                          className="absolute top-0.5 right-0.5 bg-red-600 text-white p-0.5 rounded-full cursor-pointer opacity-90 hover:opacity-100"
+                          title="Xóa icon"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="w-12 h-12 rounded-lg border-2 border-dashed border-slate-300 hover:border-red-600 flex flex-col items-center justify-center cursor-pointer bg-slate-50 hover:bg-red-50/40 transition-colors shrink-0">
+                        {uploadingIcon ? (
+                          <Loader2 className="w-4 h-4 text-red-600 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4 text-slate-400" />
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={uploadingIcon}
+                          onChange={handleCategoryIconUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                    <span className="text-[11px] text-slate-400">
+                      {iconUrl ? 'Đã chọn ảnh đại diện cho danh mục này' : 'Bấm để tải ảnh/icon biểu tượng ngành hàng'}
+                    </span>
+                  </div>
                 </div>
+
+                {!editingCategory && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Trực Thuộc Danh Mục Cha</label>
+                    <select
+                      value={parentId || ''}
+                      onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-red-600"
+                    >
+                      <option value="">-- Là Danh Mục Cấp 1 (Danh Mục Gốc) --</option>
+                      {getParentOptions(categories).map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                   <button
@@ -392,7 +450,7 @@ export const AdminCategoryListPage: React.FC = () => {
               <div>
                 <h3 className="font-bold text-slate-800 text-sm">Xác Nhận Xóa Danh Mục?</h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Bạn có chắc chắn muốn xóa danh mục <span className="font-bold text-slate-800">"{deletingCategory.name}"</span> (ID: #{deletingCategory.id}) khỏi hệ thống không?
+                  Bạn có chắc chắn muốn xóa danh mục <span className="font-bold text-slate-800">"{deletingCategory.name}"</span> khỏi hệ thống không?
                 </p>
               </div>
 

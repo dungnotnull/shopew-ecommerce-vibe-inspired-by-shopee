@@ -47,13 +47,13 @@ export const Header: React.FC = () => {
       <Navbar />
 
       {/* Thanh Header chính (Logo + Search Bar + Giỏ hàng) */}
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-8">
-        {/* Logo Shopew */}
-        <Link to="/" className="flex items-center gap-2 text-white font-bold text-2xl tracking-tight shrink-0">
-          <div className="bg-white text-[#ee4d2d] p-1.5 rounded-lg shadow-sm">
-            <ShoppingBag className="w-6 h-6" />
+      <div className="max-w-7xl mx-auto px-4 pt-3.5 pb-4 flex items-start justify-between gap-8">
+        {/* Logo Shopew - Căn lên phía trên cùng hàng với ô Tìm kiếm */}
+        <Link to="/" className="flex items-center gap-2.5 text-white shrink-0 group pt-0.5">
+          <div className="w-10 h-10 bg-white text-[#ee4d2d] rounded-xl shadow-sm group-hover:scale-105 transition-transform flex items-center justify-center shrink-0">
+            <ShoppingBag className="w-6 h-6 stroke-[2.5]" />
           </div>
-          <span>shopew</span>
+          <span className="font-extrabold text-3xl tracking-tight leading-none text-white select-none">shopew</span>
         </Link>
 
         {/* Thanh Tìm kiếm Smart Search */}
@@ -97,7 +97,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Giỏ Hàng Icon */}
-        <Link to="/cart" className="relative p-2 text-white hover:opacity-90 transition-opacity">
+        <Link to="/cart" className="relative p-1 text-white hover:opacity-90 transition-opacity shrink-0 pt-1">
           <ShoppingCart className="w-7 h-7" />
           <span className="absolute -top-1 -right-1 bg-white text-[#ee4d2d] font-bold text-xs px-2 py-0.5 rounded-full border border-[#ee4d2d]">
             0
