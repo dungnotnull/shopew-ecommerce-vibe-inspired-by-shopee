@@ -32,6 +32,7 @@ export class CategoriesService {
       data: {
         name: data.name,
         parentId: data.parentId,
+        imageUrl: data.imageUrl,
         attributes: data.attributes,
       },
     });
@@ -43,6 +44,7 @@ export class CategoriesService {
       data: {
         name: data.name,
         parentId: data.parentId,
+        imageUrl: data.imageUrl,
         attributes: data.attributes,
       },
     });
