@@ -396,9 +396,36 @@
   "totalUsers": 12850,
   "totalShops": 845,
   "activeDisputes": 3,
-  "totalGMV": 4520000000
 }
 ```
+
+### `GET /api/v1/admin/banners`
+- **Query:** `?page=1&limit=20`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Paginated list of banners.
+
+### `POST /api/v1/admin/banners`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Body:**
+```json
+{
+  "title": "Sale Mùa Hè",
+  "imageUrl": "/api/uploads/banner.jpg",
+  "linkUrl": "/search",
+  "isActive": true,
+  "sortOrder": 1
+}
+```
+- **Response:** Created banner object.
+
+### `PUT /api/v1/admin/banners/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Body:** *(Same as POST, fields are optional)*
+- **Response:** Updated banner object.
+
+### `DELETE /api/v1/admin/banners/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Deleted banner object.
 
 ### `POST /api/v1/orders/checkout`
 - **Request:**
