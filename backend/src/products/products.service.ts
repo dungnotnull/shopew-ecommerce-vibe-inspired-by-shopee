@@ -88,6 +88,7 @@ export class ProductsService {
       isLiked: userLikedProductIds.has(p.id),
       isMall: p.isMall,
       isPreferred: p.isPreferred,
+      images: p.images,
       thumbnailUrl: p.skus && p.skus.length > 0 ? p.skus[0]?.thumbnailUrl : null,
       shopId: p.shopId,
       shopName: p.shop?.name || ''
