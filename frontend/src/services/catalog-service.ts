@@ -1,4 +1,4 @@
-import { apiClient } from './api-client';
+import { apiClient, formatImageUrl } from './api-client';
 import { Category, ProductSPU, SearchParams, SearchResult, ShopProfile } from '../types/catalog';
 
 export interface HomeBanner {
@@ -220,9 +220,22 @@ export const CatalogService = {
   async getHomeBanners(): Promise<HomeBanner[]> {
     try {
       const response = await apiClient.get('/v1/home/banners');
-      return response.data.data || response.data;
+      const resData = response.data;
+      const list: any[] = Array.isArray(resData)
+        ? resData
+        : Array.isArray(resData?.data)
+        ? resData.data
+        : mockBanners;
+
+      return list.map((b: any) => ({
+        ...b,
+        imageUrl: formatImageUrl(b.imageUrl),
+      }));
     } catch {
-      return mockBanners;
+      return mockBanners.map((b) => ({
+        ...b,
+        imageUrl: formatImageUrl(b.imageUrl),
+      }));
     }
   },
 

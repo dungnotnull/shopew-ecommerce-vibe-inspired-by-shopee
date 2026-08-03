@@ -62,7 +62,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <nav className="space-y-1 text-xs font-medium">
             {menuItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = location.pathname === item.path || (item.path === '/admin/vouchers' && location.pathname === '/admin/banners');
               return (
                 <Link
                   key={item.path}

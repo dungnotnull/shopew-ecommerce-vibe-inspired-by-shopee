@@ -44,3 +44,25 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Helper chuẩn hóa đường dẫn hình ảnh tĩnh từ Backend (xử lý cả relative /uploads & /api/uploads)
+export const formatImageUrl = (url?: string | null, absolute = false): string => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  let clean = url.trim();
+  let relativePath = clean;
+  if (clean.startsWith('/uploads/')) {
+    relativePath = `/api${clean}`;
+  } else if (clean.startsWith('uploads/')) {
+    relativePath = `/api/${clean}`;
+  } else if (!clean.startsWith('/')) {
+    relativePath = `/api/uploads/${clean}`;
+  }
+
+  if (absolute && typeof window !== 'undefined') {
+    return `${window.location.origin}${relativePath}`;
+  }
+  return relativePath;
+};
