@@ -268,39 +268,98 @@ export const CatalogService = {
     }
   },
 
-  // 4. Lấy cây danh mục sản phẩm: GET /api/v1/categories
+  // 4. Lấy cây danh mục sản phẩm: GET /api/v1/categories (Sắp xếp cố định vị trí theo ID tăng dần)
   async getCategories(): Promise<Category[]> {
     try {
       const response = await apiClient.get('/v1/categories');
-      return response.data.data || response.data;
+      const rawList: any[] = response.data.data || response.data || [];
+      const mapCat = (c: any): Category => {
+        const isParent = !c.parentId;
+        const img = isParent ? formatImageUrl(c.imageUrl || c.iconUrl || c.attributes?.imageUrl) : undefined;
+        const children = Array.isArray(c.children) ? c.children.map(mapCat) : [];
+        children.sort((a: Category, b: Category) => a.id - b.id);
+        return {
+          ...c,
+          iconUrl: img,
+          imageUrl: img,
+          children,
+        };
+      };
+      const list = Array.isArray(rawList) ? rawList.map(mapCat) : mockCategories;
+      list.sort((a: Category, b: Category) => a.id - b.id);
+      return list;
     } catch {
-      return mockCategories;
+      const mock = [...mockCategories];
+      mock.sort((a, b) => a.id - b.id);
+      return mock;
     }
   },
 
   // Tạo mới Danh mục sản phẩm (Role Seller / Admin)
-  async createCategory(data: { name: string; parentId?: number | null; attributes?: any }): Promise<Category> {
+  async createCategory(data: { name: string; parentId?: number | null; imageUrl?: string; iconUrl?: string; attributes?: any }): Promise<Category> {
     try {
-      const response = await apiClient.post('/v1/categories', data);
-      return response.data.data || response.data;
+      const isParent = !data.parentId;
+      const img = isParent ? (data.imageUrl || data.iconUrl || data.attributes?.imageUrl || null) : null;
+      const payload = {
+        ...data,
+        parentId: data.parentId || null,
+        imageUrl: img,
+        iconUrl: img,
+        attributes: {
+          ...(data.attributes || {}),
+          ...(img ? { imageUrl: img } : {}),
+        },
+      };
+      const response = await apiClient.post('/v1/categories', payload);
+      const res = response.data.data || response.data;
+      const formattedImg = isParent ? formatImageUrl(res.imageUrl || res.iconUrl || img) : undefined;
+      return {
+        ...res,
+        iconUrl: formattedImg,
+        imageUrl: formattedImg,
+      };
     } catch {
+      const isParent = !data.parentId;
+      const formattedImg = isParent ? formatImageUrl(data.imageUrl || data.iconUrl) : undefined;
       const newCat: Category = {
         id: Date.now(),
         name: data.name,
         parentId: data.parentId || null,
         children: [],
+        iconUrl: formattedImg,
+        imageUrl: formattedImg,
       };
       return newCat;
     }
   },
 
   // Cập nhật Danh mục sản phẩm (Role Admin)
-  async updateCategory(id: number, data: { name?: string; parentId?: number | null; attributes?: any }): Promise<Category> {
+  async updateCategory(id: number, data: { name?: string; parentId?: number | null; imageUrl?: string; iconUrl?: string; attributes?: any }): Promise<Category> {
     try {
-      const response = await apiClient.put(`/v1/categories/${id}`, data);
-      return response.data.data || response.data;
+      const isParent = !data.parentId;
+      const img = isParent ? (data.imageUrl || data.iconUrl || data.attributes?.imageUrl || null) : null;
+      const payload = {
+        ...data,
+        parentId: data.parentId || null,
+        imageUrl: img,
+        iconUrl: img,
+        attributes: {
+          ...(data.attributes || {}),
+          ...(img ? { imageUrl: img } : {}),
+        },
+      };
+      const response = await apiClient.put(`/v1/categories/${id}`, payload);
+      const res = response.data.data || response.data;
+      const formattedImg = isParent ? formatImageUrl(res.imageUrl || res.iconUrl || img) : undefined;
+      return {
+        ...res,
+        iconUrl: formattedImg,
+        imageUrl: formattedImg,
+      };
     } catch {
-      return { id, name: data.name || 'Danh Mục', parentId: data.parentId || null, children: [] };
+      const isParent = !data.parentId;
+      const formattedImg = isParent ? formatImageUrl(data.imageUrl || data.iconUrl) : undefined;
+      return { id, name: data.name || 'Danh Mục', parentId: data.parentId || null, children: [], iconUrl: formattedImg, imageUrl: formattedImg };
     }
   },
 

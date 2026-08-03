@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Category } from '../../types/catalog';
 import { LayoutGrid, Shirt, Smartphone, Sparkles, Home, ShoppingBag } from 'lucide-react';
+import { formatImageUrl } from '../../services/api-client';
 
 interface CategoryBarProps {
   categories: Category[];
@@ -18,9 +19,10 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({ categories }) => {
     return <ShoppingBag className="w-6 h-6 text-[#ee4d2d]" />;
   };
 
-  // Lọc chỉ lấy các danh mục ngành hàng cấp cha (parentId === null) để giao diện gọn gàng chuẩn Shopee
+  // Lọc chỉ lấy các danh mục ngành hàng cấp cha (parentId === null) và sắp xếp cố định vị trí theo ID
   const displayCategories = React.useMemo(() => {
-    return categories.filter((c) => c.parentId === null || !c.parentId);
+    const list = categories.filter((c) => c.parentId === null || !c.parentId);
+    return list.sort((a, b) => a.id - b.id);
   }, [categories]);
 
   return (
@@ -38,9 +40,9 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({ categories }) => {
             className="flex flex-col items-center justify-center p-3 rounded-lg border border-gray-100 hover:border-[#ee4d2d] hover:shadow-md transition-all group bg-gray-50/50 hover:bg-white text-center"
           >
             <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-2 shadow-xs group-hover:scale-110 transition-transform overflow-hidden">
-              {cat.iconUrl || cat.attributes?.imageUrl ? (
+              {cat.imageUrl || cat.iconUrl || cat.attributes?.imageUrl ? (
                 <img
-                  src={cat.iconUrl || cat.attributes?.imageUrl}
+                  src={formatImageUrl(cat.imageUrl || cat.iconUrl || cat.attributes?.imageUrl)}
                   alt={cat.name}
                   className="w-full h-full object-cover rounded-full"
                 />
@@ -57,3 +59,4 @@ export const CategoryBar: React.FC<CategoryBarProps> = ({ categories }) => {
     </div>
   );
 };
+

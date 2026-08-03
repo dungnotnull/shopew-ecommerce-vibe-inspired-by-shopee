@@ -45,19 +45,26 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Helper chuẩn hóa đường dẫn hình ảnh tĩnh từ Backend (xử lý cả relative /uploads & /api/uploads)
+// Helper chuẩn hóa đường dẫn hình ảnh tĩnh từ Backend (xử lý bóc tách localhost hardcode, /uploads & /api/uploads)
 export const formatImageUrl = (url?: string | null, absolute = false): string => {
   if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
   let clean = url.trim();
+
+  // Bóc tách loại bỏ domain localhost nếu bị lỡ gán cứng host/port của frontend/backend
+  if (clean.includes('localhost:3000') || clean.includes('localhost:3001')) {
+    clean = clean.replace(/^https?:\/\/localhost:(3000|3001)/, '');
+  }
+
+  if (clean.startsWith('http://') || clean.startsWith('https://') || clean.startsWith('data:')) {
+    return clean;
+  }
+
   let relativePath = clean;
   if (clean.startsWith('/uploads/')) {
     relativePath = `/api${clean}`;
   } else if (clean.startsWith('uploads/')) {
     relativePath = `/api/${clean}`;
-  } else if (!clean.startsWith('/')) {
+  } else if (!clean.startsWith('/') && !clean.startsWith('api/')) {
     relativePath = `/api/uploads/${clean}`;
   }
 
@@ -66,3 +73,4 @@ export const formatImageUrl = (url?: string | null, absolute = false): string =>
   }
   return relativePath;
 };
+

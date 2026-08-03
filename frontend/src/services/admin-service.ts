@@ -85,7 +85,8 @@ export const adminService = {
     const response = await apiClient.post('/v1/upload', formData);
     const data = response.data;
     const rawUrl = typeof data === 'string' ? data : (data?.url || data?.data?.url || (typeof data === 'object' && data !== null ? data.url : ''));
-    return formatImageUrl(rawUrl, true);
+    return formatImageUrl(rawUrl, false);
   },
 };
+
 

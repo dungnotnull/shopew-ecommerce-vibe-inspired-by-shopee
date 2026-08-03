@@ -4,6 +4,7 @@ import { Layers, Plus, Edit, FolderPlus, Folder, X, Save, ChevronRight, Trash2, 
 import CatalogService from '../../services/catalog-service';
 import { sellerService } from '../../services/seller-service';
 import { Category } from '../../types/catalog';
+import { formatImageUrl } from '../../services/api-client';
 
 export const AdminCategoryListPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -32,7 +33,8 @@ export const AdminCategoryListPage: React.FC = () => {
     setErrorMsg('');
     try {
       const data = await CatalogService.getCategories();
-      setCategories(data || []);
+      const sorted = [...(data || [])].sort((a, b) => a.id - b.id);
+      setCategories(sorted);
     } catch (err: any) {
       setErrorMsg('Không thể tải danh sách ngành hàng. Vui lòng thử lại sau.');
     } finally {
@@ -77,7 +79,7 @@ export const AdminCategoryListPage: React.FC = () => {
     setEditingCategory(cat);
     setCategoryName(cat.name);
     setParentId(cat.parentId || null);
-    setIconUrl(cat.iconUrl || cat.attributes?.imageUrl || '');
+    setIconUrl(cat.imageUrl || cat.iconUrl || cat.attributes?.imageUrl || '');
     setModalError('');
     setIsModalOpen(true);
   };
@@ -90,11 +92,14 @@ export const AdminCategoryListPage: React.FC = () => {
     setSaving(true);
     setModalError('');
     try {
+      // Chỉ danh mục cha cấp 1 (parentId === null) mới lưu imageUrl
+      const img = parentId ? null : (iconUrl || null);
       const payload: any = {
         name: categoryName,
-        parentId,
-        iconUrl,
-        attributes: { imageUrl: iconUrl },
+        parentId: parentId || null,
+        imageUrl: img,
+        iconUrl: img,
+        attributes: img ? { imageUrl: img } : null,
       };
       if (editingCategory) {
         await CatalogService.updateCategory(editingCategory.id, payload);
@@ -240,8 +245,8 @@ export const AdminCategoryListPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-red-50 text-red-600 rounded-lg border border-red-100 flex items-center justify-center overflow-hidden shrink-0">
-                          {pCat.iconUrl || pCat.attributes?.imageUrl ? (
-                            <img src={pCat.iconUrl || pCat.attributes?.imageUrl} alt={pCat.name} className="w-full h-full object-cover" />
+                          {pCat.imageUrl || pCat.iconUrl || pCat.attributes?.imageUrl ? (
+                            <img src={formatImageUrl(pCat.imageUrl || pCat.iconUrl || pCat.attributes?.imageUrl)} alt={pCat.name} className="w-full h-full object-cover" />
                           ) : (
                             <Folder className="w-5 h-5" />
                           )}
@@ -359,63 +364,77 @@ export const AdminCategoryListPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Upload Icon/Ảnh Danh Mục */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                    <ImageIcon className="w-3.5 h-3.5 text-red-600" /> Icon / Hình Ảnh Danh Mục
-                  </label>
-                  <div className="flex items-center gap-3">
-                    {iconUrl ? (
-                      <div className="relative w-12 h-12 rounded-lg border border-slate-200 overflow-hidden bg-slate-50 shrink-0">
-                        <img src={iconUrl} alt="Category Icon" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setIconUrl('')}
-                          className="absolute top-0.5 right-0.5 bg-red-600 text-white p-0.5 rounded-full cursor-pointer opacity-90 hover:opacity-100"
-                          title="Xóa icon"
-                        >
-                          <X className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="w-12 h-12 rounded-lg border-2 border-dashed border-slate-300 hover:border-red-600 flex flex-col items-center justify-center cursor-pointer bg-slate-50 hover:bg-red-50/40 transition-colors shrink-0">
-                        {uploadingIcon ? (
-                          <Loader2 className="w-4 h-4 text-red-600 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4 text-slate-400" />
-                        )}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          disabled={uploadingIcon}
-                          onChange={handleCategoryIconUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                    <span className="text-[11px] text-slate-400">
-                      {iconUrl ? 'Đã chọn ảnh đại diện cho danh mục này' : 'Bấm để tải ảnh/icon biểu tượng ngành hàng'}
-                    </span>
-                  </div>
-                </div>
-
-                {!editingCategory && (
+                {/* Upload / Nhập URL Icon/Ảnh Danh Mục (Chỉ áp dụng cho Danh mục cha cấp 1 match với Top Page) */}
+                {(parentId === null || !parentId) && (
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Trực Thuộc Danh Mục Cha</label>
-                    <select
-                      value={parentId || ''}
-                      onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-red-600"
-                    >
-                      <option value="">-- Là Danh Mục Cấp 1 (Danh Mục Gốc) --</option>
-                      {getParentOptions(categories).map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                      <ImageIcon className="w-3.5 h-3.5 text-red-600" /> Icon / Hình Ảnh Danh Mục Cha (Hiển thị Top Page)
+                    </label>
+
+                    <div className="space-y-2">
+                      {/* Nhập URL hình ảnh trực tiếp hoặc Chọn tệp từ máy */}
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Nhập URL hình ảnh (ví dụ: https://... hoặc /api/uploads/...)"
+                          value={iconUrl}
+                          onChange={(e) => setIconUrl(e.target.value)}
+                          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-red-600"
+                        />
+
+                        <label className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0 transition-colors">
+                          {uploadingIcon ? (
+                            <Loader2 className="w-3.5 h-3.5 text-red-600 animate-spin" />
+                          ) : (
+                            <Upload className="w-3.5 h-3.5 text-slate-600" />
+                          )}
+                          <span className="hidden sm:inline">Tải tệp</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={uploadingIcon}
+                            onChange={handleCategoryIconUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Xem trước thumbnail hình ảnh */}
+                      {iconUrl && (
+                        <div className="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                          <div className="w-10 h-10 rounded border border-slate-200 overflow-hidden bg-white shrink-0">
+                            <img src={formatImageUrl(iconUrl)} alt="Preview Icon" className="w-full h-full object-cover" />
+                          </div>
+                          <span className="text-[11px] text-slate-500 truncate flex-1">{iconUrl}</span>
+                          <button
+                            type="button"
+                            onClick={() => setIconUrl('')}
+                            className="text-red-600 hover:text-red-700 p-1 text-xs font-bold cursor-pointer shrink-0"
+                            title="Xóa icon"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Trực Thuộc Danh Mục Cha</label>
+                  <select
+                    value={parentId || ''}
+                    onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-red-600"
+                  >
+                    <option value="">-- Là Danh Mục Cấp 1 (Danh Mục Gốc) --</option>
+                    {getParentOptions(categories, editingCategory?.id).map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                   <button
