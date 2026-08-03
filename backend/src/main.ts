@@ -17,6 +17,7 @@ async function bootstrap() {
   const express = require('express');
   const { join } = require('path');
   app.use('/uploads', express.static(join(process.cwd(), 'public/uploads')));
+  app.use('/api/uploads', express.static(join(process.cwd(), 'public/uploads')));
 
   // Enable CORS
   app.enableCors();

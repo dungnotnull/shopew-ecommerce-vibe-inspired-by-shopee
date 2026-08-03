@@ -43,7 +43,7 @@ export class UploadController {
       throw new BadRequestException('File is not uploaded');
     }
     return {
-      url: `/uploads/${file.filename}`
+      url: `/api/uploads/${file.filename}`
     };
   }
 }

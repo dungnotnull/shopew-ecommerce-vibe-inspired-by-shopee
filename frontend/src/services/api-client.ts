@@ -12,6 +12,11 @@ export const apiClient = axios.create({
 // Request Interceptor: Tự động gắn Bearer Token nếu tồn tại trong LocalStorage
 apiClient.interceptors.request.use(
   (config) => {
+    // Tự động xóa Content-Type nếu payload là FormData để trình duyệt gán boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     const token = localStorage.getItem('shopew_token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
