@@ -195,8 +195,8 @@ export class ProductsService {
               stock: sku.stock,
               tierIndex: sku.tierIndex,
               skuCode: sku.skuCode,
-              discountPercentage: sku.discountPercentage || 0,
               isDiscount: sku.isDiscount || false,
+              discountPercentage: sku.isDiscount ? (sku.discountPercentage || 0) : 0,
             }
           });
         }
@@ -250,8 +250,8 @@ export class ProductsService {
               data: {
                 price: sku.price,
                 stock: sku.stock,
-                discountPercentage: sku.discountPercentage,
-                isDiscount: sku.isDiscount,
+                isDiscount: sku.isDiscount || false,
+                discountPercentage: sku.isDiscount ? (sku.discountPercentage || 0) : 0,
               },
             });
           }
