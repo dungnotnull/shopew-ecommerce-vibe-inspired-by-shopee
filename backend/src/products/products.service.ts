@@ -81,17 +81,16 @@ export class ProductsService {
       priceMin: p.priceMin,
       priceMax: p.priceMax,
       promotionalPrice: p.promotionalPrice,
-      discountPercentage: Math.max(0, ...p.skus.map(s => s.discountPercentage || 0)),
+      discountPercentage: p.skus && p.skus.length > 0 ? Math.max(0, ...p.skus.map(s => s.discountPercentage || 0)) : 0,
       rating: p.rating,
       soldCount: p.soldCount,
       likeCount: p.likeCount,
       isLiked: userLikedProductIds.has(p.id),
       isMall: p.isMall,
       isPreferred: p.isPreferred,
-      thumbnailUrl: p.skus[0]?.thumbnailUrl || null,
-      images: p.images,
+      thumbnailUrl: p.skus && p.skus.length > 0 ? p.skus[0]?.thumbnailUrl : null,
       shopId: p.shopId,
-      shopName: p.shop?.name
+      shopName: p.shop?.name || ''
     }));
 
     return {
@@ -190,11 +189,11 @@ export class ProductsService {
           await tx.sKU.create({
             data: {
               productId: product.id,
-              price: sku.price,
-              originalPrice: sku.originalPrice,
-              stock: sku.stock,
-              tierIndex: sku.tierIndex,
-              skuCode: sku.skuCode,
+              price: sku.price ?? data.priceMin ?? 0,
+              originalPrice: sku.originalPrice ?? data.priceMax ?? 0,
+              stock: sku.stock ?? data.stock ?? 0,
+              tierIndex: sku.tierIndex || [],
+              skuCode: sku.skuCode || `DEFAULT-${product.id}-${Date.now()}`,
               isDiscount: sku.isDiscount || false,
               discountPercentage: sku.isDiscount ? (sku.discountPercentage || 0) : 0,
             }
@@ -207,9 +206,9 @@ export class ProductsService {
             productId: product.id,
             price: data.priceMin || 0,
             originalPrice: data.priceMax || 0,
-            stock: data.stock || 0,
+            stock: data.stock || 100, // Đặt mặc định 100 để hiển thị được FE nếu payload thiếu
             tierIndex: [],
-            skuCode: data.skuCode || `DEFAULT-${product.id}`,
+            skuCode: data.skuCode || `DEFAULT-${product.id}-${Date.now()}`,
           }
         });
       }
