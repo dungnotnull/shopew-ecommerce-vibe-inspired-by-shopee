@@ -29,6 +29,11 @@
   - [x] `GET /api/v1/admin/users`: View user list.
   - [x] `GET /api/v1/admin/shops`: View shop list.
   - [x] `GET /api/v1/admin/products`: View all products across platform.
+- [x] **Banners Management:**
+  - [x] `GET /api/v1/admin/banners`: API lấy danh sách banners cho Admin.
+  - [x] `POST /api/v1/admin/banners`: API tạo mới banner.
+  - [x] `PUT /api/v1/admin/banners/:id`: API cập nhật banner.
+  - [x] `DELETE /api/v1/admin/banners/:id`: API xóa banner.
 
 ### 2.2. Product Management (Role Seller)
 - [x] **Shop Profile:** API to manage Shop profiles (create, update, view).

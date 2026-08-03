@@ -62,4 +62,37 @@ export class AdminService {
     ]);
     return { data: products, total, page, limit };
   }
+
+  // --- Banners Management ---
+  async getBanners(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+    const [banners, total] = await Promise.all([
+      this.prisma.banner.findMany({
+        skip,
+        take: limit,
+        orderBy: { sortOrder: 'asc' },
+      }),
+      this.prisma.banner.count()
+    ]);
+    return { data: banners, total, page, limit };
+  }
+
+  async createBanner(data: any) {
+    return this.prisma.banner.create({
+      data
+    });
+  }
+
+  async updateBanner(id: number, data: any) {
+    return this.prisma.banner.update({
+      where: { id },
+      data
+    });
+  }
+
+  async deleteBanner(id: number) {
+    return this.prisma.banner.delete({
+      where: { id }
+    });
+  }
 }
