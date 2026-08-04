@@ -1,8 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
-import { Users, Search, Lock, Unlock, Edit, Trash2, X, Save, AlertTriangle, ShieldCheck, Store, UserCheck, CheckCircle2, User as UserIcon, UserPlus } from 'lucide-react';
+import { Users, Search, Lock, Unlock, Edit, Trash2, X, Save, AlertTriangle, ShieldCheck, Store, UserCheck, CheckCircle2, UserPlus } from 'lucide-react';
 import { adminService, AdminUser } from '../../services/admin-service';
 import { ShopeePagination } from '../../components/common/ShopeePagination';
+
+// Helper trích xuất và hiển thị chuẩn xác Tên người dùng (loại bỏ email/khoảng trắng thừa)
+const formatDisplayName = (fullName?: string, email?: string): string => {
+  if (fullName && fullName.trim()) {
+    let cleaned = fullName.trim();
+    if (cleaned.includes('@')) {
+      cleaned = cleaned.split('@')[0];
+    }
+    return cleaned;
+  }
+  if (email && email.includes('@')) {
+    const namePart = email.split('@')[0];
+    return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+  }
+  return 'Người dùng';
+};
 
 export const AdminUserListPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -242,7 +258,6 @@ export const AdminUserListPage: React.FC = () => {
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase">
-                    <th className="p-3 text-center">ID</th>
                     <th className="p-3">Họ Và Tên</th>
                     <th className="p-3">Email</th>
                     <th className="p-3">Số Điện Thoại</th>
@@ -259,14 +274,8 @@ export const AdminUserListPage: React.FC = () => {
 
                     return (
                       <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="p-3 text-center font-bold text-slate-400">#{u.id}</td>
                         <td className="p-3 font-bold text-slate-800">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0 font-bold">
-                              {u.fullName ? u.fullName.charAt(0).toUpperCase() : <UserIcon className="w-4 h-4" />}
-                            </div>
-                            <span>{u.fullName || 'Người dùng'}</span>
-                          </div>
+                          <span>{formatDisplayName(u.fullName, u.email)}</span>
                         </td>
                         <td className="p-3 text-slate-600">{u.email}</td>
                         <td className="p-3 text-slate-600">{u.phone || '—'}</td>
