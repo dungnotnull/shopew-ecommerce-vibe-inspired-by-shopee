@@ -101,7 +101,7 @@ export class AdminService {
   }
 
   async deleteUser(id: number) {
-    // 1. Kiểm tra xem user có phải là Seller và có sản phẩm public không
+    // 1. Kiểm tra xem user có tồn tại không
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -109,22 +109,29 @@ export class AdminService {
           include: {
             products: {
               select: { id: true },
-              take: 1 // Chỉ cần check có ít nhất 1 sản phẩm là đủ
+              take: 1
             }
           }
         }
       }
     });
 
-    if (user?.shop && user.shop.products.length > 0) {
-      throw new BadRequestException('Không thể xóa/vô hiệu hóa user đã có sản phẩm public trên hệ thống.');
+    if (!user) {
+      throw new BadRequestException('Xóa thất bại: Người dùng không tồn tại trên hệ thống.');
     }
 
-    // 2. Thực hiện soft delete (khóa tài khoản) thay vì xóa hoàn toàn để tránh lỗi Foreign Key
-    return this.prisma.user.update({
+    // 2. Kiểm tra xem user có phải là Seller và có sản phẩm public không
+    if (user.shop && user.shop.products.length > 0) {
+      throw new BadRequestException('Xóa thất bại: Không thể xóa user là chủ Shop đang có sản phẩm hiển thị trên hệ thống.');
+    }
+
+    // 3. Thực hiện soft delete (khóa tài khoản)
+    await this.prisma.user.update({
       where: { id },
       data: { isActive: false }
     });
+
+    return { success: true, message: 'Xóa (vô hiệu hóa) người dùng thành công.' };
   }
 
   async getShops(page: number, limit: number) {
