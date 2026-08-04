@@ -27,9 +27,23 @@ interface FlattenCategoryOption {
 }
 
 const buildCategorySelectOptions = (cats: Category[]): FlattenCategoryOption[] => {
-  return cats
-    .filter((c) => c.parentId === null || !c.parentId)
-    .map((c) => ({ id: c.id, label: c.name }));
+  const options: FlattenCategoryOption[] = [];
+
+  const traverse = (items: Category[], level: number) => {
+    items.forEach((cat) => {
+      const prefix = level === 0 ? '' : '  └─ ';
+      options.push({
+        id: cat.id,
+        label: `${prefix}${cat.name}`,
+      });
+      if (cat.children && cat.children.length > 0) {
+        traverse(cat.children, level + 1);
+      }
+    });
+  };
+
+  traverse(cats, 0);
+  return options;
 };
 
 export const SellerProductEditModal: React.FC<SellerProductEditModalProps> = ({

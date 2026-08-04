@@ -140,21 +140,7 @@ export const AdminCategoryListPage: React.FC = () => {
     }
   };
 
-  // Lấy danh sách ngành hàng gốc cho dropdown chọn danh mục cha (loại trừ chính nó nếu đang sửa)
-  const getParentOptions = (cats: Category[], currentId?: number): Category[] => {
-    const list: Category[] = [];
-    const collect = (items: Category[]) => {
-      items.forEach((c) => {
-        if (currentId && c.id === currentId) return;
-        list.push(c);
-        if (c.children && c.children.length > 0) {
-          collect(c.children);
-        }
-      });
-    };
-    collect(cats);
-    return list;
-  };
+
 
   // Lọc danh mục theo từ khóa tìm kiếm
   const filterCategories = (items: Category[], query: string): Category[] => {
@@ -420,21 +406,20 @@ export const AdminCategoryListPage: React.FC = () => {
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Trực Thuộc Danh Mục Cha</label>
-                  <select
-                    value={parentId || ''}
-                    onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-red-600"
-                  >
-                    <option value="">-- Là Danh Mục Cấp 1 (Danh Mục Gốc) --</option>
-                    {getParentOptions(categories, editingCategory?.id).map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {/* Hiển thị loại danh mục (Gốc / Con) mà không dùng field select theo yêu cầu Admin */}
+                {parentId !== null ? (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-semibold flex items-center justify-between shadow-xs">
+                    <div className="flex items-center gap-2">
+                      <FolderPlus className="w-4 h-4 text-red-600 shrink-0" />
+                      <span>Danh mục cha trực thuộc: <strong className="font-extrabold text-slate-800">{categories.find((c) => c.id === parentId)?.name || `ID #${parentId}`}</strong></span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs">
+                    <Folder className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>Loại danh mục: <strong className="font-extrabold text-red-600">Danh Mục Cha (Cấp 1)</strong></span>
+                  </div>
+                )}
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                   <button

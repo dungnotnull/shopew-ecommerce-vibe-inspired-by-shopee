@@ -23,9 +23,23 @@ interface FlattenCategoryOption {
 }
 
 const buildCategorySelectOptions = (cats: Category[]): FlattenCategoryOption[] => {
-  return cats
-    .filter((c) => c.parentId === null || !c.parentId)
-    .map((c) => ({ id: c.id, label: c.name }));
+  const options: FlattenCategoryOption[] = [];
+
+  const traverse = (items: Category[], level: number) => {
+    items.forEach((cat) => {
+      const prefix = level === 0 ? '' : '  └─ ';
+      options.push({
+        id: cat.id,
+        label: `${prefix}${cat.name}`,
+      });
+      if (cat.children && cat.children.length > 0) {
+        traverse(cat.children, level + 1);
+      }
+    });
+  };
+
+  traverse(cats, 0);
+  return options;
 };
 
 export const SellerProductManagement: React.FC = () => {
@@ -34,7 +48,7 @@ export const SellerProductManagement: React.FC = () => {
   // State Form Sản Phẩm Cơ Bản (Mục 1)
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
-  const [priceMin, setPriceMin] = useState<number>(100000);
+  const [priceMin] = useState<number>(100000);
   const [categoryId, setCategoryId] = useState<number>(1);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState<boolean>(true);
@@ -529,24 +543,12 @@ export const SellerProductManagement: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Giá Mặc Định Gợi Ý (VND) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={priceMin}
-                    onChange={(e) => setPriceMin(Number(e.target.value))}
-                    className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded text-xs font-bold text-gray-900 focus:outline-none focus:border-[#ee4d2d]"
-                  />
-                </div>
-
-                {/* Ô Chọn Danh Mục Sản Phẩm */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-gray-700">
-                      Danh Mục Ngành Hàng *
-                    </label>
+              {/* Ô Chọn Danh Mục Sản Phẩm */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-gray-700">
+                    Danh Mục Ngành Hàng *
+                  </label>
                     {categoriesError && (
                       <button
                         type="button"
@@ -585,7 +587,6 @@ export const SellerProductManagement: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
 
           {/* Section 2: Phân loại sản phẩm (Màu sắc, Kích cỡ...) */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-4">
