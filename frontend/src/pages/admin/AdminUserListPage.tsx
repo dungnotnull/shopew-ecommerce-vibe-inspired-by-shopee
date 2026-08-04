@@ -1,8 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
-import { Users, Search, Lock, Unlock, Edit, Trash2, X, Save, AlertTriangle, ShieldCheck, Store, UserCheck, CheckCircle2, User as UserIcon, UserPlus } from 'lucide-react';
+import { Users, Search, Lock, Unlock, Edit, Trash2, X, Save, AlertTriangle, ShieldCheck, Store, UserCheck, CheckCircle2, UserPlus } from 'lucide-react';
 import { adminService, AdminUser } from '../../services/admin-service';
 import { ShopeePagination } from '../../components/common/ShopeePagination';
+
+// Helper trích xuất và hiển thị chuẩn xác Tên người dùng (loại bỏ email/khoảng trắng thừa)
+const formatDisplayName = (fullName?: string, email?: string): string => {
+  if (fullName && fullName.trim()) {
+    let cleaned = fullName.trim();
+    if (cleaned.includes('@')) {
+      cleaned = cleaned.split('@')[0];
+    }
+    return cleaned;
+  }
+  if (email && email.includes('@')) {
+    const namePart = email.split('@')[0];
+    return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+  }
+  return 'Người dùng';
+};
 
 export const AdminUserListPage: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -263,9 +279,9 @@ export const AdminUserListPage: React.FC = () => {
                         <td className="p-3 font-bold text-slate-800">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0 font-bold">
-                              {u.fullName ? u.fullName.charAt(0).toUpperCase() : <UserIcon className="w-4 h-4" />}
+                              {formatDisplayName(u.fullName, u.email).charAt(0).toUpperCase()}
                             </div>
-                            <span>{u.fullName || 'Người dùng'}</span>
+                            <span>{formatDisplayName(u.fullName, u.email)}</span>
                           </div>
                         </td>
                         <td className="p-3 text-slate-600">{u.email}</td>
