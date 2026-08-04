@@ -30,10 +30,10 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    // Validate Email buộc có đuôi @gmail.com
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    // Validate Email tiêu chuẩn
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      setErrorMsg('Địa chỉ Email phải bắt buộc @gmail.com');
+      setErrorMsg('Địa chỉ Email không hợp lệ.');
       return;
     }
 
@@ -82,10 +82,10 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     if (!forgotEmail) return;
 
-    // Validate Email buộc có đuôi @gmail.com
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
+    // Validate Email tiêu chuẩn
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(forgotEmail.trim())) {
-      setForgotSuccessMsg('Địa chỉ Email phải bắt buộc @gmail.com');
+      setForgotSuccessMsg('Địa chỉ Email không hợp lệ.');
       return;
     }
 
