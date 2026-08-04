@@ -248,10 +248,12 @@ export class ProductsService {
             return this.prisma.sKU.update({
               where: { id: sku.id },
               data: {
-                price: sku.price,
-                stock: sku.stock,
-                isDiscount: sku.isDiscount || false,
-                discountPercentage: sku.isDiscount ? (sku.discountPercentage || 0) : 0,
+                ...(sku.price !== undefined && { price: sku.price }),
+                ...(sku.originalPrice !== undefined && { originalPrice: sku.originalPrice }),
+                ...(sku.stock !== undefined && { stock: sku.stock }),
+                ...(sku.skuCode !== undefined && { skuCode: sku.skuCode }),
+                ...(sku.isDiscount !== undefined && { isDiscount: sku.isDiscount }),
+                ...(sku.discountPercentage !== undefined && { discountPercentage: sku.discountPercentage }),
               },
             });
           }
