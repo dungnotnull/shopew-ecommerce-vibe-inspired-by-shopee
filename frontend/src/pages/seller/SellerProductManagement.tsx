@@ -300,7 +300,7 @@ export const SellerProductManagement: React.FC = () => {
       isPreferred: true,
       images,
       variantGroups,
-      skus: skus.map(s => ({
+      skus: skus.map((s, idx) => ({
         id: s.id,
         tierIndex: s.tierIndex,
         price: s.price,
@@ -308,6 +308,7 @@ export const SellerProductManagement: React.FC = () => {
         stock: s.stock,
         isDiscount: s.isDiscountActive,
         discountPercentage: s.discountPercentage,
+        skuCode: `SKU-${Date.now()}-${idx + 1}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
       })),
     });
 

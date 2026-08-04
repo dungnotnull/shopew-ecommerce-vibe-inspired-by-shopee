@@ -99,4 +99,7 @@ export interface SearchResult {
   facets?: SearchFacets;
   categoryBreadcrumbs?: { id: number; name: string }[];
   total: number;
+  totalPages?: number;
+  page?: number;
+  limit?: number;
 }

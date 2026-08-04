@@ -5,22 +5,30 @@ import { ShopProfile, ProductSPU } from '../types/catalog';
 import CatalogService from '../services/catalog-service';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
+import { ShopeePagination } from '../components/common/ShopeePagination';
 
 export const ShopDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [shop, setShop] = useState<ShopProfile | null>(null);
   const [products, setProducts] = useState<ProductSPU[]>([]);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchShopProducts = async (pageNum: number) => {
+    const searchRes = await CatalogService.searchProducts({ page: pageNum, limit: 20 });
+    setProducts(searchRes.data || []);
+    setTotalPages(searchRes.totalPages || Math.ceil((searchRes.total || 0) / 20) || 1);
+    setPage(pageNum);
+  };
 
   useEffect(() => {
     const fetchShopData = async () => {
       setLoading(true);
       const shopId = id ? Number(id) : 1;
       const profile = await CatalogService.getShopById(shopId);
-      const searchRes = await CatalogService.searchProducts({});
-
+      await fetchShopProducts(1);
       setShop(profile);
-      setProducts(searchRes.data);
       setLoading(false);
     };
 
@@ -101,16 +109,33 @@ export const ShopDetailPage: React.FC = () => {
         </div>
 
         {/* Danh Sách Sản Phẩm Của Shop */}
-        <div className="space-y-4">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
-            <Store className="w-5 h-5 text-[#ee4d2d]" />
-            <h2 className="font-bold text-gray-800 uppercase text-sm">TẤT CẢ SẢN PHẨM CỦA SHOP</h2>
+        <div id="shop-products-section" className="space-y-4">
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Store className="w-5 h-5 text-[#ee4d2d]" />
+              <h2 className="font-bold text-gray-800 uppercase text-sm">TẤT CẢ SẢN PHẨM CỦA SHOP</h2>
+            </div>
+            <span className="text-xs text-gray-500">
+              Tối đa 20 sản phẩm/trang • Trang {page} / {totalPages}
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {products.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+
+            <ShopeePagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={(newPage) => {
+                fetchShopProducts(newPage);
+                const el = document.getElementById('shop-products-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
           </div>
         </div>
       </div>

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, Heart, Star, ShoppingCart, Store, Check, AlertCircle, Eye } from 'lucide-react';
+import { ShieldCheck, Heart, Star, ShoppingCart, Store, Check, AlertCircle, Eye, Flame } from 'lucide-react';
 import { ProductSPU, SKU } from '../types/catalog';
 import { formatVND } from '../utils/format-currency';
 import CatalogService from '../services/catalog-service';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
+import { ProductCard } from '../components/catalog/ProductCard';
+import { ShopeePagination } from '../components/common/ShopeePagination';
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +20,27 @@ export const ProductDetailPage: React.FC = () => {
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [likeCount, setLikeCount] = useState<number>(0);
   const [selectedImage, setSelectedImage] = useState<string>('');
+
+  // State cho danh sách Sản phẩm Gợi ý (20 sản phẩm/trang)
+  const [relatedProducts, setRelatedProducts] = useState<ProductSPU[]>([]);
+  const [relatedPage, setRelatedPage] = useState<number>(1);
+  const [relatedTotalPages, setRelatedTotalPages] = useState<number>(1);
+  const [relatedLoading, setRelatedLoading] = useState<boolean>(false);
+
+  const fetchRelatedProducts = async (pageNum: number) => {
+    setRelatedLoading(true);
+    try {
+      const res = await CatalogService.getDailyDiscover(pageNum, 20);
+      setRelatedProducts(res.data || []);
+      const totalP = res.totalPages || Math.ceil((res.total || 0) / 20) || 1;
+      setRelatedTotalPages(totalP);
+      setRelatedPage(pageNum);
+    } catch {
+      setRelatedProducts([]);
+    } finally {
+      setRelatedLoading(false);
+    }
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -70,6 +93,7 @@ export const ProductDetailPage: React.FC = () => {
     };
 
     fetchDetail();
+    fetchRelatedProducts(1);
   }, [id]);
 
   // Tìm SKU khớp chính xác với mảng tierIndex được chọn
@@ -367,7 +391,7 @@ export const ProductDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Môt tả sản phẩm */}
+        {/* Mô tả sản phẩm */}
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
           <h3 className="text-base font-bold text-gray-900 uppercase bg-gray-50 p-3 rounded mb-4">
             MÔ TẢ SẢN PHẨM
@@ -375,6 +399,43 @@ export const ProductDetailPage: React.FC = () => {
           <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
             {product.description || 'Sản phẩm chính hãng chất lượng cao phân phối chính thức trên Shopew.'}
           </p>
+        </div>
+
+        {/* Section 20 Sản phẩm Gợi ý (Có Thể Bạn Cũng Thích) khi xem chi tiết */}
+        <div id="related-products-section" className="space-y-4 pt-4">
+          <div className="bg-white p-3.5 rounded-xl shadow-xs border-b-2 border-[#ee4d2d] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Flame className="w-5 h-5 text-[#ee4d2d] fill-[#ee4d2d]" />
+              <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wide">CÓ THỂ BẠN CŨNG THÍCH</h3>
+            </div>
+            <span className="text-xs text-gray-500">
+              Tối đa 20 sản phẩm/trang • Trang {relatedPage} / {relatedTotalPages}
+            </span>
+          </div>
+
+          {relatedLoading ? (
+            <div className="p-8 text-center text-xs text-gray-400">Đang tải sản phẩm gợi ý...</div>
+          ) : relatedProducts.length === 0 ? (
+            <div className="p-8 text-center text-xs text-gray-400 bg-white rounded-lg border border-gray-100">Chưa có sản phẩm gợi ý.</div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {relatedProducts.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+
+              <ShopeePagination
+                currentPage={relatedPage}
+                totalPages={relatedTotalPages}
+                onPageChange={(newPage) => {
+                  fetchRelatedProducts(newPage);
+                  const el = document.getElementById('related-products-section');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </CustomerLayout>

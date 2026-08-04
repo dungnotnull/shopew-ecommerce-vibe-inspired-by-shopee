@@ -254,15 +254,20 @@ export const CatalogService = {
     }
   },
 
-  // 3. Lấy sản phẩm Gợi ý hôm nay / All Products: GET /api/v1/home/daily-discover
+  // 3. Lấy sản phẩm Gợi ý hôm nay / All Products: GET /api/v1/home/daily-discover (Phân trang tối đa 20 sản phẩm/trang theo backend)
   async getDailyDiscover(page = 1, limit = 20): Promise<SearchResult> {
     try {
       const response = await apiClient.get('/v1/home/daily-discover', { params: { page, limit } });
       return response.data;
     } catch {
+      const startIndex = (page - 1) * limit;
+      const paginatedData = mockProducts.slice(startIndex, startIndex + limit);
       return {
-        data: mockProducts,
+        data: paginatedData,
         total: mockProducts.length,
+        totalPages: Math.ceil(mockProducts.length / limit),
+        page,
+        limit,
         facets: { brands: [], locations: [], dynamicAttributes: [] },
       };
     }
