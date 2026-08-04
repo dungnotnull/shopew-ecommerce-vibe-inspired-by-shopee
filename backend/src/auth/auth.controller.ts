@@ -3,6 +3,9 @@ import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, ForgotPasswordDto } from './dto/auth.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -24,7 +27,10 @@ export class AuthController {
   }
 
   @Post('register-admin')
-  @ApiOperation({ summary: 'Register a new admin account' })
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @ApiBearerAuth()
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Register a new admin account (Admin only)' })
   @ApiResponse({ status: 201, description: 'Admin successfully registered' })
   registerAdmin(@Body() dto: RegisterDto) {
     return this.authService.register(dto, 'ADMIN');
