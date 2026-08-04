@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateBannerDto, UpdateBannerDto } from './dto/banner.dto';
 import { CreateUserDto, UpdateUserDto, UpdateUserStatusDto } from './dto/user.dto';
@@ -32,8 +32,8 @@ export class AdminController {
 
   @Get('users/:id')
   @ApiOperation({ summary: 'Get details of a user' })
-  async getUserDetail(@Param('id') id: string) {
-    return this.adminService.getUserDetail(+id);
+  async getUserDetail(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.getUserDetail(id);
   }
 
   @Post('users')
@@ -44,20 +44,20 @@ export class AdminController {
 
   @Put('users/:id')
   @ApiOperation({ summary: 'Update user information' })
-  async updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return this.adminService.updateUser(+id, dto);
+  async updateUser(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserDto) {
+    return this.adminService.updateUser(id, dto);
   }
 
   @Put('users/:id/status')
   @ApiOperation({ summary: 'Update user active status' })
-  async updateUserStatus(@Param('id') id: string, @Body() dto: UpdateUserStatusDto) {
-    return this.adminService.updateUserStatus(+id, dto.isActive);
+  async updateUserStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserStatusDto) {
+    return this.adminService.updateUserStatus(id, dto.isActive);
   }
 
   @Delete('users/:id')
   @ApiOperation({ summary: 'Delete a user' })
-  async deleteUser(@Param('id') id: string) {
-    return this.adminService.deleteUser(+id);
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.deleteUser(id);
   }
 
   @Get('shops')
@@ -93,13 +93,13 @@ export class AdminController {
 
   @Put('banners/:id')
   @ApiOperation({ summary: 'Update a banner' })
-  async updateBanner(@Param('id') id: string, @Body() dto: UpdateBannerDto) {
-    return this.adminService.updateBanner(+id, dto);
+  async updateBanner(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateBannerDto) {
+    return this.adminService.updateBanner(id, dto);
   }
 
   @Delete('banners/:id')
   @ApiOperation({ summary: 'Delete a banner' })
-  async deleteBanner(@Param('id') id: string) {
-    return this.adminService.deleteBanner(+id);
+  async deleteBanner(@Param('id', ParseIntPipe) id: number) {
+    return this.adminService.deleteBanner(id);
   }
 }
