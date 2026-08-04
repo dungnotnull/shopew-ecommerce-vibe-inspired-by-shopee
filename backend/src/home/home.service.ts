@@ -40,7 +40,7 @@ export class HomeService {
     });
   }
 
-  async getDailyDiscover(page: number = 1, limit: number = 10, userId?: number) {
+  async getDailyDiscover(page: number = 1, limit: number = 20, userId?: number) {
     const skip = (page - 1) * limit;
 
     const products = await this.prisma.product.findMany({

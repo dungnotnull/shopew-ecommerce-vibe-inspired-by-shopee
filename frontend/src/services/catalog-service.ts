@@ -254,8 +254,8 @@ export const CatalogService = {
     }
   },
 
-  // 3. Lấy sản phẩm Gợi ý hôm nay / All Products: GET /api/v1/home/daily-discover (Phân trang tối đa 10 sản phẩm/trang)
-  async getDailyDiscover(page = 1, limit = 10): Promise<SearchResult> {
+  // 3. Lấy sản phẩm Gợi ý hôm nay / All Products: GET /api/v1/home/daily-discover (Phân trang tối đa 20 sản phẩm/trang theo backend)
+  async getDailyDiscover(page = 1, limit = 20): Promise<SearchResult> {
     try {
       const response = await apiClient.get('/v1/home/daily-discover', { params: { page, limit } });
       return response.data;

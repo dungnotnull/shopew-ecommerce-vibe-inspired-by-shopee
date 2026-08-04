@@ -103,13 +103,13 @@ export const HomePage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Lấy dữ liệu Daily Discover theo số trang (Tối đa 10 sản phẩm/trang)
+  // Lấy dữ liệu Daily Discover theo số trang (Tối đa 20 sản phẩm/trang theo backend)
   const fetchDailyProducts = async (page: number) => {
     setDailyLoading(true);
     try {
-      const discoverRes = await CatalogService.getDailyDiscover(page, 10);
+      const discoverRes = await CatalogService.getDailyDiscover(page, 20);
       setDailyProducts(discoverRes.data || []);
-      const totalPages = discoverRes.totalPages || Math.ceil((discoverRes.total || 0) / 10) || 1;
+      const totalPages = discoverRes.totalPages || Math.ceil((discoverRes.total || 0) / 20) || 1;
       setDailyTotalPages(totalPages);
       setDailyPage(page);
     } catch {
@@ -123,7 +123,7 @@ export const HomePage: React.FC = () => {
   // 1. GET /api/v1/home/banners
   // 2. GET /api/v1/categories
   // 3. GET /api/v1/home/flash-sale
-  // 4. GET /api/v1/home/daily-discover (limit = 10)
+  // 4. GET /api/v1/home/daily-discover (limit = 20)
   useEffect(() => {
     const fetchHomeData = async () => {
       setLoading(true);
@@ -132,14 +132,14 @@ export const HomePage: React.FC = () => {
           CatalogService.getHomeBanners(),
           CatalogService.getCategories(),
           CatalogService.getFlashSale(),
-          CatalogService.getDailyDiscover(1, 10),
+          CatalogService.getDailyDiscover(1, 20),
         ]);
 
         setBanners(bannerRes);
         setCategories(catRes);
         setFlashSales(flashRes);
         setDailyProducts(discoverRes.data || []);
-        const totalPages = discoverRes.totalPages || Math.ceil((discoverRes.total || 0) / 10) || 1;
+        const totalPages = discoverRes.totalPages || Math.ceil((discoverRes.total || 0) / 20) || 1;
         setDailyTotalPages(totalPages);
         setDailyPage(1);
       } finally {
@@ -278,7 +278,7 @@ export const HomePage: React.FC = () => {
         )}
       </div>
 
-      {/* SECTION 4: ALL PRODUCTS FEED / DAILY DISCOVER (GET /api/v1/home/daily-discover - 10 tấm ảnh/trang) */}
+      {/* SECTION 4: ALL PRODUCTS FEED / DAILY DISCOVER (GET /api/v1/home/daily-discover - 20 sản phẩm/trang theo backend) */}
       <div id="daily-discover-section">
         <div className="flex items-center justify-between mb-4 bg-white p-3.5 rounded-xl shadow-xs border-b-2 border-[#ee4d2d]">
           <div className="flex items-center gap-2">
@@ -286,7 +286,7 @@ export const HomePage: React.FC = () => {
             <h2 className="font-extrabold text-gray-900 uppercase text-sm tracking-wide">GỢI Ý HÔM NAY</h2>
           </div>
           <span className="text-xs text-gray-500">
-            Tối đa 10 sản phẩm/trang • Trang {dailyPage} / {dailyTotalPages}
+            Tối đa 20 sản phẩm/trang • Trang {dailyPage} / {dailyTotalPages}
           </span>
         </div>
 
