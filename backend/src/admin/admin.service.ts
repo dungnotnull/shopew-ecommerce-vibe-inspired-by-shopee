@@ -34,7 +34,7 @@ export class AdminService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        select: { id: true, email: true, fullName: true, role: true, isActive: true, createdAt: true }
+        select: { id: true, email: true, fullName: true, phone: true, role: true, isActive: true, createdAt: true }
       }),
       this.prisma.user.count()
     ]);
@@ -101,8 +101,29 @@ export class AdminService {
   }
 
   async deleteUser(id: number) {
-    return this.prisma.user.delete({
-      where: { id }
+    // 1. Kiểm tra xem user có phải là Seller và có sản phẩm public không
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        shop: {
+          include: {
+            products: {
+              select: { id: true },
+              take: 1 // Chỉ cần check có ít nhất 1 sản phẩm là đủ
+            }
+          }
+        }
+      }
+    });
+
+    if (user?.shop && user.shop.products.length > 0) {
+      throw new BadRequestException('Không thể xóa/vô hiệu hóa user đã có sản phẩm public trên hệ thống.');
+    }
+
+    // 2. Thực hiện soft delete (khóa tài khoản) thay vì xóa hoàn toàn để tránh lỗi Foreign Key
+    return this.prisma.user.update({
+      where: { id },
+      data: { isActive: false }
     });
   }
 
