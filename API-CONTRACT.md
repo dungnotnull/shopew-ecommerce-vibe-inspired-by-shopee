@@ -388,7 +388,7 @@
 - **Body:** `{ "name": "Updated Shop Name" }`
 
 ## Admin Portal
-### `GET /api/admin/dashboard`
+### `GET /api/v1/admin/dashboard`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
 - **Response:**
 ```json
@@ -398,6 +398,20 @@
   "activeDisputes": 3,
 }
 ```
+
+### `POST /api/v1/admin/users`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Body:**
+```json
+{
+  "email": "newadmin@example.com",
+  "password": "password123",
+  "fullName": "New Admin",
+  "phone": "0123456789",
+  "role": "ADMIN"
+}
+```
+- **Response:** Created user object.
 
 ### `GET /api/v1/admin/banners`
 - **Query:** `?page=1&limit=20`
