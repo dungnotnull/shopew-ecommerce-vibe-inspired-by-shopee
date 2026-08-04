@@ -1,42 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CustomerLayout } from '../../components/layout/CustomerLayout';
 import { ShippingAddress } from '../../types/user';
 import { Plus, MapPin, Trash2, Edit2 } from 'lucide-react';
+import { useAuthStore } from '../../store/useAuthStore';
 
 // Trang Sổ Địa Chỉ Giao Hàng (User Address Book)
 export const AddressPage: React.FC = () => {
-  // Mock dữ liệu Địa chỉ giao hàng
+  const { user } = useAuthStore();
+
+  // Dữ liệu Địa chỉ giao hàng
   const [addresses, setAddresses] = useState<ShippingAddress[]>([
     {
       id: 1,
-      fullName: 'Nguyễn Văn A',
-      phone: '0987654321',
+      fullName: user?.fullName || 'Nguyễn Văn A',
+      phone: user?.phone || '0987654321',
       province: 'TP. Hồ Chí Minh',
       district: 'Quận 1',
       ward: 'Phường Bến Nghé',
       detailAddress: 'Số 123 Đường Lê Lợi',
       isDefault: true,
     },
-    {
-      id: 2,
-      fullName: 'Nguyễn Văn A (Văn phòng)',
-      phone: '0912345678',
-      province: 'Hà Nội',
-      district: 'Quận Cầu Giấy',
-      ward: 'Phường Dịch Vọng',
-      detailAddress: 'Tòa nhà Landmark 72',
-      isDefault: false,
-    },
   ]);
 
   const [showModal, setShowModal] = useState(false);
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [province, setProvince] = useState('TP. Hồ Chí Minh');
   const [district, setDistrict] = useState('Quận 1');
   const [ward, setWard] = useState('Phường Bến Nghé');
   const [detailAddress, setDetailAddress] = useState('');
   const [isDefault, setIsDefault] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setFullName((prev) => prev || user.fullName || '');
+      setPhone((prev) => prev || user.phone || '');
+      setAddresses((prev) =>
+        prev.map((a, idx) => (idx === 0 ? { ...a, fullName: user.fullName || a.fullName, phone: user.phone || a.phone } : a))
+      );
+    }
+  }, [user]);
 
   // Đặt địa chỉ mặc định
   const handleSetDefault = (id: number) => {

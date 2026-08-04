@@ -1,12 +1,9 @@
 /** 
- * Format số tiền sang định dạng tiền tệ Việt Nam Đồng (VND) chuẩn Shopee.
- * Ví dụ: 25000000 -> 25.000.000 ₫
+ * Format số tiền nguyên thành chuỗi VND chuẩn Shopee (ví dụ: 150000 -> 150.000 ₫)
  */
-export const formatVND = (amount: number): string => {
-  if (isNaN(amount)) return '0 ₫';
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0
-  }).format(amount);
+export const formatVND = (amount: number | null | undefined): string => {
+  if (amount === undefined || amount === null || typeof amount !== 'number' || isNaN(amount)) {
+    return '0 ₫';
+  }
+  return `${Math.round(amount).toLocaleString('vi-VN')} ₫`;
 };

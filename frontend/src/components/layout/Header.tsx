@@ -4,6 +4,7 @@ import { Search, ShoppingCart, ShoppingBag } from 'lucide-react';
 import { Navbar } from './Navbar';
 import CatalogService from '../../services/catalog-service';
 import { Category } from '../../types/catalog';
+import { useCartStore } from '../../store/useCartStore';
 
 // Header chính của hệ thống Shopew
 export const Header: React.FC = () => {
@@ -11,8 +12,12 @@ export const Header: React.FC = () => {
   const [quickCategories, setQuickCategories] = useState<Category[]>([]);
   const navigate = useNavigate();
 
-  // Nạp danh mục ngành hàng từ API Backend để hiển thị Tag tìm kiếm nhanh
+  const { cartCount, fetchCartCount } = useCartStore();
+
+  // Nạp số lượng sản phẩm giỏ hàng & danh mục ngành hàng từ API Backend khi load Header
   useEffect(() => {
+    fetchCartCount();
+
     const fetchQuickCats = async () => {
       try {
         const catData = await CatalogService.getCategories();
@@ -31,7 +36,7 @@ export const Header: React.FC = () => {
       }
     };
     fetchQuickCats();
-  }, []);
+  }, [fetchCartCount]);
 
   // Xử lý gửi Form Tìm kiếm
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -99,8 +104,8 @@ export const Header: React.FC = () => {
         {/* Giỏ Hàng Icon */}
         <Link to="/cart" className="relative p-1 text-white hover:opacity-90 transition-opacity shrink-0 pt-1">
           <ShoppingCart className="w-7 h-7" />
-          <span className="absolute -top-1 -right-1 bg-white text-[#ee4d2d] font-bold text-xs px-2 py-0.5 rounded-full border border-[#ee4d2d]">
-            0
+          <span className="absolute -top-1 -right-1 bg-white text-[#ee4d2d] font-bold text-xs px-1.5 py-0.5 rounded-full border border-[#ee4d2d] min-w-[20px] text-center">
+            {cartCount}
           </span>
         </Link>
       </div>

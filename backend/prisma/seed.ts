@@ -93,6 +93,24 @@ async function main() {
   });
   console.log(`✅ Default system admin initialized successfully: ${admin.email}`);
 
+  console.log('Seeding Master Data (Default Addresses)...');
+  const allUsers = await prisma.user.findMany();
+  for (const u of allUsers) {
+    const existingAddr = await prisma.address.findFirst({ where: { userId: u.id } });
+    if (!existingAddr) {
+      await prisma.address.create({
+        data: {
+          userId: u.id,
+          street: '123 Đường Nguyễn Huệ, Phường Bến Nghé',
+          city: 'Quận 1',
+          state: 'TP. Hồ Chí Minh',
+          zipCode: '700000',
+          isDefault: true,
+        },
+      });
+    }
+  }
+
   console.log('Seeding complete!');
 }
 
