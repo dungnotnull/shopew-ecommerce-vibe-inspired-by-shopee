@@ -18,11 +18,14 @@ import { SellerDashboardPage } from './pages/seller/SellerDashboardPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminCategoryListPage } from './pages/admin/AdminCategoryListPage';
 import { AdminBannerListPage } from './pages/admin/AdminBannerListPage';
+import { AdminUserListPage } from './pages/admin/AdminUserListPage';
 
-// Phase 2 & 3 Catalog & Shop Pages
+// Phase 2, 3 & 4 Catalog, Shop & Order Pages
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { SearchPage } from './pages/SearchPage';
 import { ShopDetailPage } from './pages/ShopDetailPage';
+import { CartPage } from './pages/CartPage';
+import { CheckoutPage } from './pages/CheckoutPage';
 import { SellerProductManagement } from './pages/seller/SellerProductManagement';
 import { SellerProductListPage } from './pages/seller/SellerProductListPage';
 
@@ -85,6 +88,22 @@ export const App: React.FC = () => {
           <Route path="/register" element={<RegisterPage />} />
 
           {/* Protected Customer Routes - Dành cho người dùng cá nhân đã đăng nhập */}
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/user/profile"
             element={
@@ -153,6 +172,14 @@ export const App: React.FC = () => {
             element={
               <RoleGuard allowedRoles={['ADMIN']}>
                 <AdminCategoryListPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminUserListPage />
               </RoleGuard>
             }
           />

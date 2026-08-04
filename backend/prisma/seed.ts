@@ -74,26 +74,24 @@ async function main() {
   });
 
   console.log('Seeding Master Data (System Admin)...');
-  const existingAdmin = await prisma.user.findFirst({
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const admin = await prisma.user.upsert({
     where: { email: 'admin@shopew.com' },
+    update: {
+      password: hashedPassword,
+      role: Role.ADMIN,
+      isActive: true,
+    },
+    create: {
+      email: 'admin@shopew.com',
+      password: hashedPassword,
+      fullName: 'System Admin',
+      phone: '0987654321',
+      role: Role.ADMIN,
+      isActive: true,
+    },
   });
-
-  if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    const admin = await prisma.user.create({
-      data: {
-        email: 'admin@shopew.com',
-        password: hashedPassword,
-        fullName: 'System Admin',
-        phone: '0987654321',
-        role: Role.ADMIN,
-        isActive: true,
-      },
-    });
-    console.log(`✅ Default system admin created successfully: ${admin.email}`);
-  } else {
-    console.log('✅ Default system admin already exists. Skipping.');
-  }
+  console.log(`✅ Default system admin initialized successfully: ${admin.email}`);
 
   console.log('Seeding complete!');
 }
