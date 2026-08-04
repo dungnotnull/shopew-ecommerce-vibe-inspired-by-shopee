@@ -72,6 +72,12 @@ export const adminService = {
     return { data: rawList, total, totalPages };
   },
 
+  // Tạo mới Tài khoản Người dùng (Admin): POST /api/admin/users
+  createUser: async (payload: { email: string; password: string; fullName: string; phone?: string; role?: 'CUSTOMER' | 'SELLER' | 'ADMIN' }): Promise<AdminUser> => {
+    const response = await apiClient.post('/admin/users', payload);
+    return response.data.data || response.data;
+  },
+
   // Lấy chi tiết thông tin Người dùng: GET /api/admin/users/:id
   getUserDetail: async (id: number): Promise<AdminUser> => {
     const response = await apiClient.get(`/admin/users/${id}`);
