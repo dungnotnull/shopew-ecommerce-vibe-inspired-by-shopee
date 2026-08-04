@@ -129,8 +129,9 @@ export const AdminUserListPage: React.FC = () => {
     try {
       await adminService.updateUserStatus(u.id, !u.isActive);
       await fetchUsers(page);
-    } catch {
-      alert('Không thể thay đổi trạng thái tài khoản. Vui lòng thử lại.');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể thay đổi trạng thái tài khoản. Vui lòng thử lại.';
+      alert(Array.isArray(msg) ? msg.join(', ') : msg);
     }
   };
 
@@ -148,8 +149,9 @@ export const AdminUserListPage: React.FC = () => {
       await adminService.deleteUser(deletingUser.id);
       await fetchUsers(page);
       setIsDeleteModalOpen(false);
-    } catch {
-      alert('Không thể xóa tài khoản này.');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể xóa tài khoản này.';
+      alert(Array.isArray(msg) ? msg.join(', ') : msg);
     } finally {
       setDeleting(false);
     }
