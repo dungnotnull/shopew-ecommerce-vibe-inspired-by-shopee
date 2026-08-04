@@ -18,6 +18,7 @@ import { SellerDashboardPage } from './pages/seller/SellerDashboardPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminCategoryListPage } from './pages/admin/AdminCategoryListPage';
 import { AdminBannerListPage } from './pages/admin/AdminBannerListPage';
+import { AdminUserListPage } from './pages/admin/AdminUserListPage';
 
 // Phase 2 & 3 Catalog & Shop Pages
 import { ProductDetailPage } from './pages/ProductDetailPage';
@@ -153,6 +154,14 @@ export const App: React.FC = () => {
             element={
               <RoleGuard allowedRoles={['ADMIN']}>
                 <AdminCategoryListPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminUserListPage />
               </RoleGuard>
             }
           />

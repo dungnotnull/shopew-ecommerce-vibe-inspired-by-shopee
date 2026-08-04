@@ -273,6 +273,7 @@ export const CatalogService = {
     }
   },
 
+
   // 4. Lấy cây danh mục sản phẩm: GET /api/v1/categories (Sắp xếp cố định vị trí theo ID tăng dần)
   async getCategories(): Promise<Category[]> {
     try {
