@@ -35,6 +35,54 @@ export class AdminService {
     return { data: users, total, page, limit };
   }
 
+  async getUserDetail(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        addresses: true,
+        shop: true,
+      }
+    });
+  }
+
+  async updateUser(id: number, data: any) {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        updatedAt: true,
+      }
+    });
+  }
+
+  async updateUserStatus(id: number, isActive: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { isActive },
+      select: { id: true, isActive: true }
+    });
+  }
+
+  async deleteUser(id: number) {
+    return this.prisma.user.delete({
+      where: { id }
+    });
+  }
+
   async getShops(page: number, limit: number) {
     const skip = (page - 1) * limit;
     const [shops, total] = await Promise.all([
