@@ -83,6 +83,9 @@ export const HomePage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [flashSales, setFlashSales] = useState<FlashSaleItem[]>([]);
   const [dailyProducts, setDailyProducts] = useState<ProductSPU[]>([]);
+  const [dailyPage, setDailyPage] = useState<number>(1);
+  const [dailyTotalPages, setDailyTotalPages] = useState<number>(1);
+  const [dailyLoading, setDailyLoading] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Countdown timer cho Flash Sale (Đếm ngược 04 giờ : 12 phút : 45 giây)
@@ -100,11 +103,27 @@ export const HomePage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Lấy dữ liệu Daily Discover theo số trang (Tối đa 10 sản phẩm/trang)
+  const fetchDailyProducts = async (page: number) => {
+    setDailyLoading(true);
+    try {
+      const discoverRes = await CatalogService.getDailyDiscover(page, 10);
+      setDailyProducts(discoverRes.data || []);
+      const totalPages = discoverRes.totalPages || Math.ceil((discoverRes.total || 0) / 10) || 1;
+      setDailyTotalPages(totalPages);
+      setDailyPage(page);
+    } catch {
+      setDailyProducts([]);
+    } finally {
+      setDailyLoading(false);
+    }
+  };
+
   // Call 4 API Backend song song nạp trang chủ:
   // 1. GET /api/v1/home/banners
   // 2. GET /api/v1/categories
   // 3. GET /api/v1/home/flash-sale
-  // 4. GET /api/v1/home/daily-discover
+  // 4. GET /api/v1/home/daily-discover (limit = 10)
   useEffect(() => {
     const fetchHomeData = async () => {
       setLoading(true);
@@ -113,13 +132,16 @@ export const HomePage: React.FC = () => {
           CatalogService.getHomeBanners(),
           CatalogService.getCategories(),
           CatalogService.getFlashSale(),
-          CatalogService.getDailyDiscover(1, 20),
+          CatalogService.getDailyDiscover(1, 10),
         ]);
 
         setBanners(bannerRes);
         setCategories(catRes);
         setFlashSales(flashRes);
         setDailyProducts(discoverRes.data || []);
+        const totalPages = discoverRes.totalPages || Math.ceil((discoverRes.total || 0) / 10) || 1;
+        setDailyTotalPages(totalPages);
+        setDailyPage(1);
       } finally {
         setLoading(false);
       }
@@ -127,6 +149,17 @@ export const HomePage: React.FC = () => {
 
     fetchHomeData();
   }, []);
+
+  // Chuyển trang Gợi Ý Hôm Nay
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > dailyTotalPages || newPage === dailyPage) return;
+    fetchDailyProducts(newPage);
+    // Cuộn nhẹ lên tiêu đề Gợi Ý Hôm Nay
+    const element = document.getElementById('daily-discover-section');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const formatTwoDigits = (num: number) => String(num).padStart(2, '0');
 
@@ -245,17 +278,19 @@ export const HomePage: React.FC = () => {
         )}
       </div>
 
-      {/* SECTION 4: ALL PRODUCTS FEED / DAILY DISCOVER (GET /api/v1/home/daily-discover) */}
-      <div>
+      {/* SECTION 4: ALL PRODUCTS FEED / DAILY DISCOVER (GET /api/v1/home/daily-discover - 10 tấm ảnh/trang) */}
+      <div id="daily-discover-section">
         <div className="flex items-center justify-between mb-4 bg-white p-3.5 rounded-xl shadow-xs border-b-2 border-[#ee4d2d]">
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-[#ee4d2d] fill-[#ee4d2d]" />
             <h2 className="font-extrabold text-gray-900 uppercase text-sm tracking-wide">GỢI Ý HÔM NAY</h2>
           </div>
-          <span className="text-xs text-gray-500">Tất cả sản phẩm dành riêng cho bạn</span>
+          <span className="text-xs text-gray-500">
+            Tối đa 10 sản phẩm/trang • Trang {dailyPage} / {dailyTotalPages}
+          </span>
         </div>
 
-        {loading ? (
+        {loading || dailyLoading ? (
           <div className="p-12 text-center text-xs text-gray-500 flex flex-col items-center gap-2">
             <ShoppingBag className="w-8 h-8 text-gray-300 animate-bounce" />
             <span>Đang tải danh sách sản phẩm gợi ý...</span>
@@ -265,10 +300,49 @@ export const HomePage: React.FC = () => {
             Chưa có sản phẩm gợi ý nào.
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {dailyProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {dailyProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+
+            {/* Thanh Phân Trang 10 Sản Phẩm / Trang */}
+            {dailyTotalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <button
+                  onClick={() => handlePageChange(dailyPage - 1)}
+                  disabled={dailyPage <= 1}
+                  className="p-2 border border-gray-200 rounded-lg text-gray-600 hover:text-[#ee4d2d] hover:border-[#ee4d2d] disabled:opacity-40 disabled:hover:text-gray-600 disabled:hover:border-gray-200 transition cursor-pointer disabled:cursor-not-allowed bg-white"
+                  title="Trang trước"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+
+                {Array.from({ length: dailyTotalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-9 h-9 rounded-lg font-bold text-xs transition cursor-pointer ${
+                      pageNum === dailyPage
+                        ? 'bg-[#ee4d2d] text-white shadow-xs'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:border-[#ee4d2d] hover:text-[#ee4d2d]'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => handlePageChange(dailyPage + 1)}
+                  disabled={dailyPage >= dailyTotalPages}
+                  className="p-2 border border-gray-200 rounded-lg text-gray-600 hover:text-[#ee4d2d] hover:border-[#ee4d2d] disabled:opacity-40 disabled:hover:text-gray-600 disabled:hover:border-gray-200 transition cursor-pointer disabled:cursor-not-allowed bg-white"
+                  title="Trang sau"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
