@@ -5,6 +5,7 @@ import { CatalogService, HomeBanner, FlashSaleItem } from '../services/catalog-s
 import { Category, ProductSPU } from '../types/catalog';
 import { CategoryBar } from '../components/catalog/CategoryBar';
 import { ProductCard } from '../components/catalog/ProductCard';
+import { ShopeePagination } from '../components/common/ShopeePagination';
 import { formatVND } from '../utils/format-currency';
 
 // Inline Hero Banner Carousel Component
@@ -307,42 +308,12 @@ export const HomePage: React.FC = () => {
               ))}
             </div>
 
-            {/* Thanh Phân Trang 10 Sản Phẩm / Trang */}
-            {dailyTotalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-4">
-                <button
-                  onClick={() => handlePageChange(dailyPage - 1)}
-                  disabled={dailyPage <= 1}
-                  className="p-2 border border-gray-200 rounded-lg text-gray-600 hover:text-[#ee4d2d] hover:border-[#ee4d2d] disabled:opacity-40 disabled:hover:text-gray-600 disabled:hover:border-gray-200 transition cursor-pointer disabled:cursor-not-allowed bg-white"
-                  title="Trang trước"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {Array.from({ length: dailyTotalPages }, (_, i) => i + 1).map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`w-9 h-9 rounded-lg font-bold text-xs transition cursor-pointer ${
-                      pageNum === dailyPage
-                        ? 'bg-[#ee4d2d] text-white shadow-xs'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:border-[#ee4d2d] hover:text-[#ee4d2d]'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
-
-                <button
-                  onClick={() => handlePageChange(dailyPage + 1)}
-                  disabled={dailyPage >= dailyTotalPages}
-                  className="p-2 border border-gray-200 rounded-lg text-gray-600 hover:text-[#ee4d2d] hover:border-[#ee4d2d] disabled:opacity-40 disabled:hover:text-gray-600 disabled:hover:border-gray-200 transition cursor-pointer disabled:cursor-not-allowed bg-white"
-                  title="Trang sau"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
+            {/* Thanh Phân Trang chuẩn Giao diện Shopee */}
+            <ShopeePagination
+              currentPage={dailyPage}
+              totalPages={dailyTotalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
       </div>
