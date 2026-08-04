@@ -81,6 +81,37 @@ export const SearchPage: React.FC = () => {
     setSearchParams({});
   };
 
+  const renderCategoryNodes = (catList: Category[], level = 0) => {
+    return catList.map((cat) => {
+      const isSelected = selectedCategory === String(cat.id);
+      const hasChildren = cat.children && cat.children.length > 0;
+
+      return (
+        <React.Fragment key={cat.id}>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedCategory(String(cat.id));
+              setSearchParams({ q: query, category_id: String(cat.id) });
+            }}
+            className={`w-full text-left py-1.5 rounded transition-colors flex items-center justify-between text-xs cursor-pointer ${
+              level === 0 ? 'px-2 font-bold text-gray-800' : level === 1 ? 'pl-5 pr-2 font-medium text-gray-700' : 'pl-8 pr-2 font-normal text-gray-600'
+            } ${
+              isSelected ? 'font-bold text-[#ee4d2d] bg-orange-50' : 'hover:bg-gray-50'
+            }`}
+          >
+            <span className="flex items-center gap-1.5 truncate">
+              {level > 0 && <span className="text-gray-400 font-mono text-[10px]">└─</span>}
+              <span className="truncate">{cat.name}</span>
+            </span>
+            {isSelected && <ChevronRight className="w-3.5 h-3.5 text-[#ee4d2d] shrink-0" />}
+          </button>
+          {hasChildren && renderCategoryNodes(cat.children!, level + 1)}
+        </React.Fragment>
+      );
+    });
+  };
+
   return (
     <CustomerLayout>
       <div className="space-y-6">
@@ -99,7 +130,7 @@ export const SearchPage: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm px-6 py-2.5 rounded-lg transition-colors shadow-xs"
+              className="bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm px-6 py-2.5 rounded-lg transition-colors shadow-xs cursor-pointer"
             >
               Tìm Kiếm
             </button>
@@ -117,43 +148,30 @@ export const SearchPage: React.FC = () => {
               </div>
               <button
                 onClick={handleResetFilters}
-                className="text-[11px] text-gray-500 hover:text-[#ee4d2d] flex items-center gap-1"
+                className="text-[11px] text-gray-500 hover:text-[#ee4d2d] flex items-center gap-1 cursor-pointer"
                 title="Xóa bộ lọc"
               >
                 <RotateCcw className="w-3 h-3" /> Đặt lại
               </button>
             </div>
 
-            {/* Theo Danh Mục */}
+            {/* Theo Danh Mục (Hiển thị đầy đủ danh mục cha và tất cả danh mục con) */}
             <div>
               <h4 className="text-xs font-bold text-gray-800 uppercase mb-2">Tất Cả Danh Mục</h4>
-              <div className="space-y-1 max-h-48 overflow-y-auto text-xs">
+              <div className="space-y-0.5 max-h-64 overflow-y-auto text-xs pr-1 border border-gray-100 rounded-md p-1 bg-gray-50/50">
                 <button
+                  type="button"
                   onClick={() => {
                     setSelectedCategory('');
                     setSearchParams({ q: query });
                   }}
-                  className={`w-full text-left px-2 py-1.5 rounded transition-colors ${
-                    !selectedCategory ? 'font-bold text-[#ee4d2d] bg-orange-50' : 'text-gray-600 hover:bg-gray-50'
+                  className={`w-full text-left px-2 py-1.5 rounded transition-colors cursor-pointer ${
+                    !selectedCategory ? 'font-bold text-[#ee4d2d] bg-orange-50' : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   Tất cả danh mục
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setSelectedCategory(String(cat.id));
-                      setSearchParams({ q: query, category_id: String(cat.id) });
-                    }}
-                    className={`w-full text-left px-2 py-1.5 rounded transition-colors flex items-center justify-between ${
-                      selectedCategory === String(cat.id) ? 'font-bold text-[#ee4d2d] bg-orange-50' : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span>{cat.name}</span>
-                    <ChevronRight className="w-3 h-3 text-gray-300" />
-                  </button>
-                ))}
+                {renderCategoryNodes(categories)}
               </div>
             </div>
 
