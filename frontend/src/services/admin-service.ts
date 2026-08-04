@@ -102,6 +102,42 @@ export const adminService = {
     return response.data;
   },
 
+  // Lấy danh sách Gian Hàng/Shops cho Admin: GET /api/admin/shops
+  getShops: async (page = 1, limit = 20): Promise<{ data: any[]; total: number; totalPages: number }> => {
+    const response = await apiClient.get('/admin/shops', { params: { page, limit } });
+    const resData = response.data;
+    let rawList: any[] = [];
+    let total = 0;
+    let totalPages = 1;
+    if (Array.isArray(resData)) {
+      rawList = resData;
+      total = resData.length;
+    } else if (resData && typeof resData === 'object') {
+      rawList = resData.data || resData.shops || [];
+      total = resData.total ?? rawList.length;
+      totalPages = resData.totalPages ?? Math.ceil(total / limit) ?? 1;
+    }
+    return { data: rawList, total, totalPages };
+  },
+
+  // Duyệt Sản Phẩm SPU/SKU trên toàn hệ thống: GET /api/admin/products
+  getProducts: async (page = 1, limit = 20): Promise<{ data: any[]; total: number; totalPages: number }> => {
+    const response = await apiClient.get('/admin/products', { params: { page, limit } });
+    const resData = response.data;
+    let rawList: any[] = [];
+    let total = 0;
+    let totalPages = 1;
+    if (Array.isArray(resData)) {
+      rawList = resData;
+      total = resData.length;
+    } else if (resData && typeof resData === 'object') {
+      rawList = resData.data || resData.products || [];
+      total = resData.total ?? rawList.length;
+      totalPages = resData.totalPages ?? Math.ceil(total / limit) ?? 1;
+    }
+    return { data: rawList, total, totalPages };
+  },
+
   // --- QUẢN LÝ BANNER ---
   // Lấy danh sách Banners cho Admin: GET /api/admin/banners
   getBanners: async (page = 1, limit = 50): Promise<{ data: AdminBanner[]; total: number }> => {
