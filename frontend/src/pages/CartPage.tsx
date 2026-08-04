@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
-import { ShoppingBag, Store, ArrowRight, ShoppingCart } from 'lucide-react';
+import { ShoppingBag, Store, ArrowRight, ShoppingCart, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { orderService, CartGroup } from '../services/order-service';
 import { formatVND } from '../utils/format';
@@ -12,14 +12,17 @@ export const CartPage: React.FC = () => {
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
 
   // Tải danh sách sản phẩm trong Giỏ hàng
-  const fetchCart = async () => {
+  const fetchCart = async (keepSelection = false) => {
     setLoading(true);
     try {
       const data = await orderService.getCart();
       setCartGroups(data);
-      // Mặc định chọn tất cả items
       const allIds = data.flatMap((g) => g.items.map((i) => i.id));
-      setSelectedItemIds(allIds);
+      if (!keepSelection) {
+        setSelectedItemIds(allIds);
+      } else {
+        setSelectedItemIds((prev) => prev.filter((id) => allIds.includes(id)));
+      }
     } catch (err) {
       console.error('Lỗi khi tải giỏ hàng:', err);
     } finally {
@@ -31,14 +34,13 @@ export const CartPage: React.FC = () => {
     fetchCart();
   }, []);
 
-  // Thay đổi số lượng item
+  // Thay đổi số lượng item hoặc xóa khi số lượng = 0
   const handleQuantityChange = async (variantId: number, newQty: number) => {
-    if (newQty < 1) return;
     try {
-      await orderService.addToCart({ variantId, quantity: newQty });
-      fetchCart();
+      await orderService.addToCart({ variantId, quantity: Math.max(0, newQty) });
+      fetchCart(true);
     } catch {
-      alert('Không thể cập nhật số lượng.');
+      alert('Không thể cập nhật giỏ hàng.');
     }
   };
 
@@ -193,9 +195,19 @@ export const CartPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Thành Tiền */}
-                      <div className="col-span-2 text-right font-extrabold text-[#ee4d2d] text-sm">
-                        {formatVND(item.price * item.quantity)}
+                      {/* Thành Tiền & Nút Xóa */}
+                      <div className="col-span-2 text-right flex items-center justify-end gap-3">
+                        <span className="font-extrabold text-[#ee4d2d] text-sm">
+                          {formatVND(item.price * item.quantity)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleQuantityChange(item.skuId, 0)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                          title="Xóa sản phẩm khỏi giỏ hàng"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   ))}
