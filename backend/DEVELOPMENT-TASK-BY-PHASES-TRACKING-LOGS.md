@@ -106,6 +106,7 @@
     - [x] Commit Transaction.
 
 - [x] **User Addresses Management (`src/users/addresses`):**
+  - [x] Thêm trường `receiverName` và `receiverPhone` vào bảng Address.
   - [x] `POST /api/v1/users/addresses`: Thêm địa chỉ mới.
   - [x] `PUT /api/v1/users/addresses/:id`: Cập nhật địa chỉ.
   - [x] `DELETE /api/v1/users/addresses/:id`: Xóa địa chỉ.

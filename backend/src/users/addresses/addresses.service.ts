@@ -31,6 +31,8 @@ export class AddressesService {
       return tx.address.create({
         data: {
           userId,
+          receiverName: data.receiverName,
+          receiverPhone: data.receiverPhone,
           street: data.street,
           city: data.city,
           state: data.state,
@@ -61,6 +63,8 @@ export class AddressesService {
       return tx.address.update({
         where: { id: addressId },
         data: {
+          receiverName: data.receiverName,
+          receiverPhone: data.receiverPhone,
           street: data.street,
           city: data.city,
           state: data.state,
