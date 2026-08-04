@@ -5,6 +5,7 @@ import { SearchParams, SearchResult, Category } from '../types/catalog';
 import CatalogService from '../services/catalog-service';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
+import { ShopeePagination } from '../components/common/ShopeePagination';
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,6 +24,7 @@ export const SearchPage: React.FC = () => {
   const [isPreferred, setIsPreferred] = useState<boolean>(false);
   const [sort, setSort] = useState<'relevance' | 'sold' | 'newest' | 'price'>('relevance');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState<number>(1);
 
   // API Results
   const [result, setResult] = useState<SearchResult | null>(null);
@@ -47,6 +49,8 @@ export const SearchPage: React.FC = () => {
         isPreferred: isPreferred || undefined,
         sort: sort,
         order: order,
+        page: page,
+        limit: 20,
       };
 
       const res = await CatalogService.searchProducts(params);
@@ -55,7 +59,7 @@ export const SearchPage: React.FC = () => {
     };
 
     doSearch();
-  }, [queryParam, categoryParam, priceMin, priceMax, rating, isMall, isPreferred, sort, order]);
+  }, [queryParam, categoryParam, priceMin, priceMax, rating, isMall, isPreferred, sort, order, page]);
 
   const handleApplyQuery = (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,10 +278,21 @@ export const SearchPage: React.FC = () => {
                 Đang tìm kiếm sản phẩm...
               </div>
             ) : result && result.data.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {result.data.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {result.data.map((p) => (
+                    <ProductCard key={p.id} product={p} />
+                  ))}
+                </div>
+
+                <ShopeePagination
+                  currentPage={page}
+                  totalPages={result.totalPages || Math.ceil((result.total || 0) / 20) || 1}
+                  onPageChange={(newPage) => {
+                    setPage(newPage);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                />
               </div>
             ) : (
               <div className="bg-white rounded-lg p-12 text-center border border-gray-100">
