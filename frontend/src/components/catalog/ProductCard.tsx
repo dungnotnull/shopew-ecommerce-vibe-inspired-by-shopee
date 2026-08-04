@@ -12,6 +12,7 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isLiked, setIsLiked] = useState<boolean>(!!product.isLiked);
   const [likeCount, setLikeCount] = useState<number>(product.likeCount || 0);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
 
   const handleToggleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,20 +30,40 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     }
   };
 
-  const getProductCardImage = () => {
-    if (Array.isArray(product.images) && product.images.length > 0) {
-      return product.images[0];
+  // Thu thập tất cả các ảnh SKU & ảnh SPU khả dụng
+  const skuThumbnails = React.useMemo(() => {
+    const list: string[] = [];
+    if (Array.isArray(product.skus)) {
+      product.skus.forEach((s) => {
+        if (s.thumbnailUrl && !list.includes(s.thumbnailUrl)) {
+          list.push(s.thumbnailUrl);
+        }
+      });
     }
-    if (typeof product.images === 'string') {
+    let imgs: string[] = [];
+    if (Array.isArray(product.images)) {
+      imgs = product.images;
+    } else if (typeof (product as any).images === 'string') {
       try {
-        const parsed = JSON.parse(product.images);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+        const parsed = JSON.parse((product as any).images);
+        if (Array.isArray(parsed)) imgs = parsed;
       } catch {
-        // Ignore
+        imgs = [];
       }
     }
-    if (product.thumbnailUrl) {
-      return product.thumbnailUrl;
+    imgs.forEach((img) => {
+      if (img && !list.includes(img)) {
+        list.push(img);
+      }
+    });
+    return list;
+  }, [product.skus, product.images]);
+
+  const getProductCardImage = () => {
+    if (activeImage) return activeImage;
+    if (product.thumbnailUrl) return product.thumbnailUrl;
+    if (skuThumbnails.length > 0) {
+      return skuThumbnails[0];
     }
     return 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
   };
@@ -82,6 +103,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <div className="absolute top-0 right-0 bg-yellow-400/95 text-[#ee4d2d] font-black text-[10px] px-1.5 py-1 text-center rounded-bl-sm leading-tight">
               <span>-{product.discountPercentage}%</span>
               <span className="block text-[8px] uppercase text-gray-800 font-bold">GIẢM</span>
+            </div>
+          )}
+
+          {/* Dải ảnh Thumbnail SKU nhỏ trực quan trên ảnh sản phẩm (hiển thị khi hover) */}
+          {skuThumbnails.length > 1 && (
+            <div
+              className="absolute bottom-1 left-1.5 right-12 z-20 flex gap-1 items-center overflow-x-auto py-0.5 scrollbar-none"
+              onClick={(e) => e.preventDefault()}
+            >
+              {skuThumbnails.slice(0, 4).map((thumb, idx) => (
+                <button
+                  key={idx}
+                  onMouseEnter={() => setActiveImage(thumb)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setActiveImage(thumb);
+                  }}
+                  className={`w-6 h-6 rounded-md overflow-hidden border transition-all cursor-pointer bg-white shrink-0 ${
+                    imageSrc === thumb ? 'border-[#ee4d2d] ring-1 ring-[#ee4d2d] scale-110' : 'border-white/80 opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  <img src={thumb} alt={`SKU ${idx}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+              {skuThumbnails.length > 4 && (
+                <span className="text-[9px] font-bold bg-black/60 text-white px-1 rounded shrink-0">
+                  +{skuThumbnails.length - 4}
+                </span>
+              )}
             </div>
           )}
 

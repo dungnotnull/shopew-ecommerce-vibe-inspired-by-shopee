@@ -6,7 +6,9 @@ export interface Category {
   attributes?: Record<string, string>;
   children?: Category[];
   iconUrl?: string;
+  imageUrl?: string;
 }
+
 
 // Types cho SPU & SKU Architecture
 export interface VariantGroup {
