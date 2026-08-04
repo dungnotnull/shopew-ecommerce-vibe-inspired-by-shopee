@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AdminLayout } from '../../components/layout/AdminLayout';
-import { Users, Search, Lock, Unlock, Edit, Trash2, X, Save, AlertTriangle, ShieldCheck, Store, UserCheck, CheckCircle2, User as UserIcon } from 'lucide-react';
+import { Users, Search, Lock, Unlock, Edit, Trash2, X, Save, AlertTriangle, ShieldCheck, Store, UserCheck, CheckCircle2, User as UserIcon, UserPlus } from 'lucide-react';
 import { adminService, AdminUser } from '../../services/admin-service';
 import { ShopeePagination } from '../../components/common/ShopeePagination';
 
@@ -13,7 +13,17 @@ export const AdminUserListPage: React.FC = () => {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [errorMsg, setErrorMsg] = useState<string>('');
 
-  // Modal State Chỉnh Sửa Người Dùng
+  // Modal State Tạo Mới Người Dùng (Create User)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [createEmail, setCreateEmail] = useState<string>('');
+  const [createPassword, setCreatePassword] = useState<string>('');
+  const [createFullName, setCreateFullName] = useState<string>('');
+  const [createPhone, setCreatePhone] = useState<string>('');
+  const [createRole, setCreateRole] = useState<'CUSTOMER' | 'SELLER' | 'ADMIN'>('CUSTOMER');
+  const [creating, setCreating] = useState<boolean>(false);
+  const [createError, setCreateError] = useState<string>('');
+
+  // Modal State Chỉnh Sửa Người Dùng (Edit User)
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editFullName, setEditFullName] = useState<string>('');
@@ -22,7 +32,7 @@ export const AdminUserListPage: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [modalError, setModalError] = useState<string>('');
 
-  // Modal State Xóa Tài Khoản
+  // Modal State Xóa Tài Khoản (Delete User)
   const [deletingUser, setDeletingUser] = useState<AdminUser | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
@@ -47,6 +57,40 @@ export const AdminUserListPage: React.FC = () => {
     fetchUsers(1);
   }, []);
 
+  // Mở modal tạo mới người dùng
+  const handleOpenCreateModal = () => {
+    setCreateEmail('');
+    setCreatePassword('');
+    setCreateFullName('');
+    setCreatePhone('');
+    setCreateRole('CUSTOMER');
+    setCreateError('');
+    setIsCreateModalOpen(true);
+  };
+
+  // Tạo mới người dùng: POST /api/admin/users
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    setCreateError('');
+    try {
+      await adminService.createUser({
+        email: createEmail,
+        password: createPassword,
+        fullName: createFullName,
+        phone: createPhone || undefined,
+        role: createRole,
+      });
+      await fetchUsers(1);
+      setIsCreateModalOpen(false);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể tạo mới tài khoản người dùng.';
+      setCreateError(Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setCreating(false);
+    }
+  };
+
   // Mở modal chỉnh sửa
   const handleOpenEditModal = (u: AdminUser) => {
     setEditingUser(u);
@@ -57,7 +101,7 @@ export const AdminUserListPage: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  // Lưu chỉnh sửa người dùng
+  // Lưu chỉnh sửa người dùng: PUT /api/admin/users/:id
   const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
@@ -133,9 +177,16 @@ export const AdminUserListPage: React.FC = () => {
               <Users className="w-6 h-6 text-red-600" /> Quản Lý Người Dùng & Shop Hệ Thống
             </h1>
             <p className="text-xs text-slate-500 mt-1">
-              Quản lý toàn bộ danh sách tài khoản Khách Hàng, Người Bán và Admin trên sàn Shopew.
+              Quản lý toàn bộ danh sách tài khoản Khách Hàng, Người Bán và Admin trên sàn Shopew (Thêm mới, sửa, khóa, xóa).
             </p>
           </div>
+
+          <button
+            onClick={handleOpenCreateModal}
+            className="px-4 py-2 bg-[#ee4d2d] hover:bg-[#d73211] text-white font-bold text-xs rounded-lg shadow-md flex items-center justify-center gap-1.5 cursor-pointer transition-colors shrink-0"
+          >
+            <UserPlus className="w-4 h-4" /> Thêm Tài Khoản Mới
+          </button>
         </div>
 
         {/* Thanh Tìm Kiếm & Bộ Lọc Vai Trò */}
@@ -294,7 +345,110 @@ export const AdminUserListPage: React.FC = () => {
           onPageChange={(newPage) => fetchUsers(newPage)}
         />
 
-        {/* Modal Chỉnh Sửa Người Dùng */}
+        {/* Modal Tạo Mới Tài Khoản (Create User) */}
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-slate-200">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-red-600" />
+                  Thêm Tài Khoản Người Dùng Mới
+                </h3>
+                <button onClick={() => setIsCreateModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {createError && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded text-xs">
+                  {createError}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateUser} className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="nhapemail@example.com"
+                    value={createEmail}
+                    onChange={(e) => setCreateEmail(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-red-600 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Mật Khẩu *</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Mật khẩu tài khoản..."
+                    value={createPassword}
+                    onChange={(e) => setCreatePassword(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-red-600 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Họ Và Tên *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Nguyễn Văn A"
+                    value={createFullName}
+                    onChange={(e) => setCreateFullName(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-red-600 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Số Điện Thoại</label>
+                  <input
+                    type="text"
+                    placeholder="0987654321"
+                    value={createPhone}
+                    onChange={(e) => setCreatePhone(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-red-600 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Phân Quyền (Role)</label>
+                  <select
+                    value={createRole}
+                    onChange={(e) => setCreateRole(e.target.value as any)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-800 focus:outline-none focus:border-red-600 cursor-pointer"
+                  >
+                    <option value="CUSTOMER">Khách Hàng (CUSTOMER)</option>
+                    <option value="SELLER">Người Bán (SELLER)</option>
+                    <option value="ADMIN">Quản Trị Admin (ADMIN)</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateModalOpen(false)}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg cursor-pointer"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creating}
+                    className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    {creating ? 'Đang tạo...' : 'Tạo Tài Khoản'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Chỉnh Sửa Người Dùng (Edit User) */}
         {isEditModalOpen && editingUser && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
             <div className="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-slate-200">

@@ -72,6 +72,12 @@ export const adminService = {
     return { data: rawList, total, totalPages };
   },
 
+  // Tạo mới Tài khoản Người dùng (Admin): POST /api/admin/users
+  createUser: async (payload: { email: string; password: string; fullName: string; phone?: string; role?: 'CUSTOMER' | 'SELLER' | 'ADMIN' }): Promise<AdminUser> => {
+    const response = await apiClient.post('/admin/users', payload);
+    return response.data.data || response.data;
+  },
+
   // Lấy chi tiết thông tin Người dùng: GET /api/admin/users/:id
   getUserDetail: async (id: number): Promise<AdminUser> => {
     const response = await apiClient.get(`/admin/users/${id}`);
@@ -94,6 +100,42 @@ export const adminService = {
   deleteUser: async (id: number): Promise<any> => {
     const response = await apiClient.delete(`/admin/users/${id}`);
     return response.data;
+  },
+
+  // Lấy danh sách Gian Hàng/Shops cho Admin: GET /api/admin/shops
+  getShops: async (page = 1, limit = 20): Promise<{ data: any[]; total: number; totalPages: number }> => {
+    const response = await apiClient.get('/admin/shops', { params: { page, limit } });
+    const resData = response.data;
+    let rawList: any[] = [];
+    let total = 0;
+    let totalPages = 1;
+    if (Array.isArray(resData)) {
+      rawList = resData;
+      total = resData.length;
+    } else if (resData && typeof resData === 'object') {
+      rawList = resData.data || resData.shops || [];
+      total = resData.total ?? rawList.length;
+      totalPages = resData.totalPages ?? Math.ceil(total / limit) ?? 1;
+    }
+    return { data: rawList, total, totalPages };
+  },
+
+  // Duyệt Sản Phẩm SPU/SKU trên toàn hệ thống: GET /api/admin/products
+  getProducts: async (page = 1, limit = 20): Promise<{ data: any[]; total: number; totalPages: number }> => {
+    const response = await apiClient.get('/admin/products', { params: { page, limit } });
+    const resData = response.data;
+    let rawList: any[] = [];
+    let total = 0;
+    let totalPages = 1;
+    if (Array.isArray(resData)) {
+      rawList = resData;
+      total = resData.length;
+    } else if (resData && typeof resData === 'object') {
+      rawList = resData.data || resData.products || [];
+      total = resData.total ?? rawList.length;
+      totalPages = resData.totalPages ?? Math.ceil(total / limit) ?? 1;
+    }
+    return { data: rawList, total, totalPages };
   },
 
   // --- QUẢN LÝ BANNER ---
