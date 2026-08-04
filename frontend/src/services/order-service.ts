@@ -31,20 +31,16 @@ export interface CartGroup {
 }
 
 export const orderService = {
-  // Lấy giỏ hàng của user theo Shop: GET /api/v1/cart (Fallback nếu Backend bị trùng prefix /api/api)
+  // Lấy giỏ hàng của user theo Shop: GET /api/v1/cart
   getCart: async (): Promise<CartGroup[]> => {
     try {
       const response = await apiClient.get('/v1/cart');
-      const data = response.data.data || response.data;
-      return Array.isArray(data) ? data : [];
+      const resData = response.data?.data || response.data || {};
+      if (Array.isArray(resData)) return resData;
+      if (Array.isArray(resData?.shops)) return resData.shops;
+      return [];
     } catch {
-      try {
-        const response = await apiClient.get('/api/v1/cart');
-        const data = response.data.data || response.data;
-        return Array.isArray(data) ? data : [];
-      } catch {
-        return [];
-      }
+      return [];
     }
   },
 

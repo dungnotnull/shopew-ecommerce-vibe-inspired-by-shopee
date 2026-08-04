@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ShieldCheck, Heart, Star, ShoppingCart, Store, Check, AlertCircle, Eye, Flame } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ShieldCheck, Heart, Star, ShoppingCart, Store, Check, AlertCircle, Eye, Flame, CheckCircle2 } from 'lucide-react';
 import { ProductSPU, SKU } from '../types/catalog';
 import { formatVND } from '../utils/format-currency';
 import CatalogService from '../services/catalog-service';
+import { orderService } from '../services/order-service';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { ShopeePagination } from '../components/common/ShopeePagination';
@@ -16,10 +17,43 @@ export const ProductDetailPage: React.FC = () => {
   // Variant Index Selection State (Array of option indices chosen for each VariantGroup)
   const [selectedTiers, setSelectedTiers] = useState<number[]>([]);
   const [activeSku, setActiveSku] = useState<SKU | null>(null);
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState<number>(1);
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [likeCount, setLikeCount] = useState<number>(0);
   const [selectedImage, setSelectedImage] = useState<string>('');
+  const [addingToCart, setAddingToCart] = useState<boolean>(false);
+  const [cartSuccessMsg, setCartSuccessMsg] = useState<string>('');
+
+  const handleAddToCart = async (redirectCart = false) => {
+    if (!product) return;
+    const targetSku = activeSku || product.skus?.[0];
+    if (!targetSku) {
+      alert('Sản phẩm tạm thời hết hàng hoặc chưa chọn phân loại.');
+      return;
+    }
+
+    setAddingToCart(true);
+    setCartSuccessMsg('');
+    try {
+      await orderService.addToCart({
+        variantId: targetSku.id,
+        quantity: quantity,
+      });
+
+      if (redirectCart) {
+        navigate('/cart');
+      } else {
+        setCartSuccessMsg('Đã thêm sản phẩm vào Giỏ hàng!');
+        setTimeout(() => setCartSuccessMsg(''), 4000);
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể thêm vào giỏ hàng. Vui lòng đăng nhập.';
+      alert(Array.isArray(msg) ? msg.join(', ') : msg);
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   // State cho danh sách Sản phẩm Gợi ý (20 sản phẩm/trang)
   const [relatedProducts, setRelatedProducts] = useState<ProductSPU[]>([]);
@@ -339,19 +373,31 @@ export const ProductDetailPage: React.FC = () => {
               </span>
             </div>
 
+            {/* Thông Báo Thành Công */}
+            {cartSuccessMsg && (
+              <div className="p-3 bg-emerald-50 text-emerald-700 rounded border border-emerald-200 text-xs font-bold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{cartSuccessMsg}</span>
+              </div>
+            )}
+
             {/* Nút Action: Thêm vào Giỏ / Mua Ngay */}
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
               <button
-                disabled={displayStock === 0}
-                className="flex-1 border border-[#ee4d2d] text-[#ee4d2d] bg-orange-50 hover:bg-orange-100 font-bold text-sm py-3 px-6 rounded flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                type="button"
+                disabled={displayStock === 0 || addingToCart}
+                onClick={() => handleAddToCart(false)}
+                className="flex-1 border border-[#ee4d2d] text-[#ee4d2d] bg-orange-50 hover:bg-orange-100 font-bold text-sm py-3 px-6 rounded flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 <ShoppingCart className="w-4 h-4" />
-                Thêm Vào Giỏ Hàng
+                {addingToCart ? 'Đang thêm...' : 'Thêm Vào Giỏ Hàng'}
               </button>
 
               <button
-                disabled={displayStock === 0}
-                className="flex-1 bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm py-3 px-6 rounded shadow-md transition-colors text-center disabled:opacity-50"
+                type="button"
+                disabled={displayStock === 0 || addingToCart}
+                onClick={() => handleAddToCart(true)}
+                className="flex-1 bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm py-3 px-6 rounded shadow-md transition-colors text-center disabled:opacity-50 cursor-pointer"
               >
                 Mua Ngay
               </button>
