@@ -75,7 +75,7 @@ async function main() {
 
   console.log('Seeding Master Data (System Admin)...');
   const existingAdmin = await prisma.user.findFirst({
-    where: { role: Role.ADMIN },
+    where: { email: 'admin@shopew.com' },
   });
 
   if (!existingAdmin) {

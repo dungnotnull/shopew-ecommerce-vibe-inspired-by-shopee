@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsEnum, IsBoolean } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 
 export class UpdateUserDto {
@@ -25,8 +25,7 @@ export class UpdateUserDto {
 }
 
 export class UpdateUserStatusDto {
-  @ApiPropertyOptional({ description: 'Is the user active or banned' })
-  @IsOptional()
+  @ApiProperty({ description: 'Is the user active or banned' })
   @IsBoolean()
-  isActive?: boolean;
+  isActive: boolean;
 }
