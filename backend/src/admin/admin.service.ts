@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { UsersService } from '../users/users.service';
+import { BadRequestException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private usersService: UsersService,
+  ) {}
 
   async getDashboardStats() {
     const totalUsers = await this.prisma.user.count();
@@ -33,6 +39,23 @@ export class AdminService {
       this.prisma.user.count()
     ]);
     return { data: users, total, page, limit };
+  }
+
+  async createUser(data: any) {
+    const existingUser = await this.usersService.findByEmail(data.email);
+    if (existingUser) {
+      throw new BadRequestException('Email already exists.');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const user = await this.usersService.createUser({
+      ...data,
+      password: hashedPassword,
+      role: data.role || 'CUSTOMER',
+    });
+
+    const { password, ...result } = user;
+    return result;
   }
 
   async getUserDetail(id: number) {

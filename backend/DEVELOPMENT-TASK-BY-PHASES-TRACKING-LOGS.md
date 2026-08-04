@@ -26,6 +26,7 @@
   - [x] `DELETE /api/v1/categories/:id`: API xóa category.
 - [x] **Dashboard & Data Viewing:**
   - [x] `GET /api/v1/admin/dashboard`: View overall statistics (Total Users, Total Shops, Active Disputes, Total GMV).
+  - [x] `POST /api/v1/admin/users`: API tạo mới user (tùy chọn role).
   - [x] `GET /api/v1/admin/users`: View user list.
   - [x] `GET /api/v1/admin/shops`: View shop list.
   - [x] `GET /api/v1/admin/products`: View all products across platform.
