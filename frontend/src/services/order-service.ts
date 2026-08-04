@@ -31,26 +31,42 @@ export interface CartGroup {
 }
 
 export const orderService = {
-  // Lấy giỏ hàng của user theo Shop: GET /api/v1/cart
+  // Lấy giỏ hàng của user theo Shop: GET /api/v1/cart (Fallback nếu Backend bị trùng prefix /api/api)
   getCart: async (): Promise<CartGroup[]> => {
     try {
       const response = await apiClient.get('/v1/cart');
       const data = response.data.data || response.data;
       return Array.isArray(data) ? data : [];
     } catch {
-      return [];
+      try {
+        const response = await apiClient.get('/api/v1/cart');
+        const data = response.data.data || response.data;
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
     }
   },
 
   // Thêm / cập nhật sản phẩm vào giỏ hàng: POST /api/v1/cart
   addToCart: async (payload: CartItemPayload): Promise<any> => {
-    const response = await apiClient.post('/v1/cart', payload);
-    return response.data;
+    try {
+      const response = await apiClient.post('/v1/cart', payload);
+      return response.data;
+    } catch {
+      const response = await apiClient.post('/api/v1/cart', payload);
+      return response.data;
+    }
   },
 
   // Thực hiện Checkout / Đặt hàng: POST /api/v1/orders/checkout
   checkout: async (payload: CheckoutPayload): Promise<{ orderGroupId: string; status: string }> => {
-    const response = await apiClient.post('/v1/orders/checkout', payload);
-    return response.data;
+    try {
+      const response = await apiClient.post('/v1/orders/checkout', payload);
+      return response.data;
+    } catch {
+      const response = await apiClient.post('/api/v1/orders/checkout', payload);
+      return response.data;
+    }
   },
 };
