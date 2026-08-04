@@ -3,7 +3,7 @@ import { CustomerLayout } from '../components/layout/CustomerLayout';
 import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { orderService } from '../services/order-service';
-import { formatVND } from '../utils/format';
+import { formatVND } from '../utils/format-currency';
 
 export const CheckoutPage: React.FC = () => {
   const location = useLocation();

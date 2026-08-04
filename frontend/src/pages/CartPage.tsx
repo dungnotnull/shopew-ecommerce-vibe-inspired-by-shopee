@@ -3,7 +3,7 @@ import { CustomerLayout } from '../components/layout/CustomerLayout';
 import { ShoppingBag, Store, ArrowRight, ShoppingCart, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { orderService, CartGroup } from '../services/order-service';
-import { formatVND } from '../utils/format';
+import { formatVND } from '../utils/format-currency';
 
 export const CartPage: React.FC = () => {
   const navigate = useNavigate();
