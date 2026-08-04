@@ -3,7 +3,7 @@ import { FlashSalesService } from './flash-sales.service';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Flash Sales')
-@Controller('api/v1/home/flash-sale')
+@Controller('v1/home/flash-sale')
 export class FlashSalesController {
   constructor(private readonly flashSalesService: FlashSalesService) {}
 

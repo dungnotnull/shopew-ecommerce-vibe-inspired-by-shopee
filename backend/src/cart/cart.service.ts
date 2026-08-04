@@ -79,10 +79,17 @@ export class CartService {
       }
       const shopGroup = shopsMap.get(item.shopId);
       shopGroup.items.push({
+        id: item.id,
         productId: item.productId,
+        productName: item.product.name,
+        productImage: item.sku.thumbnailUrl || (item.product.images && item.product.images.length > 0 ? item.product.images[0] : ''),
+        skuId: item.variantId,
+        skuCode: item.sku.skuCode || '',
         variantId: item.variantId,
-        quantity: item.quantity,
         price: item.sku.price,
+        originalPrice: item.sku.originalPrice,
+        quantity: item.quantity,
+        tierIndex: item.sku.tierIndex,
       });
     }
 

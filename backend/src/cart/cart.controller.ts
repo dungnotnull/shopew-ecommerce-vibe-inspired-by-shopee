@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 @ApiTags('Cart')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
-@Controller('api/v1/cart')
+@Controller('v1/cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
