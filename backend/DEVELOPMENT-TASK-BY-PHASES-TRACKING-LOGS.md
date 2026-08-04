@@ -105,6 +105,22 @@
     - [x] Remove processed items from `CartItem`.
     - [x] Commit Transaction.
 
+- [x] **User Addresses Management (`src/users/addresses`):**
+  - [x] `POST /api/v1/users/addresses`: Thêm địa chỉ mới.
+  - [x] `PUT /api/v1/users/addresses/:id`: Cập nhật địa chỉ.
+  - [x] `DELETE /api/v1/users/addresses/:id`: Xóa địa chỉ.
+  - [x] `GET /api/v1/users/addresses`: Lấy danh sách địa chỉ.
+
+- [x] **Order Management & Payment (Customer):**
+  - [x] `POST /api/v1/orders/:id/pay`: Mock API thanh toán (Chuyển trạng thái từ PENDING_PAYMENT sang PROCESSING).
+  - [x] `GET /api/v1/orders`: Lịch sử đơn hàng của User.
+  - [x] `GET /api/v1/orders/:id`: Chi tiết đơn hàng.
+  - [x] `PUT /api/v1/orders/:id/cancel`: Hủy đơn hàng.
+
+- [x] **Order Management (Seller):**
+  - [x] `GET /api/v1/seller/orders`: Danh sách đơn đặt hàng của Shop.
+  - [x] `PUT /api/v1/seller/orders/:id/status`: Cập nhật trạng thái đơn hàng (PROCESSING -> SHIPPED -> DELIVERED).
+
 
 ## Phase 5: Promotions & Flash Sales
 
@@ -115,11 +131,17 @@
 
 - [x] **Vouchers (`src/vouchers`):**
   - [x] Define `Voucher` schema.
-  - [x] Update Checkout Transaction (`CheckoutProcessor`) to validate `platformVoucherId` and `shopVouchers`.
-  - [x] Calculate total discount and update `Voucher.usedCount`.
+  - [x] `POST /api/v1/admin/vouchers`: Admin tạo voucher hệ thống.
+  - [x] `POST /api/v1/seller/vouchers`: Seller tạo voucher cho Shop.
+  - [x] `POST /api/v1/vouchers/save`: User lưu voucher vào ví.
+  - [x] `GET /api/v1/vouchers/wallet`: User lấy danh sách voucher khả dụng.
+  - [x] Update Checkout Transaction (`CheckoutProcessor`) to validate `platformVoucherId` and `shopVouchers`, deduct voucher usage, and calculate final totalAmount.
 
 - [x] **Flash Sales (High Concurrency - `src/flash-sales`):**
   - [x] `GET /api/v1/home/flash-sale`: Fetch active `FlashSaleItem`, return with `stock`, `soldCount` and `discountPercentage`.
+  - [x] `POST /api/v1/admin/flash-sales`: Admin tạo khung giờ (Session) Flash Sale.
+  - [x] `POST /api/v1/seller/flash-sales/register`: Seller đăng ký sản phẩm tham gia.
+  - [x] Update Checkout Transaction (`CheckoutProcessor`) to handle Flash Sale logic (validate if SKU in active flash sale, apply flash sale price instead of normal price).
   - [x] **Redis Operations:**
     - [x] Sync Flash Sale `promotionalStock` to Redis memory on session start.
     - [x] Implement Redis Distributed Lock (Redlock) or use atomic `DECRBY` to handle high-volume stock deduction.

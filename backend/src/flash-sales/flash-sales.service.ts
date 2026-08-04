@@ -63,6 +63,45 @@ export class FlashSalesService implements OnModuleInit {
     return { success: true, data };
   }
 
+  async createFlashSaleSession(data: { startTime: string, endTime: string }) {
+    const session = await this.prisma.flashSaleSession.create({
+      data: {
+        startTime: new Date(data.startTime),
+        endTime: new Date(data.endTime),
+        isActive: true
+      }
+    });
+    return session;
+  }
+
+  async registerFlashSaleItem(sellerId: number, data: { sessionId: number, productId: number, skuId: number, promotionalStock: number, discountPercentage: number }) {
+    // Verify product belongs to seller
+    const shop = await this.prisma.shop.findUnique({ where: { userId: sellerId } });
+    if (!shop) throw new Error('Seller does not have a shop');
+
+    const product = await this.prisma.product.findFirst({
+      where: { id: data.productId, shopId: shop.id }
+    });
+    if (!product) throw new Error('Product not found or does not belong to shop');
+
+    // Verify sku belongs to product
+    const sku = await this.prisma.sKU.findFirst({
+      where: { id: data.skuId, productId: data.productId }
+    });
+    if (!sku) throw new Error('SKU not found');
+
+    const item = await this.prisma.flashSaleItem.create({
+      data: {
+        sessionId: data.sessionId,
+        productId: data.productId,
+        skuId: data.skuId,
+        promotionalStock: data.promotionalStock,
+        discountPercentage: data.discountPercentage
+      }
+    });
+    return item;
+  }
+
   async decrementStock(sessionId: number, skuId: number, quantity: number): Promise<boolean> {
     const key = `flash_sale:${sessionId}:sku:${skuId}`;
     const remaining = await this.redis.decrby(key, quantity);

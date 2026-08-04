@@ -5,40 +5,61 @@ import { PrismaService } from '../prisma/prisma.service';
 export class VouchersService {
   constructor(private prisma: PrismaService) {}
 
-  async validateAndApplyVoucher(voucherId: number, orderTotal: number, shopId?: number) {
-    const voucher = await this.prisma.voucher.findUnique({ where: { id: voucherId } });
-    if (!voucher || !voucher.isActive) {
-      throw new BadRequestException('Voucher không hợp lệ hoặc đã hết hạn');
-    }
+  async createVoucher(data: any) {
+    let shopId = data.shopId;
     
-    if (voucher.expiresAt < new Date()) {
-      throw new BadRequestException('Voucher đã hết hạn');
+    // If created by seller, find their shop ID
+    if (data.userId && !shopId) {
+      const shop = await this.prisma.shop.findUnique({
+        where: { userId: data.userId }
+      });
+      if (!shop) throw new BadRequestException('Seller does not have a shop');
+      shopId = shop.id;
     }
 
-    if (voucher.usedCount >= voucher.maxUsage) {
-      throw new BadRequestException('Voucher đã hết lượt sử dụng');
-    }
-
-    if (orderTotal < voucher.minOrderValue) {
-      throw new BadRequestException(`Đơn hàng chưa đạt giá trị tối thiểu ${voucher.minOrderValue}đ`);
-    }
-
-    if (voucher.shopId && voucher.shopId !== shopId) {
-      throw new BadRequestException('Voucher không áp dụng cho shop này');
-    }
-
-    let discount = Math.floor(orderTotal * (voucher.discountPercentage / 100));
-    if (discount > voucher.maxDiscount) {
-      discount = voucher.maxDiscount;
-    }
-
-    return discount;
+    return this.prisma.voucher.create({
+      data: {
+        code: data.code.toUpperCase(),
+        discountPercentage: data.discountPercentage,
+        maxDiscount: data.maxDiscount,
+        minOrderValue: data.minOrderValue,
+        shopId: shopId || null,
+        maxUsage: data.maxUsage,
+        expiresAt: new Date(data.expiresAt)
+      }
+    });
   }
 
-  async incrementVoucherUsage(voucherId: number) {
-    await this.prisma.voucher.update({
-      where: { id: voucherId },
-      data: { usedCount: { increment: 1 } }
+  async saveVoucher(userId: number, voucherId: number) {
+    const voucher = await this.prisma.voucher.findUnique({
+      where: { id: voucherId }
+    });
+
+    if (!voucher) throw new BadRequestException('Voucher không tồn tại');
+    if (!voucher.isActive || voucher.expiresAt < new Date()) {
+      throw new BadRequestException('Voucher đã hết hạn hoặc không hoạt động');
+    }
+
+    try {
+      await this.prisma.userVoucher.create({
+        data: { userId, voucherId }
+      });
+      return { success: true };
+    } catch (e: any) {
+      if (e.code === 'P2002') {
+        throw new BadRequestException('Bạn đã lưu voucher này rồi');
+      }
+      throw e;
+    }
+  }
+
+  async getWalletVouchers(userId: number) {
+    return this.prisma.userVoucher.findMany({
+      where: { userId, isUsed: false },
+      include: {
+        voucher: true
+      },
+      orderBy: { createdAt: 'desc' }
     });
   }
 }

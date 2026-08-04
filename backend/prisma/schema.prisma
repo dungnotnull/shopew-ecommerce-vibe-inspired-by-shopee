@@ -31,6 +31,7 @@ model User {
   productLikes ProductLike[]
   cartItems    CartItem[]
   orders       Order[]
+  userVouchers UserVoucher[]
 }
 
 model Address {
@@ -241,6 +242,21 @@ model Voucher {
   isActive           Boolean   @default(true)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
+
+  userVouchers       UserVoucher[]
+}
+
+model UserVoucher {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  voucherId Int
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  voucher   Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, voucherId])
 }
 
 model FlashSaleSession {

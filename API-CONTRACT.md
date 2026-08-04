@@ -454,6 +454,82 @@
 ```
 - **Response:** `{ "orderGroupId": "GRP-12345", "status": "PENDING_PAYMENT" }`
 
+### `GET /api/v1/orders`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** Array of User orders with their items.
+
+### `GET /api/v1/orders/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** Single Order details.
+
+### `PUT /api/v1/orders/:id/cancel`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** `{ "id": 1, "status": "CANCELLED" }`
+
+### `POST /api/v1/orders/:id/pay`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** `{ "id": 1, "status": "PROCESSING" }`
+
+## Addresses
+### `GET /api/v1/users/addresses`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** Array of addresses.
+
+### `POST /api/v1/users/addresses`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Body:** `{ "street": "123 Le Loi", "city": "HCM", "state": "Q1", "zipCode": "70000", "isDefault": true }`
+- **Response:** Created address object.
+
+### `PUT /api/v1/users/addresses/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Body:** `{ "street": "456 Le Loi", "isDefault": false }`
+- **Response:** Updated address object.
+
+### `DELETE /api/v1/users/addresses/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** `{ "success": true }`
+
+## Seller Orders
+### `GET /api/v1/seller/orders`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Array of Shop orders with their items.
+
+### `PUT /api/v1/seller/orders/:id/status`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Body:** `{ "status": "SHIPPED" }`
+- **Response:** Updated order object.
+
+## Vouchers & Promotions
+### `POST /api/v1/admin/vouchers`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Body:** `{ "code": "SUMMER50", "discountPercentage": 10, "maxDiscount": 50000, "minOrderValue": 100000, "maxUsage": 1000, "expiresAt": "2026-12-31T23:59:59Z" }`
+- **Response:** Created voucher object.
+
+### `POST /api/v1/seller/vouchers`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Body:** *(Same as Admin voucher, but applies only to the Seller's Shop)*
+- **Response:** Created voucher object.
+
+### `POST /api/v1/vouchers/save`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Body:** `{ "voucherId": 1 }`
+- **Response:** `{ "success": true }`
+
+### `GET /api/v1/vouchers/wallet`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** Array of user's saved vouchers.
+
+## Flash Sales
+### `POST /api/v1/admin/flash-sales`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Body:** `{ "startTime": "2026-08-05T12:00:00Z", "endTime": "2026-08-05T14:00:00Z" }`
+- **Response:** Created session object.
+
+### `POST /api/v1/seller/flash-sales/register`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Body:** `{ "sessionId": 1, "productId": 101, "skuId": 1001, "promotionalStock": 50, "discountPercentage": 20 }`
+- **Response:** Created flash sale item object.
+
 ## Social (WebSockets)
 - **Namespace:** `/chat`
 - **Events:** `join_room`, `send_message`, `receive_message`, `read_receipt`
