@@ -9,9 +9,18 @@ export const ProfilePage: React.FC = () => {
 
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
-  const [email] = useState(user?.email || '');
+  const [email, setEmail] = useState(user?.email || '');
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Tự động đồng bộ thông tin Hồ sơ khi User store nạp từ API GET /api/auth/me thành công
+  React.useEffect(() => {
+    if (user) {
+      setFullName(user.fullName || '');
+      setPhone(user.phone || '');
+      setEmail(user.email || '');
+    }
+  }, [user]);
 
   // Lưu thông tin hồ sơ
   const handleSaveProfile = (e: React.FormEvent) => {
