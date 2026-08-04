@@ -12,9 +12,36 @@ import { ShopsModule } from './shops/shops.module';
 import { ProductsModule } from './products/products.module';
 import { HomeModule } from './home/home.module';
 import { UploadModule } from './upload/upload.module';
+import { CartModule } from './cart/cart.module';
+import { OrdersModule } from './orders/orders.module';
+import { VouchersModule } from './vouchers/vouchers.module';
+import { FlashSalesModule } from './flash-sales/flash-sales.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, UsersModule, AdminModule, SellerModule, CategoriesModule, ShopsModule, ProductsModule, HomeModule, UploadModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379,
+      },
+    }),
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    AdminModule,
+    SellerModule,
+    CategoriesModule,
+    ShopsModule,
+    ProductsModule,
+    HomeModule,
+    UploadModule,
+    CartModule,
+    OrdersModule,
+    VouchersModule,
+    FlashSalesModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

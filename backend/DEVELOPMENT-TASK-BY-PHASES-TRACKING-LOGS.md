@@ -72,58 +72,58 @@
 
 ## Phase 4: Cart, Checkout & Orders
 
-- [ ] **Database Schema Update (Cart & Order):**
-  - [ ] Update `schema.prisma` to add `CartItem` model (Relations to `User`, `Shop`, `Product`, `SKU`).
-  - [ ] Update `schema.prisma` to add `Order` and `OrderItem` models.
-  - [ ] Run `npx prisma db push` to sync schema.
+- [x] **Database Schema Update (Cart & Order):**
+  - [x] Update `schema.prisma` to add `CartItem` model (Relations to `User`, `Shop`, `Product`, `SKU`).
+  - [x] Update `schema.prisma` to add `Order` and `OrderItem` models.
+  - [x] Run `npx prisma db push` to sync schema.
 
-- [ ] **Cart Management (`src/cart`):**
-  - [ ] Generate module/controller/service (`nest g res cart`).
-  - [ ] `POST /api/v1/cart`: Add to cart / Update quantity.
-    - [ ] Check if `variantId` exists in `SKU` table.
-    - [ ] Check if `quantity` <= `SKU.stock`.
-    - [ ] Upsert record in `CartItem`.
-  - [ ] `GET /api/v1/cart`: Fetch cart grouped by `shopId`.
-    - [ ] Fetch all `CartItem` for `req.user.id` including `Shop`, `Product`, `SKU` relations.
-    - [ ] Map response to group by `shopId` matching `API-CONTRACT.md`.
+- [x] **Cart Management (`src/cart`):**
+  - [x] Generate module/controller/service (`nest g res cart`).
+  - [x] `POST /api/v1/cart`: Add to cart / Update quantity.
+    - [x] Check if `variantId` exists in `SKU` table.
+    - [x] Check if `quantity` <= `SKU.stock`.
+    - [x] Upsert record in `CartItem`.
+  - [x] `GET /api/v1/cart`: Fetch cart grouped by `shopId`.
+    - [x] Fetch all `CartItem` for `req.user.id` including `Shop`, `Product`, `SKU` relations.
+    - [x] Map response to group by `shopId` matching `API-CONTRACT.md`.
 
-- [ ] **Checkout (The Core Transaction - `src/orders`):**
-  - [ ] Generate module/controller/service (`nest g res orders`).
-  - [ ] **Redis Queue Integration (Anti-Overselling):**
-    - [ ] Configure `BullModule` (BullMQ) in `AppModule`.
-    - [ ] Create `checkout` queue and a Consumer/Worker class.
-  - [ ] `POST /api/v1/orders/checkout`: API entrypoint.
-    - [ ] Validate `shippingAddressId` belongs to user (check `Address` model).
-    - [ ] Dispatch checkout payload to `checkout` queue and return `PENDING_PAYMENT`.
-  - [ ] **Worker Process (`CheckoutProcessor`):**
-    - [ ] Begin Prisma Transaction (`prisma.$transaction`).
-    - [ ] Execute `SELECT ... FOR UPDATE` via `$queryRaw` to lock inventory rows in `SKU` table.
-    - [ ] Validate `stock >= quantity` for all selected SKUs. If not, rollback transaction.
-    - [ ] Split Master Order into multiple Sub-Orders per `shopId`.
-    - [ ] Deduct inventory: Update `SKU.stock` and `Product.soldCount`.
-    - [ ] Remove processed items from `CartItem`.
-    - [ ] Commit Transaction.
+- [x] **Checkout (The Core Transaction - `src/orders`):**
+  - [x] Generate module/controller/service (`nest g res orders`).
+  - [x] **Redis Queue Integration (Anti-Overselling):**
+    - [x] Configure `BullModule` (BullMQ) in `AppModule`.
+    - [x] Create `checkout` queue and a Consumer/Worker class.
+  - [x] `POST /api/v1/orders/checkout`: API entrypoint.
+    - [x] Validate `shippingAddressId` belongs to user (check `Address` model).
+    - [x] Dispatch checkout payload to `checkout` queue and return `PENDING_PAYMENT`.
+  - [x] **Worker Process (`CheckoutProcessor`):**
+    - [x] Begin Prisma Transaction (`prisma.$transaction`).
+    - [x] Execute `SELECT ... FOR UPDATE` via `$queryRaw` to lock inventory rows in `SKU` table.
+    - [x] Validate `stock >= quantity` for all selected SKUs. If not, rollback transaction.
+    - [x] Split Master Order into multiple Sub-Orders per `shopId`.
+    - [x] Deduct inventory: Update `SKU.stock` and `Product.soldCount`.
+    - [x] Remove processed items from `CartItem`.
+    - [x] Commit Transaction.
 
 
 ## Phase 5: Promotions & Flash Sales
 
-- [ ] **Database Schema Update (Promotions):**
-  - [ ] Add `Voucher` model to `schema.prisma`.
-  - [ ] Add `FlashSaleSession` and `FlashSaleItem` models to `schema.prisma` (Relation to `Product`, `SKU`).
-  - [ ] Run `npx prisma db push`.
+- [x] **Database Schema Update (Promotions):**
+  - [x] Add `Voucher` model to `schema.prisma`.
+  - [x] Add `FlashSaleSession` and `FlashSaleItem` models to `schema.prisma` (Relation to `Product`, `SKU`).
+  - [x] Run `npx prisma db push`.
 
-- [ ] **Vouchers (`src/vouchers`):**
-  - [ ] Define `Voucher` schema.
-  - [ ] Update Checkout Transaction (`CheckoutProcessor`) to validate `platformVoucherId` and `shopVouchers`.
-  - [ ] Calculate total discount and update `Voucher.usedCount`.
+- [x] **Vouchers (`src/vouchers`):**
+  - [x] Define `Voucher` schema.
+  - [x] Update Checkout Transaction (`CheckoutProcessor`) to validate `platformVoucherId` and `shopVouchers`.
+  - [x] Calculate total discount and update `Voucher.usedCount`.
 
-- [ ] **Flash Sales (High Concurrency - `src/flash-sales`):**
-  - [ ] `GET /api/v1/home/flash-sale`: Fetch active `FlashSaleItem`, return with `stock`, `soldCount` and `discountPercentage`.
-  - [ ] **Redis Operations:**
-    - [ ] Sync Flash Sale `promotionalStock` to Redis memory on session start.
-    - [ ] Implement Redis Distributed Lock (Redlock) or use atomic `DECRBY` to handle high-volume stock deduction.
-    - [ ] Reject checkout request immediately if Redis stock < 0.
-  - [ ] Async sync from Redis to PostgreSQL for Flash Sale orders (using BullMQ).
+- [x] **Flash Sales (High Concurrency - `src/flash-sales`):**
+  - [x] `GET /api/v1/home/flash-sale`: Fetch active `FlashSaleItem`, return with `stock`, `soldCount` and `discountPercentage`.
+  - [x] **Redis Operations:**
+    - [x] Sync Flash Sale `promotionalStock` to Redis memory on session start.
+    - [x] Implement Redis Distributed Lock (Redlock) or use atomic `DECRBY` to handle high-volume stock deduction.
+    - [x] Reject checkout request immediately if Redis stock < 0.
+  - [x] Async sync from Redis to PostgreSQL for Flash Sale orders (using BullMQ).
   
 
 ## Phase 6: Social, Chat & Dispute

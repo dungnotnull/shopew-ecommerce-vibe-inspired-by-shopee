@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateBannerDto, UpdateBannerDto } from './dto/banner.dto';
+import { UpdateUserDto, UpdateUserStatusDto } from './dto/user.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -27,6 +28,30 @@ export class AdminController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async getUsers(@Query('page') page: string = '1', @Query('limit') limit: string = '20') {
     return this.adminService.getUsers(+page, +limit);
+  }
+
+  @Get('users/:id')
+  @ApiOperation({ summary: 'Get details of a user' })
+  async getUserDetail(@Param('id') id: string) {
+    return this.adminService.getUserDetail(+id);
+  }
+
+  @Put('users/:id')
+  @ApiOperation({ summary: 'Update user information' })
+  async updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.adminService.updateUser(+id, dto);
+  }
+
+  @Put('users/:id/status')
+  @ApiOperation({ summary: 'Update user active status' })
+  async updateUserStatus(@Param('id') id: string, @Body() dto: UpdateUserStatusDto) {
+    return this.adminService.updateUserStatus(+id, dto.isActive);
+  }
+
+  @Delete('users/:id')
+  @ApiOperation({ summary: 'Delete a user' })
+  async deleteUser(@Param('id') id: string) {
+    return this.adminService.deleteUser(+id);
   }
 
   @Get('shops')
