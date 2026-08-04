@@ -321,7 +321,7 @@ export const AdminCategoryListPage: React.FC = () => {
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
                   <Folder className="w-5 h-5 text-red-600" />
-                  {editingCategory ? 'Chỉnh Sửa Tên Danh Mục' : 'Thêm Danh Mục Ngành Hàng Mới'}
+                  {editingCategory ? 'Chỉnh Sửa Tên Danh Mục' : parentId ? 'Thêm Ngành Hàng Con' : 'Thêm Danh Mục Ngành Hàng Mới'}
                 </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -406,20 +406,7 @@ export const AdminCategoryListPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Hiển thị loại danh mục (Gốc / Con) mà không dùng field select theo yêu cầu Admin */}
-                {parentId !== null ? (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-semibold flex items-center justify-between shadow-xs">
-                    <div className="flex items-center gap-2">
-                      <FolderPlus className="w-4 h-4 text-red-600 shrink-0" />
-                      <span>Danh mục cha trực thuộc: <strong className="font-extrabold text-slate-800">{categories.find((c) => c.id === parentId)?.name || `ID #${parentId}`}</strong></span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-xs">
-                    <Folder className="w-4 h-4 text-red-600 shrink-0" />
-                    <span>Loại danh mục: <strong className="font-extrabold text-red-600">Danh Mục Cha (Cấp 1)</strong></span>
-                  </div>
-                )}
+
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                   <button
