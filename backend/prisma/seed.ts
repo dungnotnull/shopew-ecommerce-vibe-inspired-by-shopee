@@ -1,7 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
+import * as bcrypt from 'bcrypt';
 dotenv.config();
 
 const connectionString = process.env.DATABASE_URL;
@@ -71,6 +72,28 @@ async function main() {
       sortOrder: 2
     }
   });
+
+  console.log('Seeding Master Data (System Admin)...');
+  const existingAdmin = await prisma.user.findFirst({
+    where: { role: Role.ADMIN },
+  });
+
+  if (!existingAdmin) {
+    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const admin = await prisma.user.create({
+      data: {
+        email: 'admin@shopew.com',
+        password: hashedPassword,
+        fullName: 'System Admin',
+        phone: '0987654321',
+        role: Role.ADMIN,
+        isActive: true,
+      },
+    });
+    console.log(`✅ Default system admin created successfully: ${admin.email}`);
+  } else {
+    console.log('✅ Default system admin already exists. Skipping.');
+  }
 
   console.log('Seeding complete!');
 }
