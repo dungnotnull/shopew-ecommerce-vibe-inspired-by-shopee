@@ -4,9 +4,11 @@ import { ShoppingBag, Store, ArrowRight, ShoppingCart, Trash2 } from 'lucide-rea
 import { Link, useNavigate } from 'react-router-dom';
 import { orderService, CartGroup } from '../services/order-service';
 import { formatVND } from '../utils/format-currency';
+import { useCartStore } from '../store/useCartStore';
 
 export const CartPage: React.FC = () => {
   const navigate = useNavigate();
+  const { fetchCartCount } = useCartStore();
   const [cartGroups, setCartGroups] = useState<CartGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
@@ -23,6 +25,7 @@ export const CartPage: React.FC = () => {
       } else {
         setSelectedItemIds((prev) => prev.filter((id) => allIds.includes(id)));
       }
+      fetchCartCount();
     } catch (err) {
       console.error('Lỗi khi tải giỏ hàng:', err);
     } finally {

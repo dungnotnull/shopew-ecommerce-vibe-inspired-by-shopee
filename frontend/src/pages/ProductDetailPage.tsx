@@ -8,8 +8,10 @@ import { orderService } from '../services/order-service';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { ShopeePagination } from '../components/common/ShopeePagination';
+import { useCartStore } from '../store/useCartStore';
 
 export const ProductDetailPage: React.FC = () => {
+  const { fetchCartCount } = useCartStore();
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<ProductSPU | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,6 +42,9 @@ export const ProductDetailPage: React.FC = () => {
         variantId: targetSku.id,
         quantity: quantity,
       });
+
+      // Cập nhật lại số lượng badge trên Header ngay lập tức
+      fetchCartCount();
 
       if (redirectCart) {
         navigate('/cart');
