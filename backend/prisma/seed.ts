@@ -101,6 +101,8 @@ async function main() {
       await prisma.address.create({
         data: {
           userId: u.id,
+          receiverName: u.fullName,
+          receiverPhone: u.phone || '0901234567',
           street: '123 Đường Nguyễn Huệ, Phường Bến Nghé',
           city: 'Quận 1',
           state: 'TP. Hồ Chí Minh',

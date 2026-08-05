@@ -477,12 +477,12 @@
 
 ### `POST /api/v1/users/addresses`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)*
-- **Body:** `{ "street": "123 Le Loi", "city": "HCM", "state": "Q1", "zipCode": "70000", "isDefault": true }`
+- **Body:** `{ "receiverName": "Nguyen Van A", "receiverPhone": "0987654321", "street": "123 Le Loi", "city": "HCM", "state": "Q1", "zipCode": "70000", "isDefault": true }`
 - **Response:** Created address object.
 
 ### `PUT /api/v1/users/addresses/:id`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)*
-- **Body:** `{ "street": "456 Le Loi", "isDefault": false }`
+- **Body:** `{ "receiverName": "Nguyen Van B", "receiverPhone": "0912345678", "street": "456 Le Loi", "isDefault": false }`
 - **Response:** Updated address object.
 
 ### `DELETE /api/v1/users/addresses/:id`
