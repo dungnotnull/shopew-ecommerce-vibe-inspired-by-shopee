@@ -108,6 +108,16 @@ export const UserOrderListPage: React.FC = () => {
     }
   };
 
+  // Xử lý mở Modal Chi Tiết Đơn Hàng (Gọi API getOrderDetails lấy đầy đủ địa chỉ & người nhận)
+  const handleViewOrderDetails = async (order: Order) => {
+    try {
+      const details = await orderService.getOrderDetails(order.id);
+      setSelectedOrderDetails(details || order);
+    } catch {
+      setSelectedOrderDetails(order);
+    }
+  };
+
   // Xử lý Thanh Toán Ngay cho đơn PENDING_PAYMENT
   const handlePayOrder = async (orderId: number) => {
     setIsActionLoading(true);
@@ -295,38 +305,41 @@ export const UserOrderListPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Body Đơn Hàng: Danh sách các Sản phẩm trong đơn */}
-                  <div className="divide-y divide-gray-50 px-6">
-                    {order.orderItems?.map((item) => {
-                      const imgUrl =
-                        item.product?.images?.[0] ||
-                        'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200';
-                      return (
-                        <div key={item.id} className="py-4 flex items-center gap-4">
-                          <img
-                            src={imgUrl}
-                            alt={item.product?.name || 'Sản phẩm'}
-                            className="w-16 h-16 object-cover rounded-xl border border-gray-100 shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold text-gray-800 line-clamp-1">
-                              {item.product?.name || `Sản phẩm #${item.productId}`}
-                            </h4>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Số lượng: <span className="font-semibold text-gray-700">x{item.quantity}</span>
-                            </p>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <p className="text-sm font-bold text-[#ee4d2d]">{formatVND(item.price)}</p>
+                  {/* Bar Địa chỉ nhận hàng & Người nhận */}
+                  {order.shippingAddress && (
+                    <div className="bg-gray-50/80 px-4 py-2.5 text-xs text-gray-700 flex items-center gap-2 border-b border-gray-100 font-medium">
+                      <MapPin className="w-4 h-4 text-[#ee4d2d] shrink-0" />
+                      <span>
+                        <strong>Người nhận:</strong> {order.shippingAddress.receiverName || 'Khách hàng'} ({order.shippingAddress.receiverPhone || 'N/A'}) - {order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Body sản phẩm trong đơn */}
+                  <div className="p-4 sm:p-6 space-y-4">
+                    {order.orderItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-4">
+                        <img
+                          src={item.product?.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200'}
+                          alt={item.product?.name}
+                          className="w-16 h-16 object-cover rounded-xl border border-gray-100 shrink-0"
+                        />
+                        <div className="flex-1 space-y-1">
+                          <h3 className="font-bold text-sm text-gray-900 line-clamp-1">
+                            {item.product?.name}
+                          </h3>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 font-medium">Số lượng: x{item.quantity}</span>
+                            <span className="font-bold text-[#ee4d2d]">{formatVND(item.price)}</span>
                           </div>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Footer Đơn Hàng: Thành tiền & Các Nút hành động */}
-                  <div className="px-6 py-4 bg-gray-50/40 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
-                    <div className="text-xs text-gray-500">
+                  {/* Footer đơn hàng */}
+                  <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="text-xs text-gray-400">
                       Ngày đặt: <span className="font-medium text-gray-700">{new Date(order.createdAt).toLocaleString('vi-VN')}</span>
                     </div>
 
@@ -341,7 +354,7 @@ export const UserOrderListPage: React.FC = () => {
                       {/* Các Nút Thao Tác Theo Trạng Thái */}
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setSelectedOrderDetails(order)}
+                          onClick={() => handleViewOrderDetails(order)}
                           className="px-3.5 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold text-xs rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" /> Xem chi tiết
