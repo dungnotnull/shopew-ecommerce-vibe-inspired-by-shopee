@@ -9,17 +9,25 @@ import { RoleGuard } from './components/auth/RoleGuard';
 // Layouts & Pages
 import { CustomerLayout } from './components/layout/CustomerLayout';
 import { SellerLayout } from './components/layout/SellerLayout';
+import { AdminLayout } from './components/layout/AdminLayout';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { ProfilePage } from './pages/user/ProfilePage';
 import { AddressPage } from './pages/user/AddressPage';
+import { UserOrderListPage } from './pages/user/UserOrderListPage';
+
 import { SellerDashboardPage } from './pages/seller/SellerDashboardPage';
+import { SellerProductManagement } from './pages/seller/SellerProductManagement';
+import { SellerProductListPage } from './pages/seller/SellerProductListPage';
+import { SellerOrderListPage } from './pages/seller/SellerOrderListPage';
+
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminCategoryListPage } from './pages/admin/AdminCategoryListPage';
 import { AdminBannerListPage } from './pages/admin/AdminBannerListPage';
 import { AdminUserListPage } from './pages/admin/AdminUserListPage';
 import { AdminProductListPage } from './pages/admin/AdminProductListPage';
+import { AdminVoucherListPage } from './pages/admin/AdminVoucherListPage';
 
 // Phase 2, 3 & 4 Catalog, Shop & Order Pages
 import { ProductDetailPage } from './pages/ProductDetailPage';
@@ -27,8 +35,6 @@ import { SearchPage } from './pages/SearchPage';
 import { ShopDetailPage } from './pages/ShopDetailPage';
 import { CartPage } from './pages/CartPage';
 import { CheckoutPage } from './pages/CheckoutPage';
-import { SellerProductManagement } from './pages/seller/SellerProductManagement';
-import { SellerProductListPage } from './pages/seller/SellerProductListPage';
 
 // Khởi tạo React Query Client
 const queryClient = new QueryClient({
@@ -121,6 +127,22 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/user/orders"
+            element={
+              <ProtectedRoute>
+                <UserOrderListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <UserOrderListPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Kênh Người Bán (Seller Center Portal) - Bảo vệ yêu cầu Role SELLER hoặc ADMIN */}
           <Route
@@ -145,6 +167,16 @@ export const App: React.FC = () => {
               <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
                 <SellerLayout>
                   <SellerProductListPage />
+                </SellerLayout>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/seller/orders"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerLayout>
+                  <SellerOrderListPage />
                 </SellerLayout>
               </RoleGuard>
             }
@@ -204,7 +236,9 @@ export const App: React.FC = () => {
             path="/admin/vouchers"
             element={
               <RoleGuard allowedRoles={['ADMIN']}>
-                <AdminBannerListPage />
+                <AdminLayout>
+                  <AdminVoucherListPage />
+                </AdminLayout>
               </RoleGuard>
             }
           />

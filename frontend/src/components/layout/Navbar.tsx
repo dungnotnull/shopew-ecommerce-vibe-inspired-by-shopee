@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, HelpCircle, Globe, User, LogOut, ShieldAlert, Store } from 'lucide-react';
+import { Bell, HelpCircle, Globe, User, LogOut, ShieldAlert, Store, ShoppingBag } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 // Thanh Navbar phụ nằm phía trên cùng Header Shopee
@@ -61,6 +61,11 @@ export const Navbar: React.FC = () => {
                   <Link to="/user/profile" className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs">
                     <User className="w-4 h-4 text-gray-500" />
                     Tài khoản của tôi
+                  </Link>
+
+                  <Link to="/user/orders" className="px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-xs text-[#ee4d2d] font-medium">
+                    <ShoppingBag className="w-4 h-4 text-[#ee4d2d]" />
+                    Đơn mua của tôi
                   </Link>
 
                   {user.role === 'SELLER' && (
