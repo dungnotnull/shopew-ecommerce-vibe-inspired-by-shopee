@@ -43,23 +43,53 @@ export class HomeService {
       userLikedProductIds = new Set(likes.map(l => l.productId));
     }
 
-    const mapped = products.map(p => ({
-      id: p.id,
-      name: p.name,
-      priceMin: p.priceMin,
-      priceMax: p.priceMax,
-      discountPercentage: p.skus[0]?.discountPercentage || 0,
-      rating: p.rating,
-      soldCount: p.soldCount,
-      likeCount: p.likeCount,
-      isLiked: userLikedProductIds.has(p.id),
-      isMall: p.isMall,
-      isPreferred: p.isPreferred,
-      thumbnailUrl: p.skus[0]?.thumbnailUrl || null,
-      images: p.images,
-      shopId: p.shopId,
-      shopName: p.shop?.name
-    }));
+    // Fetch active flash sale to override prices
+    const activeSession = await this.prisma.flashSaleSession.findFirst({
+      where: { isActive: true, startTime: { lte: new Date() }, endTime: { gte: new Date() } }
+    });
+
+    let fsMap = new Map();
+    if (activeSession && products.length > 0) {
+      const fsItems = await this.prisma.flashSaleItem.findMany({
+        where: {
+          sessionId: activeSession.id,
+          productId: { in: products.map(p => p.id) }
+        },
+        include: { sku: true }
+      });
+      // Just take the first flash sale item for the product for display purposes
+      fsMap = new Map(fsItems.map(i => [i.productId, i]));
+    }
+
+    const mapped = products.map(p => {
+      let promotionalPrice = p.promotionalPrice;
+      let discountPercentage = p.skus[0]?.discountPercentage || 0;
+      
+      const fs = fsMap.get(p.id);
+      if (fs && fs.promotionalStock > 0) {
+        promotionalPrice = Math.floor(fs.sku.originalPrice * (1 - fs.discountPercentage / 100));
+        discountPercentage = fs.discountPercentage;
+      }
+
+      return {
+        id: p.id,
+        name: p.name,
+        priceMin: p.priceMin,
+        priceMax: p.priceMax,
+        promotionalPrice,
+        discountPercentage,
+        rating: p.rating,
+        soldCount: p.soldCount,
+        likeCount: p.likeCount,
+        isLiked: userLikedProductIds.has(p.id),
+        isMall: p.isMall,
+        isPreferred: p.isPreferred,
+        thumbnailUrl: p.skus[0]?.thumbnailUrl || null,
+        images: p.images,
+        shopId: p.shopId,
+        shopName: p.shop?.name
+      };
+    });
 
     const total = await this.prisma.product.count();
 
