@@ -68,6 +68,7 @@ export const CheckoutPage: React.FC = () => {
     setFormIsDefault(addresses.length === 0);
     setModalError('');
     setIsEditingInModal(true);
+    setShowAddressModal(true);
   };
 
   // Mở Form chỉnh sửa địa chỉ trong Modal
@@ -82,6 +83,7 @@ export const CheckoutPage: React.FC = () => {
     setFormIsDefault(Boolean(addr.isDefault));
     setModalError('');
     setIsEditingInModal(true);
+    setShowAddressModal(true);
   };
 
   // Lưu Địa chỉ (Thêm mới hoặc Cập nhật qua API Backend)
