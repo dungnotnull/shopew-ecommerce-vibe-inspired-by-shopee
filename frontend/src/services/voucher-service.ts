@@ -50,7 +50,19 @@ export const voucherService = {
     try {
       const response = await apiClient.get('/v1/vouchers/wallet');
       const data = response.data?.data || response.data;
-      return Array.isArray(data) ? data : [];
+      if (Array.isArray(data)) {
+        return data.map((item: any) => {
+          if (item.voucher && typeof item.voucher === 'object') {
+            return {
+              ...item.voucher,
+              userVoucherId: item.id,
+              isUsed: item.isUsed,
+            };
+          }
+          return item;
+        });
+      }
+      return [];
     } catch {
       return [];
     }

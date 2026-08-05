@@ -32,36 +32,14 @@ export const AdminVoucherListPage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Giả lập nạp dữ liệu Voucher từ Backend
+  // Nạp dữ liệu Voucher Toàn Sàn từ Backend: GET /api/v1/admin/vouchers
   const fetchVouchers = async () => {
     setLoading(true);
     try {
-      // Mock / API call
-      const data: Voucher[] = [
-        {
-          id: 1,
-          code: 'SHOPEW50K',
-          discountPercentage: 10,
-          maxDiscount: 50000,
-          minOrderValue: 100000,
-          maxUsage: 1000,
-          usedCount: 142,
-          expiresAt: '2026-12-31T23:59:59Z',
-          shopId: null,
-        },
-        {
-          id: 2,
-          code: 'FREESHIP100K',
-          discountPercentage: 20,
-          maxDiscount: 100000,
-          minOrderValue: 200000,
-          maxUsage: 500,
-          usedCount: 89,
-          expiresAt: '2026-10-15T23:59:59Z',
-          shopId: null,
-        },
-      ];
+      const data = await voucherService.getAdminPlatformVouchers();
       setVouchers(data);
+    } catch {
+      setVouchers([]);
     } finally {
       setLoading(false);
     }
@@ -86,20 +64,6 @@ export const AdminVoucherListPage: React.FC = () => {
         expiresAt: new Date(formData.expiresAt).toISOString(),
       });
       showToast(`Tạo thành công Voucher mã ${created.code || formData.code}!`);
-      setVouchers((prev) => [
-        {
-          id: created.id || Date.now(),
-          code: formData.code.toUpperCase().trim(),
-          discountPercentage: Number(formData.discountPercentage),
-          maxDiscount: Number(formData.maxDiscount),
-          minOrderValue: Number(formData.minOrderValue),
-          maxUsage: Number(formData.maxUsage),
-          usedCount: 0,
-          expiresAt: formData.expiresAt,
-          shopId: null,
-        },
-        ...prev,
-      ]);
       setIsCreateModalOpen(false);
       setFormData({
         code: '',
@@ -109,6 +73,7 @@ export const AdminVoucherListPage: React.FC = () => {
         maxUsage: 500,
         expiresAt: '2026-12-31T23:59:59',
       });
+      await fetchVouchers();
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'Không thể tạo Voucher. Vui lòng kiểm tra lại.';
       showToast(Array.isArray(msg) ? msg.join(', ') : msg);
@@ -117,13 +82,19 @@ export const AdminVoucherListPage: React.FC = () => {
     }
   };
 
-  // Xử lý Xóa Voucher với Confirm Modal hệ thống
-  const handleConfirmDeleteVoucher = () => {
+  // Xử lý Xóa Voucher với Confirm Modal hệ thống: DELETE /api/v1/admin/vouchers/:id
+  const handleConfirmDeleteVoucher = async () => {
     if (!deletingVoucher) return;
-    setVouchers((prev) => prev.filter((v) => v.id !== deletingVoucher.id));
-    showToast(`Đã xóa voucher ${deletingVoucher.code}`);
-    setIsDeleteModalOpen(false);
-    setDeletingVoucher(null);
+    try {
+      await voucherService.deletePlatformVoucher(deletingVoucher.id);
+      showToast(`Đã xóa voucher ${deletingVoucher.code}`);
+      await fetchVouchers();
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'Không thể xóa voucher.');
+    } finally {
+      setIsDeleteModalOpen(false);
+      setDeletingVoucher(null);
+    }
   };
 
   const filteredVouchers = vouchers.filter((v) =>
