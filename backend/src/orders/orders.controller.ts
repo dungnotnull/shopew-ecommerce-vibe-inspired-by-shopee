@@ -3,6 +3,9 @@ import { OrdersService } from './orders.service';
 import { CheckoutDto } from './dto/checkout.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @ApiTags('Orders')
 @ApiBearerAuth()
@@ -12,10 +15,20 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post('checkout')
+  @UseGuards(RolesGuard)
+  @Roles(Role.CUSTOMER)
   @ApiOperation({ summary: 'Checkout cart items' })
   @ApiResponse({ status: 201, description: 'Checkout job queued' })
   async checkout(@Request() req: any, @Body() dto: CheckoutDto) {
     return this.ordersService.checkout(req.user.id, dto);
+  }
+
+  @Post('calculate-checkout')
+  @UseGuards(RolesGuard)
+  @Roles(Role.CUSTOMER)
+  @ApiOperation({ summary: 'Tính toán trước số tiền giỏ hàng (Áp dụng voucher nếu có)' })
+  async calculateCheckout(@Request() req: any, @Body() dto: CheckoutDto) {
+    return this.ordersService.calculateCheckout(req.user.id, dto);
   }
 
   @Get()

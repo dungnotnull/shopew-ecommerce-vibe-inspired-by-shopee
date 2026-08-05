@@ -63,6 +63,30 @@ export class VouchersService {
     });
   }
 
+  async getPublicPlatformVouchers() {
+    const vouchers = await this.prisma.voucher.findMany({
+      where: {
+        shopId: null,
+        isActive: true,
+        expiresAt: { gt: new Date() }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return vouchers.filter(v => v.usedCount < v.maxUsage);
+  }
+
+  async getPublicShopVouchers(shopId: number) {
+    const vouchers = await this.prisma.voucher.findMany({
+      where: {
+        shopId,
+        isActive: true,
+        expiresAt: { gt: new Date() }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    return vouchers.filter(v => v.usedCount < v.maxUsage);
+  }
+
   // --- PLATFORM VOUCHERS (ADMIN) ---
 
   async getPlatformVouchers() {

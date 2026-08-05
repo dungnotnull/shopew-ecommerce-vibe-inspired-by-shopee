@@ -11,6 +11,18 @@ import { VouchersService } from './vouchers.service';
 export class VouchersController {
   constructor(private readonly vouchersService: VouchersService) { }
 
+  @Get('vouchers/public/platform')
+  @ApiOperation({ summary: 'Lấy danh sách voucher hệ thống (Platform) đang phát hành' })
+  async getPublicPlatformVouchers() {
+    return this.vouchersService.getPublicPlatformVouchers();
+  }
+
+  @Get('vouchers/public/shop/:shopId')
+  @ApiOperation({ summary: 'Lấy danh sách voucher của một Shop đang phát hành' })
+  async getPublicShopVouchers(@Param('shopId') shopId: string) {
+    return this.vouchersService.getPublicShopVouchers(Number(shopId));
+  }
+
   @Post('admin/vouchers')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -91,7 +103,8 @@ export class VouchersController {
 
   @Post('vouchers/save')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.CUSTOMER)
   @ApiOperation({ summary: 'Lưu voucher vào ví User' })
   async saveVoucher(@Request() req: any, @Body('voucherId') voucherId: number) {
     if (!voucherId) throw new BadRequestException('voucherId is required');
@@ -100,7 +113,8 @@ export class VouchersController {
 
   @Get('vouchers/wallet')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.CUSTOMER)
   @ApiOperation({ summary: 'Lấy danh sách voucher trong ví User' })
   async getWalletVouchers(@Request() req: any) {
     return this.vouchersService.getWalletVouchers(req.user.id);

@@ -459,6 +459,35 @@
 - **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
 - **Response:** Deleted banner object.
 
+### `POST /api/v1/orders/calculate-checkout`
+- **Request:**
+```json
+{
+  "cartItems": [ { "variantId": 201, "quantity": 2 } ],
+  "shippingAddressId": 5,
+  "platformVoucherId": 99,
+  "shopVouchers": [ { "shopId": 1, "voucherId": 45 } ]
+}
+```
+- **Response:**
+```json
+{
+  "totalAmount": 50000000,
+  "discountAmount": 100000,
+  "finalAmount": 49900000,
+  "shopOrders": [
+    {
+      "shopId": 1,
+      "totalAmount": 50000000,
+      "discountAmount": 0,
+      "finalAmount": 50000000,
+      "appliedVoucher": null
+    }
+  ],
+  "appliedPlatformVoucher": { "id": 99, "discountAmount": 100000 }
+}
+```
+
 ### `POST /api/v1/orders/checkout`
 - **Request:**
 ```json
@@ -564,6 +593,44 @@
 ### `GET /api/v1/vouchers/wallet`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)*
 - **Response:** Array of user's saved vouchers.
+
+### `GET /api/v1/vouchers/public/platform`
+- **Request:** *(No auth required)*
+- **Response:** Array of active platform vouchers.
+```json
+[
+  {
+    "id": 99,
+    "code": "SUMMER50",
+    "discountPercentage": 10,
+    "maxDiscount": 50000,
+    "minOrderValue": 100000,
+    "maxUsage": 1000,
+    "usedCount": 0,
+    "expiresAt": "2026-12-31T23:59:59Z",
+    "shopId": null
+  }
+]
+```
+
+### `GET /api/v1/vouchers/public/shop/:shopId`
+- **Request:** *(No auth required)*
+- **Response:** Array of active shop vouchers.
+```json
+[
+  {
+    "id": 45,
+    "code": "SHOP10K",
+    "discountPercentage": 5,
+    "maxDiscount": 10000,
+    "minOrderValue": 50000,
+    "maxUsage": 100,
+    "usedCount": 5,
+    "expiresAt": "2026-12-31T23:59:59Z",
+    "shopId": 1
+  }
+]
+```
 
 ## Flash Sales
 ### `POST /api/v1/admin/flash-sales`

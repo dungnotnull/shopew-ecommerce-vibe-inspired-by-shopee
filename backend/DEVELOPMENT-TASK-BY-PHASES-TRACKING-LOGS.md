@@ -145,7 +145,10 @@
   - [x] `DELETE /api/v1/seller/vouchers/:id`: Seller xóa voucher.
   - [x] `POST /api/v1/vouchers/save`: User lưu voucher vào ví.
   - [x] `GET /api/v1/vouchers/wallet`: User lấy danh sách voucher khả dụng.
+  - [x] `GET /api/v1/vouchers/public/platform`: Lấy danh sách voucher của Sàn đang hoạt động.
+  - [x] `GET /api/v1/vouchers/public/shop/:shopId`: Lấy danh sách voucher của Shop đang hoạt động.
   - [x] Update Checkout Transaction (`CheckoutProcessor`) to validate `platformVoucherId` and `shopVouchers`, deduct voucher usage, and calculate final totalAmount.
+  - [x] `POST /api/v1/orders/calculate-checkout`: API preview tổng tiền thanh toán và tính toán tiền giảm từ voucher trước khi đặt hàng.
 
 - [x] **Flash Sales (High Concurrency - `src/flash-sales`):**
   - [x] `GET /api/v1/home/flash-sale`: Fetch active `FlashSaleItem`, return with `stock`, `soldCount` and `discountPercentage`.
