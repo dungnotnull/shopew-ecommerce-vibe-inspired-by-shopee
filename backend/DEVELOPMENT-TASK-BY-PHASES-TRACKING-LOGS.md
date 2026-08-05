@@ -116,6 +116,7 @@
 
 - [x] **Order Management & Payment (Customer):**
   - [x] `POST /api/v1/orders/:id/pay`: Mock API thanh toán (Chuyển trạng thái từ PENDING_PAYMENT sang PROCESSING).
+  - [x] `POST /api/v1/orders/:id/rebuy`: API Mua lại đơn hàng (Tự động quét sản phẩm đơn cũ vào giỏ hàng).
   - [x] `GET /api/v1/orders`: Lịch sử đơn hàng của User.
   - [x] `GET /api/v1/orders/:id`: Chi tiết đơn hàng.
   - [x] `PUT /api/v1/orders/:id/cancel`: Hủy đơn hàng.

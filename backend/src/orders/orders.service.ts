@@ -122,4 +122,39 @@ export class OrdersService {
       data: { status: 'PROCESSING' }
     });
   }
+
+  async rebuyOrder(userId: number, orderId: number) {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, userId },
+      include: { orderItems: true }
+    });
+
+    if (!order) throw new BadRequestException('Không tìm thấy đơn hàng');
+
+    return this.prisma.$transaction(async (tx) => {
+      for (const item of order.orderItems) {
+        const existingCartItem = await tx.cartItem.findFirst({
+          where: { userId, variantId: item.skuId }
+        });
+
+        if (existingCartItem) {
+          await tx.cartItem.update({
+            where: { id: existingCartItem.id },
+            data: { quantity: existingCartItem.quantity + item.quantity }
+          });
+        } else {
+          await tx.cartItem.create({
+            data: {
+              userId,
+              shopId: order.shopId,
+              productId: item.productId,
+              variantId: item.skuId,
+              quantity: item.quantity
+            }
+          });
+        }
+      }
+      return { message: 'Đã thêm các sản phẩm vào giỏ hàng' };
+    });
+  }
 }

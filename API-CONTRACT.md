@@ -488,6 +488,10 @@
 - **Request:** *(Headers: `Authorization: Bearer <token>`)*
 - **Response:** `{ "id": 1, "status": "PROCESSING" }`
 
+### `POST /api/v1/orders/:id/rebuy`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** `{ "message": "Đã thêm các sản phẩm vào giỏ hàng" }`
+
 ## Addresses
 ### `GET /api/v1/users/addresses`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)*
