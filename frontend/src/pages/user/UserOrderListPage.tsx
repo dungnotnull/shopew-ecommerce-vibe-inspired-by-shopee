@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CustomerLayout } from '../../components/layout/CustomerLayout';
 import { orderService, Order, OrderStatus } from '../../services/order-service';
+import { addressService } from '../../services/address-service';
 import { formatVND } from '../../utils/format-currency';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import {
@@ -16,6 +17,10 @@ import {
   RefreshCw,
   Eye,
   MapPin,
+  Edit2,
+  Save,
+  User,
+  Phone,
   ChevronRight,
 } from 'lucide-react';
 
@@ -37,6 +42,15 @@ export const UserOrderListPage: React.FC = () => {
 
   // State cho Modal Xem Chi Tiết Đơn Hàng
   const [selectedOrderDetails, setSelectedOrderDetails] = useState<Order | null>(null);
+
+  // State cho Modal Chỉnh Sửa Địa Chỉ Nhận Hàng Đơn Hàng
+  const [editingAddressOrder, setEditingAddressOrder] = useState<Order | null>(null);
+  const [editReceiverName, setEditReceiverName] = useState<string>('');
+  const [editReceiverPhone, setEditReceiverPhone] = useState<string>('');
+  const [editStreet, setEditStreet] = useState<string>('');
+  const [editCity, setEditCity] = useState<string>('');
+  const [editState, setEditState] = useState<string>('');
+  const [savingAddress, setSavingAddress] = useState<boolean>(false);
 
   // State cho System Confirm Popup Modal Hủy Đơn Hàng
   const [cancelModalOpen, setCancelModalOpen] = useState<boolean>(false);
@@ -105,6 +119,72 @@ export const UserOrderListPage: React.FC = () => {
       showToast(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg, 'error');
     } finally {
       setIsActionLoading(false);
+    }
+  };
+
+  // Xử lý mở Modal Chỉnh Sửa Địa Chỉ Nhận Hàng
+  const handleOpenEditAddress = (order: Order) => {
+    setEditingAddressOrder(order);
+    const addr = order.shippingAddress;
+    setEditReceiverName(addr?.receiverName || '');
+    setEditReceiverPhone(addr?.receiverPhone || '');
+    setEditStreet(addr?.street || '');
+    setEditCity(addr?.city || 'Quận 1');
+    setEditState(addr?.state || 'TP. Hồ Chí Minh');
+  };
+
+  // Gọi API cập nhật địa chỉ người nhận (PUT /api/v1/users/addresses/:id hoặc POST)
+  const handleSaveAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAddressOrder) return;
+
+    if (!editReceiverName.trim() || !editReceiverPhone.trim() || !editStreet.trim()) {
+      showToast('Vui lòng điền đầy đủ Tên người nhận, Số điện thoại và Tên đường.', 'error');
+      return;
+    }
+
+    setSavingAddress(true);
+    try {
+      const payload = {
+        receiverName: editReceiverName.trim(),
+        receiverPhone: editReceiverPhone.trim(),
+        street: editStreet.trim(),
+        city: editCity.trim() || 'Quận 1',
+        state: editState.trim() || 'TP. Hồ Chí Minh',
+      };
+
+      let updatedAddr;
+      if (editingAddressOrder.shippingAddress?.id) {
+        updatedAddr = await addressService.updateAddress(editingAddressOrder.shippingAddress.id, payload);
+      } else {
+        updatedAddr = await addressService.createAddress(payload);
+      }
+
+      const newShippingAddr = {
+        id: updatedAddr.id || editingAddressOrder.shippingAddress?.id || 1,
+        receiverName: payload.receiverName,
+        receiverPhone: payload.receiverPhone,
+        street: payload.street,
+        city: payload.city,
+        state: payload.state,
+        zipCode: '700000',
+      };
+
+      // Cập nhật lại UI Đơn hàng với dữ liệu người nhận & địa chỉ mới
+      setOrders((prev) =>
+        prev.map((o) => (o.id === editingAddressOrder.id ? { ...o, shippingAddress: newShippingAddr } : o))
+      );
+
+      if (selectedOrderDetails && selectedOrderDetails.id === editingAddressOrder.id) {
+        setSelectedOrderDetails((prev) => (prev ? { ...prev, shippingAddress: newShippingAddr } : null));
+      }
+
+      showToast('✅ Đã cập nhật thông tin người nhận và địa chỉ giao hàng thành công!');
+      setEditingAddressOrder(null);
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'Không thể cập nhật địa chỉ giao hàng.', 'error');
+    } finally {
+      setSavingAddress(false);
     }
   };
 
@@ -307,10 +387,19 @@ export const UserOrderListPage: React.FC = () => {
 
                   {/* Bar Địa chỉ nhận hàng & Người nhận */}
                   {order.shippingAddress && (
-                    <div className="bg-gray-50/80 px-4 py-2.5 text-xs text-gray-700 flex items-center gap-2 border-b border-gray-100 font-medium">
-                      <MapPin className="w-4 h-4 text-[#ee4d2d] shrink-0" />
-                      <span>
-                        <strong>Người nhận:</strong> {order.shippingAddress.receiverName || 'Khách hàng'} ({order.shippingAddress.receiverPhone || 'N/A'}) - {order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state}
+                    <div
+                      onClick={() => handleOpenEditAddress(order)}
+                      className="bg-gray-50/80 hover:bg-orange-50/50 px-4 py-2.5 text-xs text-gray-700 flex items-center justify-between border-b border-gray-100 font-medium cursor-pointer group transition-colors"
+                      title="Nhấn để chỉnh sửa người nhận & địa chỉ giao hàng"
+                    >
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-[#ee4d2d] shrink-0" />
+                        <span>
+                          <strong>Người nhận:</strong> {order.shippingAddress.receiverName || 'Khách hàng'} ({order.shippingAddress.receiverPhone || 'N/A'}) - {order.shippingAddress.street}, {order.shippingAddress.city}, {order.shippingAddress.state}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-[#ee4d2d] font-bold flex items-center gap-1 group-hover:underline shrink-0">
+                        <Edit2 className="w-3 h-3" /> Sửa
                       </span>
                     </div>
                   )}
@@ -438,9 +527,17 @@ export const UserOrderListPage: React.FC = () => {
 
               {/* Thông tin Địa chỉ Giao Hàng */}
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2">
-                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4 text-[#ee4d2d]" /> Địa chỉ nhận hàng
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin className="w-4 h-4 text-[#ee4d2d]" /> Địa chỉ nhận hàng
+                  </h4>
+                  <button
+                    onClick={() => handleOpenEditAddress(selectedOrderDetails)}
+                    className="text-xs text-[#ee4d2d] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" /> Sửa địa chỉ
+                  </button>
+                </div>
                 {selectedOrderDetails.shippingAddress ? (
                   <div className="text-xs text-gray-700 space-y-1">
                     <p className="font-bold text-gray-900">
@@ -498,7 +595,113 @@ export const UserOrderListPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Modal Chỉnh Sửa Địa Chỉ Nhận Hàng (Gợi ý / Gọi API Cập Nhật PUT /api/v1/users/addresses/:id) */}
+        {editingAddressOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-100 p-6 space-y-5">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-[#ee4d2d]" />
+                  Chỉnh Sửa Địa Chỉ Nhận Hàng #{editingAddressOrder.id}
+                </h3>
+                <button
+                  onClick={() => setEditingAddressOrder(null)}
+                  className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveAddress} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1 flex items-center gap-1">
+                    <User className="w-3.5 h-3.5 text-gray-500" /> Tên Người Nhận
+                  </label>
+                  <input
+                    type="text"
+                    value={editReceiverName}
+                    onChange={(e) => setEditReceiverName(e.target.value)}
+                    placeholder="Nhập họ và tên người nhận"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ee4d2d] focus:border-[#ee4d2d] font-bold"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1 flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5 text-gray-500" /> Số Điện Thoại
+                  </label>
+                  <input
+                    type="tel"
+                    value={editReceiverPhone}
+                    onChange={(e) => setEditReceiverPhone(e.target.value)}
+                    placeholder="Nhập số điện thoại nhận hàng"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ee4d2d] focus:border-[#ee4d2d] font-bold"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1">Số Nhà / Tên Đường</label>
+                  <input
+                    type="text"
+                    value={editStreet}
+                    onChange={(e) => setEditStreet(e.target.value)}
+                    placeholder="VD: 123 Đường Nguyễn Huệ, Phường Bến Nghé"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ee4d2d] focus:border-[#ee4d2d]"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Quận / Huyện</label>
+                    <input
+                      type="text"
+                      value={editCity}
+                      onChange={(e) => setEditCity(e.target.value)}
+                      placeholder="VD: Quận 1"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ee4d2d]"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1">Tỉnh / TP</label>
+                    <input
+                      type="text"
+                      value={editState}
+                      onChange={(e) => setEditState(e.target.value)}
+                      placeholder="VD: TP. Hồ Chí Minh"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-[#ee4d2d]"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setEditingAddressOrder(null)}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    Hủy Bỏ
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingAddress}
+                    className="inline-flex items-center gap-1.5 px-5 py-2 bg-[#ee4d2d] hover:bg-[#d73211] text-white rounded-xl font-bold transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    {savingAddress ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </CustomerLayout>
   );
 };
+
