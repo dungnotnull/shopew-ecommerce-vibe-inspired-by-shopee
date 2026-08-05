@@ -37,13 +37,28 @@ export const CartPage: React.FC = () => {
     fetchCart();
   }, []);
 
-  // Thay đổi số lượng item hoặc xóa khi số lượng = 0
-  const handleQuantityChange = async (variantId: number, newQty: number) => {
+  // Cập nhật số lượng sản phẩm chính xác (PUT /api/v1/cart/:variantId)
+  const handleUpdateQuantity = async (variantId: number, newQty: number) => {
+    if (newQty <= 0) {
+      handleRemoveItem(variantId);
+      return;
+    }
+
     try {
-      await orderService.addToCart({ variantId, quantity: Math.max(0, newQty) });
-      fetchCart(true);
-    } catch {
-      alert('Không thể cập nhật giỏ hàng.');
+      await orderService.updateCartItem(variantId, newQty);
+      await fetchCart(true);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Không thể cập nhật số lượng sản phẩm.');
+    }
+  };
+
+  // Xóa sản phẩm khỏi giỏ hàng (DELETE /api/v1/cart/:variantId)
+  const handleRemoveItem = async (variantId: number) => {
+    try {
+      await orderService.removeCartItem(variantId);
+      await fetchCart(true);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Không thể xóa sản phẩm khỏi giỏ hàng.');
     }
   };
 
@@ -183,15 +198,15 @@ export const CartPage: React.FC = () => {
                       <div className="col-span-2 flex items-center justify-center">
                         <div className="flex items-center border border-slate-300 rounded-md overflow-hidden bg-white">
                           <button
-                            onClick={() => handleQuantityChange(item.skuId, item.quantity - 1)}
-                            className="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold border-r border-slate-300"
+                            onClick={() => handleUpdateQuantity(item.skuId, item.quantity - 1)}
+                            className="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold border-r border-slate-300 cursor-pointer"
                           >
                             -
                           </button>
                           <span className="px-3 py-1 font-bold text-slate-800">{item.quantity}</span>
                           <button
-                            onClick={() => handleQuantityChange(item.skuId, item.quantity + 1)}
-                            className="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold border-l border-slate-300"
+                            onClick={() => handleUpdateQuantity(item.skuId, item.quantity + 1)}
+                            className="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold border-l border-slate-300 cursor-pointer"
                           >
                             +
                           </button>
@@ -205,7 +220,7 @@ export const CartPage: React.FC = () => {
                         </span>
                         <button
                           type="button"
-                          onClick={() => handleQuantityChange(item.skuId, 0)}
+                          onClick={() => handleRemoveItem(item.skuId)}
                           className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
                           title="Xóa sản phẩm khỏi giỏ hàng"
                         >

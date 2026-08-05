@@ -90,7 +90,7 @@ export const orderService = {
     }
   },
 
-  // Thêm / cập nhật sản phẩm vào giỏ hàng: POST /api/v1/cart
+  // Thêm sản phẩm vào giỏ hàng (cộng dồn): POST /api/v1/cart
   addToCart: async (payload: CartItemPayload): Promise<any> => {
     try {
       const response = await apiClient.post('/v1/cart', payload);
@@ -99,6 +99,18 @@ export const orderService = {
       const response = await apiClient.post('/api/v1/cart', payload);
       return response.data;
     }
+  },
+
+  // Cập nhật chính xác số lượng sản phẩm trong giỏ hàng: PUT /api/v1/cart/:variantId
+  updateCartItem: async (variantId: number, quantity: number): Promise<any> => {
+    const response = await apiClient.put(`/v1/cart/${variantId}`, { quantity });
+    return response.data?.data || response.data;
+  },
+
+  // Xóa sản phẩm khỏi giỏ hàng: DELETE /api/v1/cart/:variantId
+  removeCartItem: async (variantId: number): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.delete(`/v1/cart/${variantId}`);
+    return response.data?.data || response.data;
   },
 
   // Thực hiện Checkout / Đặt hàng: POST /api/v1/orders/checkout
