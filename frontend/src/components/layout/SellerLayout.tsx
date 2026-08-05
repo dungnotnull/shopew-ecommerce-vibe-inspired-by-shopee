@@ -14,6 +14,7 @@ export const SellerLayout: React.FC<SellerLayoutProps> = ({ children }) => {
 
   const menuItems = [
     { label: 'Tổng Quan Shop', path: '/seller', icon: BarChart2 },
+    { label: 'Hồ Sơ Gian Hàng', path: '/seller/profile', icon: Store },
     { label: 'Quản Lý Sản Phẩm', path: '/seller/products', icon: Package },
     { label: 'Quản Lý Đơn Hàng', path: '/seller/orders', icon: ShoppingBag },
     { label: 'Kênh Marketing / Voucher', path: '/seller/vouchers', icon: Ticket },

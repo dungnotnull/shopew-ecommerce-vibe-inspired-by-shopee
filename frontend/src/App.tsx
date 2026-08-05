@@ -16,11 +16,14 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { ProfilePage } from './pages/user/ProfilePage';
 import { AddressPage } from './pages/user/AddressPage';
 import { UserOrderListPage } from './pages/user/UserOrderListPage';
+import { UserVoucherWalletPage } from './pages/user/UserVoucherWalletPage';
 
 import { SellerDashboardPage } from './pages/seller/SellerDashboardPage';
 import { SellerProductManagement } from './pages/seller/SellerProductManagement';
 import { SellerProductListPage } from './pages/seller/SellerProductListPage';
 import { SellerOrderListPage } from './pages/seller/SellerOrderListPage';
+import { SellerVoucherListPage } from './pages/seller/SellerVoucherListPage';
+import { SellerProfilePage } from './pages/seller/SellerProfilePage';
 
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminCategoryListPage } from './pages/admin/AdminCategoryListPage';
@@ -143,6 +146,14 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/user/vouchers"
+            element={
+              <ProtectedRoute>
+                <UserVoucherWalletPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Kênh Người Bán (Seller Center Portal) - Bảo vệ yêu cầu Role SELLER hoặc ADMIN */}
           <Route
@@ -178,6 +189,22 @@ export const App: React.FC = () => {
                 <SellerLayout>
                   <SellerOrderListPage />
                 </SellerLayout>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/seller/vouchers"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerVoucherListPage />
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/seller/profile"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerProfilePage />
               </RoleGuard>
             }
           />

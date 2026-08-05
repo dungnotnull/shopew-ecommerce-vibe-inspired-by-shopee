@@ -35,4 +35,16 @@ export const sellerService = {
     const response = await apiClient.post('/v1/upload', formData);
     return response.data.url;
   },
+
+  // Lấy thông tin Shop của Seller hiện tại: GET /api/v1/shops/me
+  getShopMe: async () => {
+    const response = await apiClient.get('/v1/shops/me');
+    return response.data?.data || response.data;
+  },
+
+  // Cập nhật thông tin Shop: PUT /api/v1/shops/me
+  updateShopMe: async (data: { name?: string; description?: string }) => {
+    const response = await apiClient.put('/v1/shops/me', data);
+    return response.data?.data || response.data;
+  },
 };
