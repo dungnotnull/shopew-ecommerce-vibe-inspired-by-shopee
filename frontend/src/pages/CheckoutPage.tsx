@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
-import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag } from 'lucide-react';
+import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Check, RefreshCw } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { orderService } from '../services/order-service';
+import { addressService, AddressPayload } from '../services/address-service';
 import { formatVND } from '../utils/format-currency';
 
 export const CheckoutPage: React.FC = () => {
@@ -13,21 +14,135 @@ export const CheckoutPage: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [successOrder, setSuccessOrder] = useState<{ orderGroupId: string; status: string } | null>(null);
 
-  // Giả lập Địa chỉ giao hàng mặc định
-  const defaultAddress = {
-    id: 1,
-    fullName: 'Nguyen Van A',
-    phone: '0987654321',
-    fullAddress: 'Số 123 Đường Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh',
+  // Quản lý danh sách địa chỉ giao hàng của User từ API Backend
+  const [addresses, setAddresses] = useState<AddressPayload[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [loadingAddresses, setLoadingAddresses] = useState<boolean>(true);
+
+  // State Modal Chọn & Chỉnh Sửa / Thêm Địa Chỉ
+  const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
+  const [isEditingInModal, setIsEditingInModal] = useState<boolean>(false);
+  const [editingAddrId, setEditingAddrId] = useState<number | null>(null);
+
+  // Field Form trong Modal
+  const [formName, setFormName] = useState<string>('');
+  const [formPhone, setFormPhone] = useState<string>('');
+  const [formStreet, setFormStreet] = useState<string>('');
+  const [formCity, setFormCity] = useState<string>('Quận 1');
+  const [formState, setFormState] = useState<string>('TP. Hồ Chí Minh');
+  const [formIsDefault, setFormIsDefault] = useState<boolean>(false);
+  const [modalError, setModalError] = useState<string>('');
+  const [savingAddress, setSavingAddress] = useState<boolean>(false);
+
+  // Nạp danh sách địa chỉ từ Backend: GET /api/v1/users/addresses
+  const fetchUserAddresses = async () => {
+    setLoadingAddresses(true);
+    try {
+      const data = await addressService.getUserAddresses();
+      setAddresses(data);
+      if (data.length > 0) {
+        const defaultAddr = data.find((a: any) => a.isDefault) || data[0];
+        if (defaultAddr.id) setSelectedAddressId(defaultAddr.id);
+      }
+    } catch {
+      // Ignore
+    } finally {
+      setLoadingAddresses(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserAddresses();
+  }, []);
+
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId) || addresses[0];
+
+  // Mở Form thêm mới địa chỉ trong Modal
+  const handleOpenAddForm = () => {
+    setEditingAddrId(null);
+    setFormName('');
+    setFormPhone('');
+    setFormStreet('');
+    setFormCity('Quận 1');
+    setFormState('TP. Hồ Chí Minh');
+    setFormIsDefault(addresses.length === 0);
+    setModalError('');
+    setIsEditingInModal(true);
+  };
+
+  // Mở Form chỉnh sửa địa chỉ trong Modal
+  const handleOpenEditForm = (addr: AddressPayload) => {
+    if (!addr.id) return;
+    setEditingAddrId(addr.id);
+    setFormName(addr.receiverName || '');
+    setFormPhone(addr.receiverPhone || '');
+    setFormStreet(addr.street || '');
+    setFormCity(addr.city || 'Quận 1');
+    setFormState(addr.state || 'TP. Hồ Chí Minh');
+    setFormIsDefault(Boolean(addr.isDefault));
+    setModalError('');
+    setIsEditingInModal(true);
+  };
+
+  // Lưu Địa chỉ (Thêm mới hoặc Cập nhật qua API Backend)
+  const handleSaveAddressForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setModalError('');
+
+    const phoneRegex = /^\d{10,11}$/;
+    if (!phoneRegex.test(formPhone.trim())) {
+      setModalError('Số điện thoại phải từ 10 đến 11 chữ số.');
+      return;
+    }
+
+    if (!formName.trim() || !formStreet.trim()) {
+      setModalError('Vui lòng điền đầy đủ Tên người nhận và Số nhà/Tên đường.');
+      return;
+    }
+
+    setSavingAddress(true);
+    try {
+      const payload = {
+        receiverName: formName.trim(),
+        receiverPhone: formPhone.trim(),
+        street: formStreet.trim(),
+        city: formCity.trim() || 'Quận 1',
+        state: formState.trim() || 'TP. Hồ Chí Minh',
+        zipCode: '700000',
+        isDefault: formIsDefault,
+      };
+
+      let saved;
+      if (editingAddrId) {
+        saved = await addressService.updateAddress(editingAddrId, payload);
+      } else {
+        saved = await addressService.createAddress(payload);
+      }
+
+      await fetchUserAddresses();
+      if (saved?.id) setSelectedAddressId(saved.id);
+      setIsEditingInModal(false);
+    } catch (err: any) {
+      setModalError(err?.response?.data?.message || 'Không thể lưu thông tin địa chỉ.');
+    } finally {
+      setSavingAddress(false);
+    }
   };
 
   const totalProductAmount = selectedCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
   const shippingFee = selectedCartItems.length > 0 ? 30000 : 0;
   const grandTotal = totalProductAmount + shippingFee;
 
+  // Thực hiện Đặt Hàng
   const handlePlaceOrder = async () => {
     if (selectedCartItems.length === 0) {
       alert('Không có sản phẩm nào được chọn để thanh toán.');
+      return;
+    }
+
+    if (!selectedAddress || !selectedAddress.id) {
+      alert('Vui lòng thêm hoặc chọn địa chỉ nhận hàng trước khi thanh toán.');
+      setShowAddressModal(true);
       return;
     }
 
@@ -38,7 +153,7 @@ export const CheckoutPage: React.FC = () => {
           variantId: item.skuId || item.id,
           quantity: item.quantity,
         })),
-        shippingAddressId: defaultAddress.id,
+        shippingAddressId: selectedAddress.id,
       };
 
       const res = await orderService.checkout(payload);
@@ -72,15 +187,54 @@ export const CheckoutPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {/* Địa Chỉ Nhận Hàng */}
+            {/* Khối Thông Tin Địa Chỉ Nhận Hàng (Kết nối API Backend) */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-3">
-              <div className="flex items-center gap-2 text-sm font-bold text-[#ee4d2d]">
-                <MapPin className="w-5 h-5" /> Địa Chỉ Nhận Hàng
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#ee4d2d]">
+                  <MapPin className="w-5 h-5" /> Địa Chỉ Nhận Hàng
+                </div>
+                <button
+                  onClick={() => {
+                    setIsEditingInModal(false);
+                    setShowAddressModal(true);
+                  }}
+                  className="text-xs text-blue-600 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5" /> {selectedAddress ? 'Thay Đổi' : 'Thêm Địa Chỉ'}
+                </button>
               </div>
-              <div className="text-xs text-slate-800 font-semibold space-y-1">
-                <div className="font-bold text-slate-900">{defaultAddress.fullName} ({defaultAddress.phone})</div>
-                <div className="text-slate-600">{defaultAddress.fullAddress}</div>
-              </div>
+
+              {loadingAddresses ? (
+                <div className="text-xs text-slate-400 py-2 flex items-center gap-2">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#ee4d2d]" /> Đang nạp thông tin người nhận...
+                </div>
+              ) : selectedAddress ? (
+                <div className="text-xs text-slate-800 font-medium space-y-1">
+                  <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <span>{selectedAddress.receiverName || 'Người nhận'}</span>
+                    <span className="text-slate-400">|</span>
+                    <span className="text-slate-600 font-semibold">{selectedAddress.receiverPhone || 'N/A'}</span>
+                    {selectedAddress.isDefault && (
+                      <span className="bg-red-50 text-[#ee4d2d] text-[10px] font-bold px-2 py-0.5 rounded border border-red-200">
+                        Mặc định
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-slate-600">
+                    {selectedAddress.street}, {selectedAddress.city}, {selectedAddress.state}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500 py-2 flex items-center justify-between">
+                  <span>Bạn chưa có địa chỉ nhận hàng. Vui lòng thêm địa chỉ để thanh toán.</span>
+                  <button
+                    onClick={handleOpenAddForm}
+                    className="px-3 py-1.5 bg-[#ee4d2d] text-white text-xs font-bold rounded cursor-pointer"
+                  >
+                    + Thêm Địa Chỉ Mới
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Danh Sách Sản Phẩm */}
@@ -142,6 +296,206 @@ export const CheckoutPage: React.FC = () => {
               >
                 {submitting ? 'Đang Xử Lý Đơn Hàng...' : 'Đặt Hàng Ngay'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Chọn & Quản Lý Địa Chỉ Nhận Hàng */}
+        {showAddressModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-[#ee4d2d]" /> Địa Chỉ Nhận Hàng Của Tôi
+                </h3>
+                <button
+                  onClick={() => setShowAddressModal(false)}
+                  className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {!isEditingInModal ? (
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium">Chọn địa chỉ nhận hàng cho đơn này:</span>
+                    <button
+                      onClick={handleOpenAddForm}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#ee4d2d] text-white font-bold rounded-lg cursor-pointer hover:bg-[#d73211]"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Thêm Địa Chỉ Mới
+                    </button>
+                  </div>
+
+                  {addresses.length === 0 ? (
+                    <div className="text-center py-6 text-slate-400 font-medium">
+                      Chưa có địa chỉ nào. Hãy bấm "Thêm Địa Chỉ Mới" ở trên.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {addresses.map((addr) => {
+                        const isSelected = addr.id === selectedAddressId;
+                        return (
+                          <div
+                            key={addr.id}
+                            onClick={() => addr.id && setSelectedAddressId(addr.id)}
+                            className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                              isSelected
+                                ? 'border-[#ee4d2d] bg-orange-50/40 shadow-xs'
+                                : 'border-slate-200 hover:border-slate-300 bg-white'
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <div className="font-bold text-slate-900 flex items-center gap-2">
+                                <span>{addr.receiverName || 'Người nhận'}</span>
+                                <span className="text-slate-300">|</span>
+                                <span className="text-slate-600 font-semibold">{addr.receiverPhone || 'N/A'}</span>
+                                {addr.isDefault && (
+                                  <span className="bg-red-50 text-[#ee4d2d] text-[10px] font-bold px-2 py-0.5 rounded border border-red-200">
+                                    Mặc định
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-slate-600">
+                                {addr.street}, {addr.city}, {addr.state}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenEditForm(addr);
+                                }}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
+                                title="Chỉnh sửa thông tin địa chỉ này"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              {isSelected && (
+                                <div className="w-6 h-6 bg-[#ee4d2d] text-white rounded-full flex items-center justify-center">
+                                  <Check className="w-4 h-4" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="pt-3 border-t border-slate-100 flex justify-end">
+                    <button
+                      onClick={() => setShowAddressModal(false)}
+                      className="px-5 py-2 bg-[#ee4d2d] text-white text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                      Xác Nhận Chọn
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Form Thêm mới / Cập nhật Địa chỉ trực tiếp trong Modal */
+                <form onSubmit={handleSaveAddressForm} className="space-y-3 text-xs">
+                  <div className="font-bold text-slate-800 text-sm border-b border-slate-100 pb-2">
+                    {editingAddrId ? 'Chỉnh Sửa Thông Tin Người Nhận & Địa Chỉ' : 'Thêm Địa Chỉ Nhận Hàng Mới'}
+                  </div>
+
+                  {modalError && (
+                    <div className="p-2 bg-red-50 text-red-600 border border-red-200 rounded font-medium">
+                      {modalError}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Tên Người Nhận</label>
+                    <input
+                      type="text"
+                      placeholder="Họ và tên người nhận"
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-[#ee4d2d] font-bold"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Số Điện Thoại</label>
+                    <input
+                      type="tel"
+                      placeholder="Số điện thoại nhận hàng"
+                      value={formPhone}
+                      onChange={(e) => setFormPhone(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-[#ee4d2d] font-bold"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Số Nhà / Tên Đường</label>
+                    <input
+                      type="text"
+                      placeholder="Số nhà, tên đường, phường/xã"
+                      value={formStreet}
+                      onChange={(e) => setFormStreet(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-[#ee4d2d]"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Quận / Huyện</label>
+                      <input
+                        type="text"
+                        placeholder="Quận / Huyện"
+                        value={formCity}
+                        onChange={(e) => setFormCity(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-[#ee4d2d]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Tỉnh / TP</label>
+                      <input
+                        type="text"
+                        placeholder="Tỉnh / Thành phố"
+                        value={formState}
+                        onChange={(e) => setFormState(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-[#ee4d2d]"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-2 text-slate-700 cursor-pointer pt-1">
+                    <input
+                      type="checkbox"
+                      checked={formIsDefault}
+                      onChange={(e) => setFormIsDefault(e.target.checked)}
+                      className="accent-[#ee4d2d]"
+                    />
+                    Đặt làm địa chỉ mặc định
+                  </label>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingInModal(false)}
+                      className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium cursor-pointer"
+                    >
+                      Quay Lại
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={savingAddress}
+                      className="px-4 py-2 bg-[#ee4d2d] text-white font-bold rounded-lg hover:bg-[#d73211] cursor-pointer disabled:opacity-50"
+                    >
+                      {savingAddress ? 'Đang Lưu...' : 'Lưu Thay Đổi'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         )}
