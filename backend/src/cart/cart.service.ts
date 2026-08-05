@@ -113,6 +113,19 @@ export class CartService {
       },
     });
 
+    // Check if there is an active flash sale
+    const activeSession = await this.prisma.flashSaleSession.findFirst({
+      where: { isActive: true, startTime: { lte: new Date() }, endTime: { gte: new Date() } }
+    });
+
+    let fsMap = new Map();
+    if (activeSession) {
+      const fsItems = await this.prisma.flashSaleItem.findMany({
+        where: { sessionId: activeSession.id }
+      });
+      fsMap = new Map(fsItems.map(i => [i.skuId, i]));
+    }
+
     // Group by shopId
     const shopsMap = new Map<number, any>();
 
@@ -126,6 +139,13 @@ export class CartService {
         });
       }
       const shopGroup = shopsMap.get(item.shopId);
+      
+      let activePrice = item.sku.price;
+      const fsItem = fsMap.get(item.variantId);
+      if (fsItem && fsItem.promotionalStock > 0) {
+        activePrice = Math.floor(item.sku.originalPrice * (1 - fsItem.discountPercentage / 100));
+      }
+
       shopGroup.items.push({
         id: item.id,
         productId: item.productId,
@@ -134,7 +154,7 @@ export class CartService {
         skuId: item.variantId,
         skuCode: item.sku.skuCode || '',
         variantId: item.variantId,
-        price: item.sku.price,
+        price: activePrice,
         originalPrice: item.sku.originalPrice,
         quantity: item.quantity,
         tierIndex: item.sku.tierIndex,
