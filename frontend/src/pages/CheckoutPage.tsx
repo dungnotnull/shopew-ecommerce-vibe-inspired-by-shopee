@@ -115,7 +115,9 @@ export const CheckoutPage: React.FC = () => {
       setDeleteConfirmOpen(false);
       setDeletingAddrId(null);
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'Không thể xóa địa chỉ.');
+      const errorMsg = err?.response?.data?.message || 'Không thể xóa địa chỉ này vì địa chỉ đã được liên kết với đơn hàng đã tạo trước đó.';
+      alert(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg);
+      setDeleteConfirmOpen(false);
     } finally {
       setIsDeletingAddr(false);
     }
