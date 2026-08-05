@@ -312,35 +312,43 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Khối Giá Tiền VND & Discount/Promotion */}
-            <div className="bg-gray-50 p-4 rounded-lg flex flex-wrap items-baseline gap-3">
-              <span className="text-3xl font-extrabold text-[#ee4d2d]">
-                {formatVND(displayPrice)}
-              </span>
-
-              {displayOriginalPrice && displayOriginalPrice > displayPrice && (
-                <span className="text-sm text-gray-400 line-through">
-                  {formatVND(displayOriginalPrice)}
-                </span>
+            {/* Khối Giá Tiền VND & Flash Sale Banner */}
+            <div className="space-y-2">
+              {(product as any).isFlashSale && (
+                <div className="bg-gradient-to-r from-red-600 to-[#ee4d2d] text-white p-3 rounded-t-lg flex items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-2 font-black text-sm uppercase tracking-wider">
+                    <Flame className="w-5 h-5 text-yellow-300 animate-bounce" />
+                    ⚡ SHOPEW FLASH SALE ⚡
+                  </div>
+                  <span className="text-xs font-bold bg-yellow-400 text-red-700 px-2 py-0.5 rounded shadow-xs">
+                    ĐANG DIỄN RA
+                  </span>
+                </div>
               )}
 
-              {!!product.promotionalPrice && product.promotionalPrice > 0 && product.promotionalPrice < displayPrice && (
-                <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-xs uppercase shadow-xs">
-                  Khuyến mãi đặc biệt: {formatVND(product.promotionalPrice)}
+              <div className={`bg-gray-50 p-4 rounded-lg flex flex-wrap items-baseline gap-3 ${(product as any).isFlashSale ? 'rounded-t-none border-t-0' : ''}`}>
+                <span className="text-3xl font-extrabold text-[#ee4d2d]">
+                  {formatVND(displayPrice)}
                 </span>
-              )}
 
-              {((activeSku && activeSku.discountPercentage && activeSku.discountPercentage > 0) || (product.discountPercentage && product.discountPercentage > 0)) && (
-                <span className="bg-[#ee4d2d] text-white text-xs font-bold px-2 py-0.5 rounded-xs uppercase">
-                  -{activeSku?.discountPercentage || product.discountPercentage}% GIẢM
-                </span>
-              )}
+                {displayOriginalPrice && displayOriginalPrice > displayPrice && (
+                  <span className="text-sm text-gray-400 line-through">
+                    {formatVND(displayOriginalPrice)}
+                  </span>
+                )}
 
-              {activeSku?.skuCode && (
-                <span className="ml-auto text-[11px] font-mono text-gray-400 bg-gray-200/60 px-2 py-0.5 rounded">
-                  SKU: {activeSku.skuCode}
-                </span>
-              )}
+                {((activeSku && activeSku.discountPercentage && activeSku.discountPercentage > 0) || (product.discountPercentage && product.discountPercentage > 0)) && (
+                  <span className="bg-[#ee4d2d] text-white text-xs font-bold px-2 py-0.5 rounded-xs uppercase">
+                    -{activeSku?.discountPercentage || product.discountPercentage}% GIẢM
+                  </span>
+                )}
+
+                {activeSku?.skuCode && (
+                  <span className="ml-auto text-[11px] font-mono text-gray-400 bg-gray-200/60 px-2 py-0.5 rounded">
+                    SKU: {activeSku.skuCode}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Cấu trúc Biến thể 2 tầng (SPU & SKU Variants Selector) */}
