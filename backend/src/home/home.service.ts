@@ -12,33 +12,7 @@ export class HomeService {
     });
   }
 
-  async getFlashSale() {
-    // Return products with discount > 0
-    const products = await this.prisma.product.findMany({
-      where: { skus: { some: { isDiscount: true } } },
-      take: 10,
-      orderBy: { soldCount: 'desc' },
-      include: {
-        skus: true
-      }
-    });
 
-    return products.map(product => {
-      const totalStock = product.skus.reduce((sum, sku) => sum + sku.stock, 0);
-      return {
-        id: product.id,
-        name: product.name,
-        priceMin: product.priceMin,
-        priceMax: product.priceMax,
-        promotionalPrice: product.promotionalPrice,
-        discountPercentage: Math.max(0, ...product.skus.map(s => s.discountPercentage || 0)),
-        soldCount: product.soldCount,
-        stock: totalStock, // Actual total stock instead of 100
-        thumbnailUrl: product.skus[0]?.thumbnailUrl || null,
-        images: product.images,
-      };
-    });
-  }
 
   async getDailyDiscover(page: number = 1, limit: number = 20, userId?: number) {
     const skip = (page - 1) * limit;

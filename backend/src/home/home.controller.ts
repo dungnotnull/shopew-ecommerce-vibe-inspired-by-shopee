@@ -14,15 +14,7 @@ export class HomeController {
     return this.homeService.getBanners();
   }
 
-  @Get('flash-sale')
-  @ApiOperation({ summary: 'Get flash sale items' })
-  async getFlashSale() {
-    const data = await this.homeService.getFlashSale();
-    return {
-      success: true,
-      data
-    };
-  }
+
 
   @Get('daily-discover')
   @UseGuards(OptionalJwtAuthGuard)
