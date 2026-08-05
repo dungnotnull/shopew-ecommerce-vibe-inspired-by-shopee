@@ -196,7 +196,7 @@ export const AddressPage: React.FC = () => {
                     >
                       <Edit2 className="w-3 h-3" /> Cập nhật
                     </button>
-                    {!addr.isDefault && addr.id && (
+                    {addr.id && (
                       <button
                         onClick={() => handleDeleteAddress(addr.id!)}
                         className="text-red-600 hover:underline flex items-center gap-1 cursor-pointer font-semibold"

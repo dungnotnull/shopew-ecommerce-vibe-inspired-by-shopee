@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
-import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Check, RefreshCw } from 'lucide-react';
+import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Trash2, Check, RefreshCw } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { orderService } from '../services/order-service';
 import { addressService, AddressPayload } from '../services/address-service';
@@ -84,6 +84,25 @@ export const CheckoutPage: React.FC = () => {
     setModalError('');
     setIsEditingInModal(true);
     setShowAddressModal(true);
+  };
+
+  // Xóa Địa Chỉ trong Modal Checkout (DELETE /api/v1/users/addresses/:id)
+  const handleDeleteAddressInModal = async (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    if (!window.confirm('Bạn có chắc chắn muốn xóa địa chỉ nhận hàng này?')) return;
+
+    try {
+      await addressService.deleteAddress(id);
+      const remainingAddresses = await addressService.getUserAddresses();
+      setAddresses(remainingAddresses);
+
+      if (selectedAddressId === id) {
+        const nextDefault = remainingAddresses.find((a) => a.isDefault) || remainingAddresses[0];
+        setSelectedAddressId(nextDefault?.id || null);
+      }
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'Không thể xóa địa chỉ.');
+    }
   };
 
   // Lưu Địa chỉ (Thêm mới hoặc Cập nhật qua API Backend)
@@ -364,7 +383,7 @@ export const CheckoutPage: React.FC = () => {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-1.5 shrink-0">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -375,6 +394,15 @@ export const CheckoutPage: React.FC = () => {
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
+                              {addr.id && (
+                                <button
+                                  onClick={(e) => handleDeleteAddressInModal(e, addr.id!)}
+                                  className="p-1.5 text-red-500 hover:bg-red-50 rounded cursor-pointer"
+                                  title="Xóa địa chỉ này"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                               {isSelected && (
                                 <div className="w-6 h-6 bg-[#ee4d2d] text-white rounded-full flex items-center justify-center">
                                   <Check className="w-4 h-4" />
