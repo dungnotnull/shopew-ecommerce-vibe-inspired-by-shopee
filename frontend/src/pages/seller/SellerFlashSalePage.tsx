@@ -240,33 +240,49 @@ export const SellerFlashSalePage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white font-medium text-gray-800">
-                    {registeredItems.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <img
-                              src={item.thumbnailUrl || item.sku?.thumbnailUrl || 'https://via.placeholder.com/50'}
-                              alt="Item"
-                              className="w-10 h-10 object-cover rounded border border-gray-200"
-                            />
-                            <div>
-                              <div className="font-bold text-gray-900 line-clamp-1">{item.productName || item.product?.name || `SKU #${item.skuId}`}</div>
-                              <div className="text-[11px] text-gray-500">Mã SKU: {item.skuCode || item.sku?.skuCode || item.skuId}</div>
+                    {registeredItems.map((item) => {
+                      // Xử lý lấy hình ảnh SKU hoặc SPU nếu SKU chưa cài hình ảnh riêng
+                      const productImg = Array.isArray(item.product?.images)
+                        ? item.product.images[0]
+                        : typeof item.product?.images === 'string'
+                        ? (JSON.parse(item.product.images)[0] || item.product.images)
+                        : null;
+
+                      const itemImage = item.thumbnailUrl || item.sku?.thumbnailUrl || productImg || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+                      const originalPrice = item.sku?.originalPrice || item.sku?.price || item.product?.priceMin || 0;
+                      const calculatedPrice = item.price || Math.floor(originalPrice * (1 - item.discountPercentage / 100));
+
+                      return (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={itemImage}
+                                alt="Item"
+                                className="w-10 h-10 object-cover rounded border border-gray-200"
+                              />
+                              <div>
+                                <div className="font-bold text-gray-900 line-clamp-1">{item.productName || item.product?.name || `SKU #${item.skuId}`}</div>
+                                <div className="text-[11px] text-gray-500">Mã SKU: {item.skuCode || item.sku?.skuCode || item.skuId}</div>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 font-extrabold text-[#ee4d2d]">
-                          {formatVND(item.price || item.sku?.price || 0)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="bg-red-50 text-red-600 font-extrabold px-2 py-0.5 rounded border border-red-200">
-                            -{item.discountPercentage}%
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 font-bold text-gray-800">{item.promotionalStock || item.stock || 0}</td>
-                        <td className="px-4 py-3 text-emerald-600 font-bold">{item.soldCount || 0}</td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="px-4 py-3 font-extrabold text-[#ee4d2d]">
+                            {formatVND(calculatedPrice)}
+                            {originalPrice > calculatedPrice && (
+                              <div className="text-[10px] text-gray-400 line-through font-normal">{formatVND(originalPrice)}</div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="bg-red-50 text-red-600 font-extrabold px-2 py-0.5 rounded border border-red-200">
+                              -{item.discountPercentage}%
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 font-bold text-gray-800">{item.promotionalStock || item.stock || 0}</td>
+                          <td className="px-4 py-3 text-emerald-600 font-bold">{item.soldCount || 0}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
