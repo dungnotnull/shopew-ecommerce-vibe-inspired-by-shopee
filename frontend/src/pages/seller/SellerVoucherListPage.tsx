@@ -179,18 +179,29 @@ export const SellerVoucherListPage: React.FC = () => {
                   />
                 </div>
 
+                {/* Khối Live Preview Xem Trước Giúp Người Bán Hiểu Rõ Logic */}
+                <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg space-y-1">
+                  <div className="font-bold text-[#ee4d2d] text-[11px] uppercase tracking-wider flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5" /> Xem trước hiển thị phía Khách hàng:
+                  </div>
+                  <div className="text-xs text-gray-800 font-medium">
+                    Mã <strong className="text-[#ee4d2d]">{code || 'MÃ_VOUCHER'}</strong>: Giảm <strong className="text-[#ee4d2d]">{discountPercentage}%</strong> (Tối đa <strong>{formatVND(maxDiscount)}</strong>) cho đơn hàng từ <strong>{formatVND(minOrderValue)}</strong>.
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block font-bold text-gray-700 mb-1">% Giảm Giá</label>
+                    <label className="block font-bold text-gray-700 mb-1">Mức Giảm (%)</label>
                     <input
                       type="number"
                       min="1"
                       max="100"
                       value={discountPercentage}
                       onChange={(e) => setDiscountPercentage(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#ee4d2d]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#ee4d2d] font-bold text-[#ee4d2d]"
                       required
                     />
+                    <span className="text-[10px] text-gray-400 mt-0.5 block">Tỷ lệ % giảm trên tổng đơn</span>
                   </div>
                   <div>
                     <label className="block font-bold text-gray-700 mb-1">Giảm Tối Đa (VND)</label>
@@ -198,9 +209,10 @@ export const SellerVoucherListPage: React.FC = () => {
                       type="number"
                       value={maxDiscount}
                       onChange={(e) => setMaxDiscount(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#ee4d2d]"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#ee4d2d] font-bold"
                       required
                     />
+                    <span className="text-[10px] text-gray-400 mt-0.5 block">Mức trần bảo vệ ngân sách (Cap)</span>
                   </div>
                 </div>
 
@@ -214,9 +226,10 @@ export const SellerVoucherListPage: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#ee4d2d]"
                       required
                     />
+                    <span className="text-[10px] text-gray-400 mt-0.5 block">Điều kiện giá trị đơn tối thiểu</span>
                   </div>
                   <div>
-                    <label className="block font-bold text-gray-700 mb-1">Số Lượng Tối Đa</label>
+                    <label className="block font-bold text-gray-700 mb-1">Tổng Số Lượt Phát Hành</label>
                     <input
                       type="number"
                       value={maxUsage}
@@ -224,6 +237,7 @@ export const SellerVoucherListPage: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#ee4d2d]"
                       required
                     />
+                    <span className="text-[10px] text-gray-400 mt-0.5 block">Số lượng lượt dùng tối đa</span>
                   </div>
                 </div>
 
