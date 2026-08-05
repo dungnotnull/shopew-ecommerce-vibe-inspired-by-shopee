@@ -27,7 +27,7 @@ export const ProductDetailPage: React.FC = () => {
   const [addingToCart, setAddingToCart] = useState<boolean>(false);
   const [cartSuccessMsg, setCartSuccessMsg] = useState<string>('');
 
-  const handleAddToCart = async (redirectCart = false) => {
+  const handleAddToCart = async () => {
     if (!product || addingToCart) return;
     const targetSku = activeSku || product.skus?.[0];
     if (!targetSku) {
@@ -45,19 +45,39 @@ export const ProductDetailPage: React.FC = () => {
 
       // Cập nhật lại số lượng badge trên Header ngay lập tức
       fetchCartCount();
-
-      if (redirectCart) {
-        navigate('/cart');
-      } else {
-        setCartSuccessMsg('Đã thêm sản phẩm vào Giỏ hàng!');
-        setTimeout(() => setCartSuccessMsg(''), 4000);
-      }
+      setCartSuccessMsg('Đã thêm sản phẩm vào Giỏ hàng!');
+      setTimeout(() => setCartSuccessMsg(''), 4000);
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể thêm vào giỏ hàng. Vui lòng đăng nhập.';
       alert(Array.isArray(msg) ? msg.join(', ') : msg);
     } finally {
       setAddingToCart(false);
     }
+  };
+
+  // Xử lý khi bấm nút "Mua Ngay": Chuyển trực tiếp tới màn hình /checkout mà KHÔNG gọi API thêm vào giỏ hàng
+  const handleBuyNow = () => {
+    if (!product) return;
+    const targetSku = activeSku || product.skus?.[0];
+    if (!targetSku) {
+      alert('Sản phẩm tạm thời hết hàng hoặc chưa chọn phân loại.');
+      return;
+    }
+
+    const directCheckoutItem = {
+      id: targetSku.id,
+      productId: product.id,
+      productName: product.name,
+      productImage: selectedImage || targetSku.thumbnailUrl || product.images?.[0] || product.thumbnailUrl || '',
+      skuId: targetSku.id,
+      skuCode: targetSku.skuCode || '',
+      price: targetSku.price,
+      originalPrice: targetSku.originalPrice || targetSku.price,
+      quantity: quantity,
+      tierIndex: targetSku.tierIndex || [],
+    };
+
+    navigate('/checkout', { state: { selectedCartItems: [directCheckoutItem] } });
   };
 
   // State cho danh sách Sản phẩm Gợi ý (20 sản phẩm/trang)
@@ -391,7 +411,7 @@ export const ProductDetailPage: React.FC = () => {
               <button
                 type="button"
                 disabled={displayStock === 0 || addingToCart}
-                onClick={() => handleAddToCart(false)}
+                onClick={handleAddToCart}
                 className="flex-1 border border-[#ee4d2d] text-[#ee4d2d] bg-orange-50 hover:bg-orange-100 font-bold text-sm py-3 px-6 rounded flex items-center justify-center gap-2 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 <ShoppingCart className="w-4 h-4" />
@@ -401,7 +421,7 @@ export const ProductDetailPage: React.FC = () => {
               <button
                 type="button"
                 disabled={displayStock === 0 || addingToCart}
-                onClick={() => handleAddToCart(true)}
+                onClick={handleBuyNow}
                 className="flex-1 bg-[#ee4d2d] hover:bg-orange-600 text-white font-bold text-sm py-3 px-6 rounded shadow-md transition-colors text-center disabled:opacity-50 cursor-pointer"
               >
                 Mua Ngay
