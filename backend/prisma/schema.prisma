@@ -284,8 +284,8 @@ model FlashSaleItem {
   updatedAt          DateTime         @updatedAt
 
   session            FlashSaleSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  product            Product          @relation(fields: [productId], references: [id])
-  sku                SKU              @relation(fields: [skuId], references: [id])
+  product            Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku                SKU              @relation(fields: [skuId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, skuId])
 }
