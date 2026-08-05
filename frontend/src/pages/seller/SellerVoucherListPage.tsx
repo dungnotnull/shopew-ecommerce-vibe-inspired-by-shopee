@@ -5,6 +5,7 @@ import { voucherService } from '../../services/voucher-service';
 import { formatVND } from '../../utils/format-currency';
 
 export const SellerVoucherListPage: React.FC = () => {
+  const [vouchers, setVouchers] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [code, setCode] = useState<string>('');
   const [discountPercentage, setDiscountPercentage] = useState<number>(10);
@@ -13,9 +14,31 @@ export const SellerVoucherListPage: React.FC = () => {
   const [maxUsage, setMaxUsage] = useState<number>(100);
   const [expiresAt, setExpiresAt] = useState<string>('2026-12-31T23:59');
 
+  const [fetching, setFetching] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [successMsg, setSuccessMsg] = useState<string>('');
+
+  // Nạp danh sách Voucher thực tế của Gian hàng từ API Backend: GET /api/v1/seller/vouchers
+  const fetchShopVouchers = async () => {
+    setFetching(true);
+    try {
+      const data = await voucherService.getSellerShopVouchers();
+      setVouchers(data);
+    } catch (err: any) {
+      if (err?.response?.status === 404) {
+        setError('Hệ thống Voucher phía Backend hiện đang bảo trì (Thiếu VoucherController router).');
+      } else if (err?.response?.data?.message) {
+        setError(err.response.data.message);
+      }
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchShopVouchers();
+  }, []);
 
   // Handler tạo Mã Giảm Giá Shop (POST /api/v1/seller/vouchers)
   const handleCreateVoucher = async (e: React.FormEvent) => {
@@ -41,10 +64,14 @@ export const SellerVoucherListPage: React.FC = () => {
 
       setSuccessMsg(`✅ Đã tạo thành công Mã giảm giá Shop: ${code.toUpperCase()}`);
       setIsModalOpen(false);
-      // Reset form
       setCode('');
+      await fetchShopVouchers();
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Có lỗi xảy ra khi tạo Mã giảm giá Shop.');
+      if (err?.response?.status === 404) {
+        setError('Không thể kết nối API POST /api/v1/seller/vouchers. Phía Backend chưa đăng ký VouchersController.');
+      } else {
+        setError(err?.response?.data?.message || 'Có lỗi xảy ra khi tạo Mã giảm giá Shop.');
+      }
     } finally {
       setLoading(false);
     }
@@ -88,34 +115,45 @@ export const SellerVoucherListPage: React.FC = () => {
           </div>
         )}
 
-        {/* Danh sách Voucher Shop Demo */}
+        {/* Danh sách Voucher Shop */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-xs">
-          <div className="p-4 bg-orange-50/50 border-b border-gray-200 font-bold text-gray-800 text-sm flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#ee4d2d]" />
-            Mã Giảm Giá Đang Hoạt Động Trên Shop
+          <div className="p-4 bg-orange-50/50 border-b border-gray-200 font-bold text-gray-800 text-sm flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#ee4d2d]" />
+              Mã Giảm Giá Gian Hàng ({vouchers.length})
+            </div>
+            {fetching && <span className="text-xs text-gray-400 font-normal">Đang tải...</span>}
           </div>
 
           <div className="divide-y divide-gray-100">
-            <div className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg bg-orange-100 border border-orange-200 flex items-center justify-center text-[#ee4d2d] font-black text-sm">
-                  10%
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-gray-900 text-sm">SHOPNEW10</span>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">ĐANG CHẠY</span>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    Giảm 10% tối đa {formatVND(50000)} • Đơn tối thiểu {formatVND(100000)}
-                  </div>
-                </div>
+            {vouchers.length === 0 ? (
+              <div className="p-8 text-center text-xs text-gray-400">
+                Gian hàng chưa có mã giảm giá nào. Bấm "Tạo Voucher Shop Mới" ở trên để phát hành mã.
               </div>
-              <div className="text-right text-xs text-gray-500">
-                <div>Lượt dùng: <strong>12/100</strong></div>
-                <div>Hạn dùng: 31/12/2026</div>
-              </div>
-            </div>
+            ) : (
+              vouchers.map((v) => (
+                <div key={v.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-orange-100 border border-orange-200 flex items-center justify-center text-[#ee4d2d] font-black text-sm">
+                      {v.discountPercentage}%
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-900 text-sm">{v.code}</span>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">ĐANG CHẠY</span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        Giảm {v.discountPercentage}% tối đa {formatVND(v.maxDiscount)} • Đơn tối thiểu {formatVND(v.minOrderValue)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-gray-500">
+                    <div>Lượt dùng: <strong>{v.usedCount || 0}/{v.maxUsage}</strong></div>
+                    <div>Hạn dùng: {new Date(v.expiresAt).toLocaleDateString('vi-VN')}</div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
