@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CustomerLayout } from '../../components/layout/CustomerLayout';
 import { orderService, Order, OrderStatus } from '../../services/order-service';
 import { addressService } from '../../services/address-service';
 import { formatVND } from '../../utils/format-currency';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { useCartStore } from '../../store/useCartStore';
 import {
   ShoppingBag,
+  ShoppingCart,
   Store,
   Clock,
   CheckCircle2,
@@ -35,6 +37,8 @@ const ORDER_TABS: { id: string; label: string }[] = [
 ];
 
 export const UserOrderListPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { fetchCartCount } = useCartStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('ALL');
@@ -209,6 +213,37 @@ export const UserOrderListPage: React.FC = () => {
       );
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || 'Thanh toán không thành công. Vui lòng thử lại.';
+      showToast(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg, 'error');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  // Xử lý Mua Lại đơn hàng (Thêm các sản phẩm trong đơn cũ vào Giỏ hàng qua API POST /api/v1/cart)
+  const handleReorder = async (order: Order) => {
+    if (!order.orderItems || order.orderItems.length === 0) {
+      showToast('Đơn hàng không có sản phẩm để mua lại.', 'error');
+      return;
+    }
+
+    setIsActionLoading(true);
+    try {
+      await Promise.all(
+        order.orderItems.map((item) => {
+          const variantId = item.skuId || item.sku?.id;
+          if (!variantId) return Promise.resolve();
+          return orderService.addToCart({
+            variantId: variantId,
+            quantity: item.quantity || 1,
+          });
+        })
+      );
+
+      await fetchCartCount();
+      showToast('Đã thêm các sản phẩm trong đơn hàng vào Giỏ hàng thành công!');
+      navigate('/cart');
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || 'Không thể mua lại sản phẩm. Vui lòng thử lại sau.';
       showToast(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg, 'error');
     } finally {
       setIsActionLoading(false);
@@ -473,12 +508,13 @@ export const UserOrderListPage: React.FC = () => {
 
                         {/* Nút Mua Lại khi DELIVERED hoặc CANCELLED */}
                         {(order.status === 'DELIVERED' || order.status === 'CANCELLED') && (
-                          <Link
-                            to="/"
-                            className="px-4 py-2 bg-[#ee4d2d] hover:bg-[#d03e20] text-white font-bold text-xs rounded-xl transition-colors shadow-sm inline-block"
+                          <button
+                            disabled={isActionLoading}
+                            onClick={() => handleReorder(order)}
+                            className="px-4 py-2 bg-[#ee4d2d] hover:bg-[#d03e20] text-white font-bold text-xs rounded-xl transition-colors shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                           >
-                            Mua lại
-                          </Link>
+                            <ShoppingCart className="w-3.5 h-3.5" /> Mua lại
+                          </button>
                         )}
                       </div>
                     </div>
