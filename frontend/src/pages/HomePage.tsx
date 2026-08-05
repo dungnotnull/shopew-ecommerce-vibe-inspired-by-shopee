@@ -233,7 +233,8 @@ export const HomePage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
             {flashSales.slice(0, 6).map((fs: any) => {
-              const displayPrice = fs.price || fs.promotionalPrice || fs.priceMin || 0;
+              const displayPrice = fs.promotionalPrice || fs.price || fs.priceMin || 0;
+              const origPrice = fs.originalPrice || (displayPrice > 0 && fs.discountPercentage > 0 ? Math.floor(displayPrice / (1 - fs.discountPercentage / 100)) : 0);
               const targetProductId = fs.productId || fs.id;
               const title = fs.productName || fs.name || `Sản phẩm Flash Sale #${targetProductId}`;
               const img = fs.thumbnailUrl || (Array.isArray(fs.images) ? fs.images[0] : null) || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
@@ -262,7 +263,12 @@ export const HomePage: React.FC = () => {
                   <h4 className="text-xs text-gray-800 font-medium line-clamp-2 mb-1.5 group-hover:text-[#ee4d2d] h-8">
                     {title}
                   </h4>
-                  <div className="text-sm font-bold text-[#ee4d2d] mb-2">{formatVND(displayPrice)}</div>
+                  <div className="flex items-baseline gap-1.5 mb-2">
+                    <span className="text-sm font-extrabold text-[#ee4d2d]">{formatVND(displayPrice)}</span>
+                    {origPrice > displayPrice && (
+                      <span className="text-[10px] text-gray-400 line-through font-normal">{formatVND(origPrice)}</span>
+                    )}
+                  </div>
 
                   {/* Sold Progress Bar */}
                   <div className="w-full bg-orange-100 rounded-full h-3.5 overflow-hidden relative border border-orange-200">

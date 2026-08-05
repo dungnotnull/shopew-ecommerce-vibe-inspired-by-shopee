@@ -42,116 +42,116 @@
 
 ## Phase 2: Khám phá Sản phẩm SPU & SKU (Core E-Commerce & PDP)
 
-- [ ] **FE-201: Cây Danh mục Sản phẩm (Category Navigation)**
-  - [ ] Component Danh mục trang chủ (Icon + Tên danh mục).
-  - [ ] Menu danh mục đa cấp (Hover xổ ra Sub-categories Level 1, Level 2).
-  - [ ] Component Breadcrumb điều hướng (Trang chủ > Danh mục cha > Danh mục con).
+- [x] **FE-201: Cây Danh mục Sản phẩm (Category Navigation)**
+  - [x] Component Danh mục trang chủ (Icon + Tên danh mục).
+  - [x] Menu danh mục đa cấp (Hover xổ ra Sub-categories Level 1, Level 2).
+  - [x] Component Breadcrumb điều hướng (Trang chủ > Danh mục cha > Danh mục con).
   - *BE Dependency:* `GET /api/v1/categories`
 
-- [ ] **FE-202: Trang Chi tiết Sản phẩm (PDP) - Thông tin SPU**
-  - [ ] Gallery Ảnh/Video sản phẩm (Slider ảnh chính, danh sách ảnh thu nhỏ thumbnail).
-  - [ ] Block Thông tin SPU: Tên sản phẩm, Đánh giá sao (1-5★), Số lượt đánh giá, Số lượng đã bán.
-  - [ ] Huy hiệu Sản phẩm: Shopee Mall (Đỏ), Shop Yêu Thích (Cam).
-  - [ ] Hiển thị Khoảng giá SPU (`price_min` - `price_max`) dạng tiền tệ VND.
-  - [ ] Nút Thích sản phẩm (Wishlist toggle) & Hiển thị số lượt thích (`likeCount`).
+- [x] **FE-202: Trang Chi tiết Sản phẩm (PDP) - Thông tin SPU**
+  - [x] Gallery Ảnh/Video sản phẩm (Slider ảnh chính, danh sách ảnh thu nhỏ thumbnail).
+  - [x] Block Thông tin SPU: Tên sản phẩm, Đánh giá sao (1-5★), Số lượt đánh giá, Số lượng đã bán.
+  - [x] Huy hiệu Sản phẩm: Shopee Mall (Đỏ), Shop Yêu Thích (Cam).
+  - [x] Hiển thị Khoảng giá SPU (`price_min` - `price_max`) dạng tiền tệ VND.
+  - [x] Nút Thích sản phẩm (Wishlist toggle) & Hiển thị số lượt thích (`likeCount`).
   - *BE Dependency:* `GET /api/v1/products/:id`
 
-- [ ] **FE-203: PDP - Bộ chọn Biến thể 2 Cấp (2-Tier SKU Selector)**
-  - [ ] UI Nhóm phân loại Tier 1 (Ví dụ: Mẫu mã / Màu sắc).
-  - [ ] UI Nhóm phân loại Tier 2 (Ví dụ: Kích thước / Dung lượng).
-  - [ ] Logic disable các Option không khả dụng/hết hàng dựa trên ma trận SKU.
-  - [ ] Logic tự động tính toán SKU khả thi khi người dùng chọn đủ 2 Tier options.
-  - [ ] Cập nhật tương tác UI khi chọn SKU: Cập nhật Giá VND chính xác, Tồn kho thực tế (Stock), và Ảnh thumbnail SKU.
-  - [ ] Xử lý sản phẩm không có phân loại (Default SKU fallback).
-  - [ ] Bộ chọn số lượng (Quantity selector: Nút `+`, `-`, ô nhập số, validate không vượt quá tồn kho).
+- [x] **FE-203: PDP - Bộ chọn Biến thể 2 Cấp (2-Tier SKU Selector)**
+  - [x] UI Nhóm phân loại Tier 1 (Ví dụ: Mẫu mã / Màu sắc).
+  - [x] UI Nhóm phân loại Tier 2 (Ví dụ: Kích thước / Dung lượng).
+  - [x] Logic disable các Option không khả dụng/hết hàng dựa trên ma trận SKU.
+  - [x] Logic tự động tính toán SKU khả thi khi người dùng chọn đủ 2 Tier options.
+  - [x] Cập nhật tương tác UI khi chọn SKU: Cập nhật Giá VND chính xác, Tồn kho thực tế (Stock), và Ảnh thumbnail SKU.
+  - [x] Xử lý sản phẩm không có phân loại (Default SKU fallback).
+  - [x] Bộ chọn số lượng (Quantity selector: Nút `+`, `-`, ô nhập số, validate không vượt quá tồn kho).
   - *BE Dependency:* `GET /api/v1/products/:id` (trả về `variantGroups` và `skus`)
 
-- [ ] **FE-204: PDP - Thuộc tính động (Dynamic Attributes Spec Table)**
-  - [ ] Bảng Chi tiết sản phẩm: Xuất xứ, Chất liệu, Thương hiệu, Bảo hành,...
-  - [ ] Logic render bảng thuộc tính động từ JSONB `attributes` trả về từ API.
-  - [ ] Section Mô tả sản phẩm (Product Description) có định dạng văn bản chuẩn.
+- [x] **FE-204: PDP - Thuộc tính động (Dynamic Attributes Spec Table)**
+  - [x] Bảng Chi tiết sản phẩm: Xuất xứ, Chất liệu, Thương hiệu, Bảo hành,...
+  - [x] Logic render bảng thuộc tính động từ JSONB `attributes` trả về từ API.
+  - [x] Section Mô tả sản phẩm (Product Description) có định dạng văn bản chuẩn.
   - *BE Dependency:* `GET /api/v1/products/:id`
 
-- [ ] **FE-205: Kênh Người Bán - Form Đăng & Quản lý Sản phẩm**
-  - [ ] Form tạo mới SPU: Tên, Mô tả, Chọn danh mục.
-  - [ ] Cấu hình Thuộc tính động theo Danh mục được chọn.
-  - [ ] Đăng ký Nhóm phân loại Tier 1 & Tier 2.
-  - [ ] Ma trận nhập giá VND & Số lượng tồn kho (Stock) cho từng SKU con.
-  - [ ] Upload ảnh thumbnail cho từng SKU & Ảnh chung cho SPU.
+- [x] **FE-205: Kênh Người Bán - Form Đăng & Quản lý Sản phẩm**
+  - [x] Form tạo mới SPU: Tên, Mô tả, Chọn danh mục.
+  - [x] Cấu hình Thuộc tính động theo Danh mục được chọn.
+  - [x] Đăng ký Nhóm phân loại Tier 1 & Tier 2.
+  - [x] Ma trận nhập giá VND & Số lượng tồn kho (Stock) cho từng SKU con.
+  - [x] Upload ảnh thumbnail cho từng SKU & Ảnh chung cho SPU.
   - *BE Dependency:* `POST /api/v1/seller/products`
 
 ---
 
 ## Phase 3: Tìm kiếm Nâng cao & Lọc đa chiều (Search & Faceted Filtering)
 
-- [ ] **FE-301: Smart Search Bar & Autocomplete**
-  - [ ] Ô tìm kiếm trên Header với kỹ thuật Debounce (300ms).
-  - [ ] Popup Gợi ý từ khóa hot & Lịch sử tìm kiếm gần đây.
-  - [ ] Dropdown gợi ý sản phẩm trực tiếp khi đang gõ từ khóa.
+- [x] **FE-301: Smart Search Bar & Autocomplete**
+  - [x] Ô tìm kiếm trên Header với kỹ thuật Debounce (300ms).
+  - [x] Popup Gợi ý từ khóa hot & Lịch sử tìm kiếm gần đây.
+  - [x] Dropdown gợi ý sản phẩm trực tiếp khi đang gõ từ khóa.
   - *BE Dependency:* `GET /api/v1/search/suggestions`
 
-- [ ] **FE-302: Thanh Sidebar Lọc Đa chiều (Faceted Filters Sidebar)**
-  - [ ] Lọc theo Loại Shop: Shopee Mall, Shop Yêu Thích (Checkbox).
-  - [ ] Lọc theo Nơi Bán: Chọn Tỉnh/Thành phố (Multiple select).
-  - [ ] Lọc theo Khoảng giá VND: Inputs `Từ (VND)` - `Đến (VND)` + Nút Áp dụng.
-  - [ ] Lọc theo Đánh giá Rating: 5 Sao, Từ 4 Sao, Từ 3 Sao...
-  - [ ] Lọc theo Thuộc tính động (Dynamic Facets dựa theo Category, VD: RAM 8GB, 16GB).
-  - [ ] Nút Xóa tất cả bộ lọc (Clear all filters).
+- [x] **FE-302: Thanh Sidebar Lọc Đa chiều (Faceted Filters Sidebar)**
+  - [x] Lọc theo Loại Shop: Shopee Mall, Shop Yêu Thích (Checkbox).
+  - [x] Lọc theo Nơi Bán: Chọn Tỉnh/Thành phố (Multiple select).
+  - [x] Lọc theo Khoảng giá VND: Inputs `Từ (VND)` - `Đến (VND)` + Nút Áp dụng.
+  - [x] Lọc theo Đánh giá Rating: 5 Sao, Từ 4 Sao, Từ 3 Sao...
+  - [x] Lọc theo Thuộc tính động (Dynamic Facets dựa theo Category, VD: RAM 8GB, 16GB).
+  - [x] Nút Xóa tất cả bộ lọc (Clear all filters).
   - *BE Dependency:* Dữ liệu `facets` từ `GET /api/v1/search`
 
-- [ ] **FE-303: Trang Kết quả Tìm kiếm & Sắp xếp (Search Result Page)**
-  - [ ] Thanh Sắp xếp Tab: Phổ biến, Mới nhất, Bán chạy, Giá (Thấp -> Cao / Cao -> Thấp).
-  - [ ] Grid hiển thị danh sách sản phẩm (Card sản phẩm: Ảnh, Mall badge, Tên, Giá VND, Lượt bán, Nơi bán).
-  - [ ] Chuyển trang (Pagination / Infinite Scroll).
-  - [ ] Đồng bộ dữ liệu Lọc + Search Query + Sort + Pagination lên URL Params (`?q=iphone&category_id=10&price_min=...`).
-  - [ ] Màn hình Trang trống (Empty state) khi không có kết quả phù hợp.
+- [x] **FE-303: Trang Kết quả Tìm kiếm & Sắp xếp (Search Result Page)**
+  - [x] Thanh Sắp xếp Tab: Phổ biến, Mới nhất, Bán chạy, Giá (Thấp -> Cao / Cao -> Thấp).
+  - [x] Grid hiển thị danh sách sản phẩm (Card sản phẩm: Ảnh, Mall badge, Tên, Giá VND, Lượt bán, Nơi bán).
+  - [x] Chuyển trang (Pagination / Infinite Scroll).
+  - [x] Đồng bộ dữ liệu Lọc + Search Query + Sort + Pagination lên URL Params (`?q=iphone&category_id=10&price_min=...`).
+  - [x] Màn hình Trang trống (Empty state) khi không có kết quả phù hợp.
   - *BE Dependency:* `GET /api/v1/search`
 
 ---
 
 ## Phase 4: Giỏ hàng, Đặt hàng & Thanh toán (Cart, Order & Checkout)
 
-- [ ] **FE-401: Trang Giỏ hàng (Cart Page)**
-  - [ ] Hiển thị danh sách sản phẩm trong giỏ gom nhóm theo Shop (`shopId`).
-  - [ ] Checkbox chọn tất cả, chọn theo Shop, chọn từng SKU lẻ.
-  - [ ] Thay đổi số lượng SKU trực tiếp trong giỏ hàng (tự cập nhật API/Zustand).
-  - [ ] Xóa sản phẩm khỏi giỏ hàng (xóa lẻ hoặc xóa hàng loạt).
-  - [ ] Thanh tổng tiền cố định bên dưới (Sticky Bottom Bar): Tổng số lượng chọn, Tổng tiền VND, Nút "Mua Hàng".
+- [x] **FE-401: Trang Giỏ hàng (Cart Page)**
+  - [x] Hiển thị danh sách sản phẩm trong giỏ gom nhóm theo Shop (`shopId`).
+  - [x] Checkbox chọn tất cả, chọn theo Shop, chọn từng SKU lẻ.
+  - [x] Thay đổi số lượng SKU trực tiếp trong giỏ hàng (tự cập nhật API/Zustand).
+  - [x] Xóa sản phẩm khỏi giỏ hàng (xóa lẻ hoặc xóa hàng loạt).
+  - [x] Thanh tổng tiền cố định bên dưới (Sticky Bottom Bar): Tổng số lượng chọn, Tổng tiền VND, Nút "Mua Hàng".
   - *BE Dependency:* `GET /api/v1/cart`, `PUT /api/v1/cart/item`, `DELETE /api/v1/cart/item`
 
-- [ ] **FE-402: Trang Thanh toán (Checkout Page)**
-  - [ ] Block Địa chỉ nhận hàng (Hiển thị địa chỉ mặc định + Nút thay đổi địa chỉ).
-  - [ ] Danh sách đơn hàng phân tách theo từng Shop (Mỗi shop 1 bảng riêng).
-  - [ ] Chọn Đơn vị vận chuyển & Hiển thị phí ship giả lập (VND).
-  - [ ] Ô Ghi chú cho Người bán (Order note per shop).
-  - [ ] Chọn Phương thức thanh toán: COD, Ví ShopewPay, Chuyển khoản.
-  - [ ] Summary Tổng thanh toán: Tổng tiền hàng, Phí vận chuyển, Giảm giá Voucher, Tổng thanh toán cuối cùng (VND).
+- [x] **FE-402: Trang Thanh toán (Checkout Page)**
+  - [x] Block Địa chỉ nhận hàng (Hiển thị địa chỉ mặc định + Nút thay đổi địa chỉ).
+  - [x] Danh sách đơn hàng phân tách theo từng Shop (Mỗi shop 1 bảng riêng).
+  - [x] Chọn Đơn vị vận chuyển & Hiển thị phí ship giả lập (VND).
+  - [x] Ô Ghi chú cho Người bán (Order note per shop).
+  - [x] Chọn Phương thức thanh toán: COD, Ví ShopewPay, Chuyển khoản.
+  - [x] Summary Tổng thanh toán: Tổng tiền hàng, Phí vận chuyển, Giảm giá Voucher, Tổng thanh toán cuối cùng (VND).
   - *BE Dependency:* `POST /api/v1/orders/checkout`
 
-- [ ] **FE-403: Đặt hàng & Xử lý Hàng đợi Chống bán lố (Order Concurrency UI)**
-  - [ ] Trigger nút "Đặt hàng" gửi payload chọn items + shippingAddress.
-  - [ ] Overlay/Modal Chờ xử lý hàng đợi ("Hệ thống đang kiểm tra kho hàng...").
-  - [ ] Xử lý phản hồi `status: PENDING_PAYMENT` & `orderGroupId`.
-  - [ ] Chuyển hướng sang trang Đặt hàng Thành công (`/order/success`).
-  - [ ] Handling lỗi hết hàng (`409 Conflict`) hiển thị thông báo dịu dàng cho người dùng.
+- [x] **FE-403: Đặt hàng & Xử lý Hàng đợi Chống bán lố (Order Concurrency UI)**
+  - [x] Trigger nút "Đặt hàng" gửi payload chọn items + shippingAddress.
+  - [x] Overlay/Modal Chờ xử lý hàng đợi ("Hệ thống đang kiểm tra kho hàng...").
+  - [x] Xử lý phản hồi `status: PENDING_PAYMENT` & `orderGroupId`.
+  - [x] Chuyển hướng sang trang Đặt hàng Thành công (`/order/success`).
+  - [x] Handling lỗi hết hàng (`409 Conflict`) hiển thị thông báo dịu dàng cho người dùng.
   - *BE Dependency:* `POST /api/v1/orders/checkout`
 
 ---
 
 ## Phase 5: Mã Giảm Giá & Flash Sales (Promotions & Concurrency UI)
 
-- [ ] **FE-501: Áp dụng Voucher 3 Tầng tại Checkout**
-  - [ ] Modal chọn Shopee Voucher (Voucher miễn phí vận chuyển / Voucher giảm giá Sàn).
-  - [ ] Section chọn Voucher riêng của Shop (Shop Voucher).
-  - [ ] Toggle dùng Shopee Xu (Quy đổi xu sang tiền VND giảm trực tiếp).
-  - [ ] Hiển thị chi tiết số tiền được giảm tương ứng từng loại Voucher.
+- [x] **FE-501: Áp dụng Voucher 3 Tầng tại Checkout**
+  - [x] Modal chọn Shopee Voucher (Voucher miễn phí vận chuyển / Voucher giảm giá Sàn).
+  - [x] Section chọn Voucher riêng của Shop (Shop Voucher).
+  - [x] Toggle dùng Shopee Xu (Quy đổi xu sang tiền VND giảm trực tiếp).
+  - [x] Hiển thị chi tiết số tiền được giảm tương ứng từng loại Voucher.
   - *BE Dependency:* `GET /api/v1/vouchers/applicable`
 
-- [ ] **FE-502: Trang & Widget Flash Sale**
-  - [ ] Block Flash Sale trang chủ với Đồng hồ Đếm ngược (Countdown Timer `HH:MM:SS`).
-  - [ ] Tab khung giờ Flash Sale (Ví dụ: 00:00, 09:00, 12:00, 15:00, 21:00).
-  - [ ] Thanh Tiến trình Tồn kho Flash Sale: "Đã bán X%", "Sắp bán hết", "Đã hết hàng".
-  - [ ] Badge Giảm giá Nổi bật (Ví dụ: `Giảm 50%`, `Chỉ từ 9k`).
+- [x] **FE-502: Trang & Widget Flash Sale**
+  - [x] Block Flash Sale trang chủ với Đồng hồ Đếm ngược (Countdown Timer `HH:MM:SS`).
+  - [x] Tab khung giờ Flash Sale (Ví dụ: 00:00, 09:00, 12:00, 15:00, 21:00).
+  - [x] Thanh Tiến trình Tồn kho Flash Sale: "Đã bán X%", "Sắp bán hết", "Đã hết hàng".
+  - [x] Badge Giảm giá Nổi bật (Ví dụ: `Giảm 50%`, `Chỉ từ 9k`).
   - *BE Dependency:* `GET /api/v1/flash-sale/current`
 
 ---
