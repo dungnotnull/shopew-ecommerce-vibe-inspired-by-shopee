@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
-import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Check, RefreshCw } from 'lucide-react';
+import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Trash2, Check, RefreshCw } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { orderService } from '../services/order-service';
 import { addressService, AddressPayload } from '../services/address-service';
+import { ConfirmModal } from '../components/common/ConfirmModal';
 import { formatVND } from '../utils/format-currency';
 
 export const CheckoutPage: React.FC = () => {
@@ -23,6 +24,11 @@ export const CheckoutPage: React.FC = () => {
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
   const [isEditingInModal, setIsEditingInModal] = useState<boolean>(false);
   const [editingAddrId, setEditingAddrId] = useState<number | null>(null);
+
+  // State cho Popup Confirm Xóa Địa Chỉ (thay thế window.confirm)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
+  const [deletingAddrId, setDeletingAddrId] = useState<number | null>(null);
+  const [isDeletingAddr, setIsDeletingAddr] = useState<boolean>(false);
 
   // Field Form trong Modal
   const [formName, setFormName] = useState<string>('');
@@ -84,6 +90,37 @@ export const CheckoutPage: React.FC = () => {
     setModalError('');
     setIsEditingInModal(true);
     setShowAddressModal(true);
+  };
+
+  // Mở Popup Confirm trước khi Xóa Địa Chỉ trong Modal Checkout
+  const handleOpenDeleteConfirmInModal = (e: React.MouseEvent, id: number) => {
+    e.stopPropagation();
+    setDeletingAddrId(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  // Thực thi Xóa Địa Chỉ sau khi người dùng bấm xác nhận trên Popup Confirm
+  const handleConfirmDeleteAddressInModal = async () => {
+    if (!deletingAddrId) return;
+    setIsDeletingAddr(true);
+    try {
+      await addressService.deleteAddress(deletingAddrId);
+      const remainingAddresses = await addressService.getUserAddresses();
+      setAddresses(remainingAddresses);
+
+      if (selectedAddressId === deletingAddrId) {
+        const nextDefault = remainingAddresses.find((a) => a.isDefault) || remainingAddresses[0];
+        setSelectedAddressId(nextDefault?.id || null);
+      }
+      setDeleteConfirmOpen(false);
+      setDeletingAddrId(null);
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || 'Không thể xóa địa chỉ này vì địa chỉ đã được liên kết với đơn hàng đã tạo trước đó.';
+      alert(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg);
+      setDeleteConfirmOpen(false);
+    } finally {
+      setIsDeletingAddr(false);
+    }
   };
 
   // Lưu Địa chỉ (Thêm mới hoặc Cập nhật qua API Backend)
@@ -364,7 +401,7 @@ export const CheckoutPage: React.FC = () => {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-1.5 shrink-0">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -375,6 +412,15 @@ export const CheckoutPage: React.FC = () => {
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
+                              {addr.id && (
+                                <button
+                                  onClick={(e) => handleOpenDeleteConfirmInModal(e, addr.id!)}
+                                  className="p-1.5 text-red-500 hover:bg-red-50 rounded cursor-pointer"
+                                  title="Xóa địa chỉ này"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                               {isSelected && (
                                 <div className="w-6 h-6 bg-[#ee4d2d] text-white rounded-full flex items-center justify-center">
                                   <Check className="w-4 h-4" />
@@ -501,6 +547,22 @@ export const CheckoutPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* System Confirm Modal cho Thao tác Xóa Địa Chỉ trong Checkout */}
+        <ConfirmModal
+          isOpen={deleteConfirmOpen}
+          title="Xác nhận xóa địa chỉ nhận hàng"
+          message="Bạn có chắc chắn muốn xóa địa chỉ nhận hàng này khỏi sổ địa chỉ?"
+          confirmText="Đồng ý Xóa"
+          cancelText="Giữ lại"
+          type="danger"
+          isLoading={isDeletingAddr}
+          onConfirm={handleConfirmDeleteAddressInModal}
+          onCancel={() => {
+            setDeleteConfirmOpen(false);
+            setDeletingAddrId(null);
+          }}
+        />
 
         {/* Modal Thành Công */}
         {successOrder && (
