@@ -54,6 +54,7 @@ export class FlashSalesService implements OnModuleInit {
       name: item.product.name,
       priceMin: item.product.priceMin,
       priceMax: item.product.priceMax,
+      promotionalPrice: Math.floor(item.sku.originalPrice * (1 - item.discountPercentage / 100)),
       discountPercentage: item.discountPercentage,
       soldCount: item.soldCount,
       stock: item.promotionalStock,
