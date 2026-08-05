@@ -67,7 +67,7 @@ export class CheckoutProcessor extends WorkerHost {
 
         // Apply Flash Sale
         if (fsItem && fsItem.promotionalStock >= item.quantity) {
-          price = Math.floor(sku.price * (1 - fsItem.discountPercentage / 100));
+          price = Math.floor(sku.originalPrice * (1 - fsItem.discountPercentage / 100));
           isFlashSale = true;
         } else if (sku.stock < item.quantity) {
           throw new Error(`SKU ${item.variantId} vượt quá số lượng tồn kho`);
