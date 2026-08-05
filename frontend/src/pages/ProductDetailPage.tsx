@@ -28,7 +28,7 @@ export const ProductDetailPage: React.FC = () => {
   const [cartSuccessMsg, setCartSuccessMsg] = useState<string>('');
 
   const handleAddToCart = async (redirectCart = false) => {
-    if (!product) return;
+    if (!product || addingToCart) return;
     const targetSku = activeSku || product.skus?.[0];
     if (!targetSku) {
       alert('Sản phẩm tạm thời hết hàng hoặc chưa chọn phân loại.');
