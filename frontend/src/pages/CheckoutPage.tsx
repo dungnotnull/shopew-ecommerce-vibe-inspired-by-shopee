@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
-import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Trash2, Check, RefreshCw } from 'lucide-react';
+import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Trash2, Check, RefreshCw, Ticket } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { orderService } from '../services/order-service';
 import { addressService, AddressPayload } from '../services/address-service';
+import { voucherService, Voucher } from '../services/voucher-service';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { formatVND } from '../utils/format-currency';
 
@@ -19,6 +20,10 @@ export const CheckoutPage: React.FC = () => {
   const [addresses, setAddresses] = useState<AddressPayload[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [loadingAddresses, setLoadingAddresses] = useState<boolean>(true);
+
+  // Quản lý Vouchers từ Ví User: GET /api/v1/vouchers/wallet
+  const [walletVouchers, setWalletVouchers] = useState<Voucher[]>([]);
+  const [selectedPlatformVoucherId, setSelectedPlatformVoucherId] = useState<number | null>(null);
 
   // State Modal Chọn & Chỉnh Sửa / Thêm Địa Chỉ
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
@@ -57,8 +62,19 @@ export const CheckoutPage: React.FC = () => {
     }
   };
 
+  // Nạp danh sách Voucher từ Ví người dùng: GET /api/v1/vouchers/wallet
+  const fetchWalletVouchers = async () => {
+    try {
+      const data = await voucherService.getWalletVouchers();
+      setWalletVouchers(data);
+    } catch {
+      setWalletVouchers([]);
+    }
+  };
+
   useEffect(() => {
     fetchUserAddresses();
+    fetchWalletVouchers();
   }, []);
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) || addresses[0];
@@ -170,7 +186,18 @@ export const CheckoutPage: React.FC = () => {
 
   const totalProductAmount = selectedCartItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
   const shippingFee = selectedCartItems.length > 0 ? 30000 : 0;
-  const grandTotal = totalProductAmount + shippingFee;
+
+  // Tính giảm giá Voucher Sàn (Platform Voucher)
+  const selectedPlatformVoucher = walletVouchers.find((v) => v.id === selectedPlatformVoucherId);
+  let platformDiscount = 0;
+  if (selectedPlatformVoucher && totalProductAmount >= selectedPlatformVoucher.minOrderValue) {
+    platformDiscount = Math.floor(totalProductAmount * (selectedPlatformVoucher.discountPercentage / 100));
+    if (selectedPlatformVoucher.maxDiscount > 0 && platformDiscount > selectedPlatformVoucher.maxDiscount) {
+      platformDiscount = selectedPlatformVoucher.maxDiscount;
+    }
+  }
+
+  const grandTotal = Math.max(0, totalProductAmount + shippingFee - platformDiscount);
 
   // Thực hiện Đặt Hàng
   const handlePlaceOrder = async () => {
@@ -187,13 +214,17 @@ export const CheckoutPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const payload = {
+      const payload: any = {
         cartItems: selectedCartItems.map((item: any) => ({
           variantId: item.skuId || item.id,
           quantity: item.quantity,
         })),
         shippingAddressId: selectedAddress.id,
       };
+
+      if (selectedPlatformVoucherId) {
+        payload.platformVoucherId = selectedPlatformVoucherId;
+      }
 
       const res = await orderService.checkout(payload);
       setSuccessOrder(res);
@@ -301,6 +332,55 @@ export const CheckoutPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Khối Chọn Shopew Voucher / Mã Giảm Giá */}
+            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                  <Ticket className="w-5 h-5 text-[#ee4d2d]" /> Shopew Voucher & Mã Giảm Giá
+                </div>
+                <span className="text-xs text-slate-500">
+                  {walletVouchers.length} mã trong Ví
+                </span>
+              </div>
+
+              {walletVouchers.length === 0 ? (
+                <div className="text-xs text-slate-400 py-1 flex items-center justify-between">
+                  <span>Bạn chưa có mã giảm giá nào trong Ví.</span>
+                  <Link to="/user/vouchers" className="text-[#ee4d2d] font-bold hover:underline">
+                    Vào Ví Voucher
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2 text-xs">
+                  <label className="block font-bold text-slate-700">Chọn Mã Giảm Giá Sàn Khả Dụng:</label>
+                  <select
+                    value={selectedPlatformVoucherId || ''}
+                    onChange={(e) => setSelectedPlatformVoucherId(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-[#ee4d2d] font-bold text-slate-800"
+                  >
+                    <option value="">-- Không sử dụng mã giảm giá sàn --</option>
+                    {walletVouchers
+                      .filter((v) => !v.shopId)
+                      .map((v) => {
+                        const isValid = totalProductAmount >= v.minOrderValue;
+                        return (
+                          <option key={v.id} value={v.id} disabled={!isValid}>
+                            {v.code} - Giảm {v.discountPercentage}% (Đơn từ {formatVND(v.minOrderValue)}) {!isValid ? '[Chưa đủ điều kiện]' : ''}
+                          </option>
+                        );
+                      })}
+                  </select>
+
+                  {selectedPlatformVoucher && (
+                    <div className="p-2.5 bg-orange-50 border border-orange-200 text-[#ee4d2d] rounded-lg font-bold flex items-center justify-between">
+                      <span>Đã áp dụng mã: {selectedPlatformVoucher.code} (-{selectedPlatformVoucher.discountPercentage}%)</span>
+                      <span>-{formatVND(platformDiscount)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Phương Thức Thanh Toán & Chi Tiết */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center gap-2 text-sm font-bold text-slate-800 border-b border-slate-100 pb-3">
@@ -322,6 +402,12 @@ export const CheckoutPage: React.FC = () => {
                   <span>Phí vận chuyển:</span>
                   <span className="font-bold text-slate-800">{formatVND(shippingFee)}</span>
                 </div>
+                {platformDiscount > 0 && (
+                  <div className="flex justify-between text-[#ee4d2d]">
+                    <span>Giảm giá Voucher:</span>
+                    <span className="font-bold">-{formatVND(platformDiscount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm font-extrabold text-slate-900 border-t border-slate-200 pt-3">
                   <span>Tổng thanh toán:</span>
                   <span className="text-[#ee4d2d] text-lg">{formatVND(grandTotal)}</span>

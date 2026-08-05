@@ -232,26 +232,25 @@ export const HomePage: React.FC = () => {
           <div className="p-8 text-center text-xs text-gray-400">Đang cập nhật danh sách Flash Sale...</div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {flashSales.slice(0, 6).map((fs) => {
-              const displayPrice = fs.promotionalPrice || fs.priceMin;
-              const soldPercent = fs.stock > 0
-                ? Math.min(100, Math.round((fs.soldCount / (fs.soldCount + fs.stock)) * 100))
-                : 85;
+            {flashSales.slice(0, 6).map((fs: any) => {
+              const displayPrice = fs.price || fs.promotionalPrice || fs.priceMin || 0;
+              const targetProductId = fs.productId || fs.id;
+              const title = fs.productName || fs.name || `Sản phẩm Flash Sale #${targetProductId}`;
+              const img = fs.thumbnailUrl || (Array.isArray(fs.images) ? fs.images[0] : null) || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400';
+              const soldCount = fs.soldCount || 0;
+              const totalStock = (fs.promotionalStock || fs.stock || 10) + soldCount;
+              const soldPercent = totalStock > 0 ? Math.min(100, Math.round((soldCount / totalStock) * 100)) : 50;
 
               return (
                 <Link
                   key={fs.id}
-                  to={`/products/${fs.id}`}
+                  to={`/products/${targetProductId}`}
                   className="group block border border-gray-100 rounded-lg p-2.5 hover:shadow-md transition-all bg-white hover:-translate-y-0.5"
                 >
                   <div className="relative aspect-square overflow-hidden rounded-md mb-2 bg-gray-50">
                     <img
-                      src={
-                        (Array.isArray((fs as any).images) && (fs as any).images.length > 0)
-                          ? (fs as any).images[0]
-                          : (fs.thumbnailUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400')
-                      }
-                      alt={fs.name}
+                      src={img}
+                      alt={title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
                     {!!fs.discountPercentage && fs.discountPercentage > 0 && (
@@ -261,15 +260,15 @@ export const HomePage: React.FC = () => {
                     )}
                   </div>
                   <h4 className="text-xs text-gray-800 font-medium line-clamp-2 mb-1.5 group-hover:text-[#ee4d2d] h-8">
-                    {fs.name}
+                    {title}
                   </h4>
                   <div className="text-sm font-bold text-[#ee4d2d] mb-2">{formatVND(displayPrice)}</div>
 
                   {/* Sold Progress Bar */}
                   <div className="w-full bg-orange-100 rounded-full h-3.5 overflow-hidden relative border border-orange-200">
-                    <div className="bg-[#ee4d2d] h-full rounded-full transition-all" style={{ width: `${soldPercent}%` }}></div>
+                    <div className="bg-[#ee4d2d] h-full rounded-full transition-all" style={{ width: `${soldPercent || 35}%` }}></div>
                     <span className="absolute inset-0 flex items-center justify-center text-[9px] font-extrabold text-white uppercase tracking-wider drop-shadow-xs">
-                      ĐÃ BÁN {fs.soldCount || 12}
+                      ĐÃ BÁN {soldCount}
                     </span>
                   </div>
                 </Link>

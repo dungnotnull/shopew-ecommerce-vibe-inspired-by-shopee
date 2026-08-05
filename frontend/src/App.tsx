@@ -31,6 +31,9 @@ import { AdminBannerListPage } from './pages/admin/AdminBannerListPage';
 import { AdminUserListPage } from './pages/admin/AdminUserListPage';
 import { AdminProductListPage } from './pages/admin/AdminProductListPage';
 import { AdminVoucherListPage } from './pages/admin/AdminVoucherListPage';
+import { AdminFlashSalePage } from './pages/admin/AdminFlashSalePage';
+
+import { SellerFlashSalePage } from './pages/seller/SellerFlashSalePage';
 
 // Phase 2, 3 & 4 Catalog, Shop & Order Pages
 import { ProductDetailPage } from './pages/ProductDetailPage';
@@ -201,6 +204,14 @@ export const App: React.FC = () => {
             }
           />
           <Route
+            path="/seller/flash-sales"
+            element={
+              <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
+                <SellerFlashSalePage />
+              </RoleGuard>
+            }
+          />
+          <Route
             path="/seller/profile"
             element={
               <RoleGuard allowedRoles={['SELLER', 'ADMIN']}>
@@ -266,6 +277,14 @@ export const App: React.FC = () => {
                 <AdminLayout>
                   <AdminVoucherListPage />
                 </AdminLayout>
+              </RoleGuard>
+            }
+          />
+          <Route
+            path="/admin/flash-sales"
+            element={
+              <RoleGuard allowedRoles={['ADMIN']}>
+                <AdminFlashSalePage />
               </RoleGuard>
             }
           />

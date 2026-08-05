@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShieldAlert, Users, ShoppingBag, RotateCcw, Tag, LogOut, ArrowLeft, Layers } from 'lucide-react';
+import { ShieldAlert, Users, ShoppingBag, RotateCcw, Tag, LogOut, ArrowLeft, Layers, Zap } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 interface AdminLayoutProps {
@@ -17,8 +17,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { label: 'Quản Lý Danh Mục Ngành Hàng', path: '/admin/categories', icon: Layers },
     { label: 'Quản Lý Người Dùng & Shop', path: '/admin/users', icon: Users },
     { label: 'Duyệt Sản Phẩm SPU/SKU', path: '/admin/products', icon: ShoppingBag },
-    { label: 'Trọng Tài Trả Hàng / Hoàn Tiền', path: '/admin/disputes', icon: RotateCcw },
     { label: 'Quản Lý Banner & Voucher Sàn', path: '/admin/vouchers', icon: Tag },
+    { label: 'Quản Lý Khung Giờ Flash Sale', path: '/admin/flash-sales', icon: Zap },
+    { label: 'Trọng Tài Trả Hàng / Hoàn Tiền', path: '/admin/disputes', icon: RotateCcw },
   ];
 
   return (
