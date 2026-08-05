@@ -4,7 +4,7 @@ import { AddToCartDto } from './dto/add-to-cart.dto';
 
 @Injectable()
 export class CartService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async upsertCart(userId: number, dto: AddToCartDto) {
     // Validate SKU
@@ -17,11 +17,24 @@ export class CartService {
       throw new NotFoundException('SKU không tồn tại');
     }
 
-    if (dto.quantity > sku.stock) {
+    const existingCartItem = await this.prisma.cartItem.findUnique({
+      where: {
+        userId_variantId: {
+          userId,
+          variantId: dto.variantId,
+        },
+      },
+    });
+
+    const newQuantity = existingCartItem
+      ? existingCartItem.quantity + dto.quantity
+      : dto.quantity;
+
+    if (newQuantity > sku.stock) {
       throw new BadRequestException('Số lượng vượt quá tồn kho');
     }
 
-    if (dto.quantity === 0) {
+    if (newQuantity <= 0) {
       // Remove item
       await this.prisma.cartItem.deleteMany({
         where: {
@@ -41,14 +54,14 @@ export class CartService {
         },
       },
       update: {
-        quantity: dto.quantity,
+        quantity: newQuantity,
       },
       create: {
         userId,
         variantId: dto.variantId,
         productId: sku.productId,
         shopId: sku.product.shopId,
-        quantity: dto.quantity,
+        quantity: newQuantity,
       },
     });
 

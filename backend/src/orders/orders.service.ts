@@ -10,7 +10,7 @@ export class OrdersService {
   constructor(
     @InjectQueue('checkout') private readonly checkoutQueue: Queue,
     private prisma: PrismaService,
-  ) {}
+  ) { }
 
   async checkout(userId: number, dto: CheckoutDto) {
     // Validate shipping address
@@ -23,16 +23,7 @@ export class OrdersService {
     }
 
     if (!address) {
-      address = await this.prisma.address.create({
-        data: {
-          userId,
-          street: '123 Đường Nguyễn Huệ, Phường Bến Nghé',
-          city: 'Quận 1',
-          state: 'TP. Hồ Chí Minh',
-          zipCode: '700000',
-          isDefault: true,
-        },
-      });
+      throw new BadRequestException('Vui lòng thêm địa chỉ giao hàng trước khi thanh toán');
     }
 
     const orderGroupId = randomUUID();
