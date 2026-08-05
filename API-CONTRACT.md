@@ -286,7 +286,25 @@
 - **Response:** Paginated list of all products.
 
 ## Cart & Checkout
+
+### `POST /api/v1/cart`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Body:** `{ "variantId": 201, "quantity": 1 }`
+- **Response:** `{ "id": 1, "userId": 2, "variantId": 201, "quantity": 3 }`
+- **Note:** Always increments the quantity (e.g. `existing + new`).
+
+### `PUT /api/v1/cart/:variantId`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Body:** `{ "quantity": 2 }`
+- **Response:** `{ "id": 1, "userId": 2, "variantId": 201, "quantity": 2 }`
+- **Note:** Sets the exact absolute quantity.
+
+### `DELETE /api/v1/cart/:variantId`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** `{ "success": true, "message": "Đã xóa khỏi giỏ hàng" }`
+
 ### `GET /api/v1/cart`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
 - **Response:** 
 ```json
 {

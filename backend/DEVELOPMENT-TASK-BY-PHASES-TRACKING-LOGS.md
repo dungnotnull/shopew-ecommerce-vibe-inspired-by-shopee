@@ -80,10 +80,12 @@
 
 - [x] **Cart Management (`src/cart`):**
   - [x] Generate module/controller/service (`nest g res cart`).
-  - [x] `POST /api/v1/cart`: Add to cart / Update quantity.
+  - [x] `POST /api/v1/cart`: Add to cart (Cộng dồn số lượng).
     - [x] Check if `variantId` exists in `SKU` table.
-    - [x] Check if `quantity` <= `SKU.stock`.
-    - [x] Upsert record in `CartItem`.
+    - [x] Check if `newQuantity` <= `SKU.stock`.
+    - [x] Upsert record in `CartItem` (Increment logic).
+  - [x] `PUT /api/v1/cart/:variantId`: Cập nhật chính xác số lượng sản phẩm trong giỏ.
+  - [x] `DELETE /api/v1/cart/:variantId`: Xóa sản phẩm khỏi giỏ hàng.
   - [x] `GET /api/v1/cart`: Fetch cart grouped by `shopId`.
     - [x] Fetch all `CartItem` for `req.user.id` including `Shop`, `Product`, `SKU` relations.
     - [x] Map response to group by `shopId` matching `API-CONTRACT.md`.
@@ -94,7 +96,7 @@
     - [x] Configure `BullModule` (BullMQ) in `AppModule`.
     - [x] Create `checkout` queue and a Consumer/Worker class.
   - [x] `POST /api/v1/orders/checkout`: API entrypoint.
-    - [x] Validate `shippingAddressId` belongs to user (check `Address` model).
+    - [x] Validate `shippingAddressId` belongs to user. Throws error if no address exists (Removed mock creation).
     - [x] Dispatch checkout payload to `checkout` queue and return `PENDING_PAYMENT`.
   - [x] **Worker Process (`CheckoutProcessor`):**
     - [x] Begin Prisma Transaction (`prisma.$transaction`).
