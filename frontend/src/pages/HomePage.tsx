@@ -7,6 +7,8 @@ import { CategoryBar } from '../components/catalog/CategoryBar';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { ShopeePagination } from '../components/common/ShopeePagination';
 import { formatVND } from '../utils/format-currency';
+import { Voucher, voucherService } from '../services/voucher-service';
+import { VoucherCarousel } from '../components/vouchers/VoucherCarousel';
 
 // Inline Hero Banner Carousel Component
 const HeroBannerCarousel: React.FC<{ banners: HomeBanner[] }> = ({ banners }) => {
@@ -83,6 +85,8 @@ export const HomePage: React.FC = () => {
   const [banners, setBanners] = useState<HomeBanner[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [flashSales, setFlashSales] = useState<FlashSaleItem[]>([]);
+  const [platformVouchers, setPlatformVouchers] = useState<Voucher[]>([]);
+  const [savedVoucherIds, setSavedVoucherIds] = useState<number[]>([]);
   const [dailyProducts, setDailyProducts] = useState<ProductSPU[]>([]);
   const [dailyPage, setDailyPage] = useState<number>(1);
   const [dailyTotalPages, setDailyTotalPages] = useState<number>(1);
@@ -120,29 +124,33 @@ export const HomePage: React.FC = () => {
     }
   };
 
-  // Call 4 API Backend song song nạp trang chủ:
-  // 1. GET /api/v1/home/banners
-  // 2. GET /api/v1/categories
-  // 3. GET /api/v1/home/flash-sale
-  // 4. GET /api/v1/home/daily-discover (limit = 20)
   useEffect(() => {
     const fetchHomeData = async () => {
       setLoading(true);
       try {
-        const [bannerRes, catRes, flashRes, discoverRes] = await Promise.all([
+        const [bannerRes, catRes, flashRes, discoverRes, platformVoucherRes] = await Promise.all([
           CatalogService.getHomeBanners(),
           CatalogService.getCategories(),
           CatalogService.getFlashSale(),
           CatalogService.getDailyDiscover(1, 20),
+          voucherService.getPublicPlatformVouchers(),
         ]);
 
         setBanners(bannerRes);
         setCategories(catRes);
         setFlashSales(flashRes);
         setDailyProducts(discoverRes.data || []);
+        setPlatformVouchers(platformVoucherRes);
         const totalPages = discoverRes.totalPages || Math.ceil((discoverRes.total || 0) / 20) || 1;
         setDailyTotalPages(totalPages);
         setDailyPage(1);
+
+        try {
+          const wallet = await voucherService.getWalletVouchers();
+          setSavedVoucherIds(wallet.map((v) => v.id));
+        } catch {
+          // Ignore
+        }
       } finally {
         setLoading(false);
       }
@@ -206,6 +214,24 @@ export const HomePage: React.FC = () => {
 
       {/* SECTION 2: CATEGORY GRID BAR (GET /api/v1/categories) */}
       <CategoryBar categories={categories} />
+
+      {/* SECTION 2.5: VOUCHER XTRA / MÃ GIẢM GIÁ SÀN */}
+      {platformVouchers.length > 0 && (
+        <VoucherCarousel
+          vouchers={platformVouchers}
+          title="VOUCHER XTRA / MÃ GIẢM GIÁ SÀN SHOPEW"
+          subtitle="Lưu voucher toàn sàn để được giảm thêm trực tiếp khi thanh toán đơn hàng"
+          savedVoucherIds={savedVoucherIds}
+          onVoucherSaved={async () => {
+            try {
+              const wallet = await voucherService.getWalletVouchers();
+              setSavedVoucherIds(wallet.map((v) => v.id));
+            } catch {
+              // Ignore
+            }
+          }}
+        />
+      )}
 
       {/* SECTION 3: FLASH SALE SÔI ĐỘNG (GET /api/v1/home/flash-sale) */}
       <div className="bg-white rounded-xl shadow-xs p-4 sm:p-5 border border-gray-100 space-y-4">

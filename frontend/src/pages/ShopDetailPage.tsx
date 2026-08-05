@@ -6,11 +6,15 @@ import CatalogService from '../services/catalog-service';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
 import { ShopeePagination } from '../components/common/ShopeePagination';
+import { Voucher, voucherService } from '../services/voucher-service';
+import { VoucherCarousel } from '../components/vouchers/VoucherCarousel';
 
 export const ShopDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [shop, setShop] = useState<ShopProfile | null>(null);
   const [products, setProducts] = useState<ProductSPU[]>([]);
+  const [shopVouchers, setShopVouchers] = useState<Voucher[]>([]);
+  const [savedVoucherIds, setSavedVoucherIds] = useState<number[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,6 +33,19 @@ export const ShopDetailPage: React.FC = () => {
       const profile = await CatalogService.getShopById(shopId);
       await fetchShopProducts(1);
       setShop(profile);
+
+      // Nạp danh sách Voucher của Shop này
+      const vouchers = await voucherService.getPublicShopVouchers(shopId);
+      setShopVouchers(vouchers);
+
+      // Nạp mảng ID voucher đã lưu trong Ví của User
+      try {
+        const wallet = await voucherService.getWalletVouchers();
+        setSavedVoucherIds(wallet.map((v) => v.id));
+      } catch {
+        // Ignore
+      }
+
       setLoading(false);
     };
 
@@ -107,6 +124,24 @@ export const ShopDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Hàng Ngang Thẻ Voucher Của Shop (Carousel) */}
+        {shopVouchers.length > 0 && (
+          <VoucherCarousel
+            vouchers={shopVouchers}
+            title={`MÃ GIẢM GIÁ CỦA ${shop.name}`}
+            subtitle="Lưu voucher để áp dụng khi thanh toán sản phẩm của shop"
+            savedVoucherIds={savedVoucherIds}
+            onVoucherSaved={async () => {
+              try {
+                const wallet = await voucherService.getWalletVouchers();
+                setSavedVoucherIds(wallet.map((v) => v.id));
+              } catch {
+                // Ignore
+              }
+            }}
+          />
+        )}
 
         {/* Danh Sách Sản Phẩm Của Shop */}
         <div id="shop-products-section" className="space-y-4">

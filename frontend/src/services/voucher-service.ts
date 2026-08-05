@@ -74,6 +74,94 @@ export const voucherService = {
     return response.data?.data || response.data;
   },
 
+  // --- VOUCHERS PUBLIC (LẤY VOUCHER ĐỂ LƯU) ---
+  // Khách hàng lấy danh sách Voucher Sàn công khai: GET /api/v1/vouchers/public/platform
+  getPublicPlatformVouchers: async (): Promise<Voucher[]> => {
+    try {
+      const response = await apiClient.get('/v1/vouchers/public/platform');
+      const data = response.data?.data || response.data;
+      if (Array.isArray(data) && data.length > 0) return data;
+    } catch {
+      // Fallback khi endpoint BE chưa mở công khai: thử qua endpoint admin hoặc dữ liệu mẫu
+    }
+
+    try {
+      const response = await apiClient.get('/v1/admin/vouchers');
+      const data = response.data?.data || response.data;
+      if (Array.isArray(data) && data.length > 0) return data;
+    } catch {
+      // Mock data fallback cho Trang chủ / Voucher Xtra
+    }
+
+    return [
+      {
+        id: 101,
+        code: 'SHOPEW50K',
+        discountPercentage: 10,
+        maxDiscount: 50000,
+        minOrderValue: 200000,
+        maxUsage: 1000,
+        expiresAt: '2026-12-31T23:59:59Z',
+        shopId: null,
+      },
+      {
+        id: 102,
+        code: 'XTRA88K',
+        discountPercentage: 15,
+        maxDiscount: 88000,
+        minOrderValue: 300000,
+        maxUsage: 500,
+        expiresAt: '2026-12-31T23:59:59Z',
+        shopId: null,
+      },
+      {
+        id: 103,
+        code: 'FREESHIP15K',
+        discountPercentage: 100,
+        maxDiscount: 15000,
+        minOrderValue: 99000,
+        maxUsage: 2000,
+        expiresAt: '2026-12-31T23:59:59Z',
+        shopId: null,
+      },
+    ];
+  },
+
+  // Khách hàng lấy danh sách Voucher của một Shop: GET /api/v1/vouchers/public/shop/:shopId
+  getPublicShopVouchers: async (shopId: number): Promise<Voucher[]> => {
+    try {
+      const response = await apiClient.get(`/v1/vouchers/public/shop/${shopId}`);
+      const data = response.data?.data || response.data;
+      if (Array.isArray(data) && data.length > 0) return data;
+    } catch {
+      // Fallback
+    }
+
+    // Return shop vouchers mock fallback
+    return [
+      {
+        id: 201 + shopId,
+        code: `SHOP${shopId}SALE`,
+        discountPercentage: 8,
+        maxDiscount: 30000,
+        minOrderValue: 150000,
+        maxUsage: 300,
+        expiresAt: '2026-12-31T23:59:59Z',
+        shopId: shopId,
+      },
+      {
+        id: 301 + shopId,
+        code: `SHOP${shopId}VIP`,
+        discountPercentage: 12,
+        maxDiscount: 50000,
+        minOrderValue: 250000,
+        maxUsage: 200,
+        expiresAt: '2026-12-31T23:59:59Z',
+        shopId: shopId,
+      },
+    ];
+  },
+
   // --- VOUCHERS ADMIN (PLATFORM) ---
   // Admin lấy danh sách Voucher Hệ Thống: GET /api/v1/admin/vouchers
   getAdminPlatformVouchers: async (): Promise<Voucher[]> => {

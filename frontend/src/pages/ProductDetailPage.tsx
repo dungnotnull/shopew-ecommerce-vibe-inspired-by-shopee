@@ -9,11 +9,15 @@ import { CustomerLayout } from '../components/layout/CustomerLayout';
 import { ProductCard } from '../components/catalog/ProductCard';
 import { ShopeePagination } from '../components/common/ShopeePagination';
 import { useCartStore } from '../store/useCartStore';
+import { Voucher, voucherService } from '../services/voucher-service';
+import { VoucherCarousel } from '../components/vouchers/VoucherCarousel';
 
 export const ProductDetailPage: React.FC = () => {
   const { fetchCartCount } = useCartStore();
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<ProductSPU | null>(null);
+  const [shopVouchers, setShopVouchers] = useState<Voucher[]>([]);
+  const [savedVoucherIds, setSavedVoucherIds] = useState<number[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Variant Index Selection State (Array of option indices chosen for each VariantGroup)
@@ -146,6 +150,18 @@ export const ProductDetailPage: React.FC = () => {
           // Default SKU fallback khi không có variant groups
           setSelectedTiers([]);
           setActiveSku(data.skus[0] || null);
+        }
+
+        // Nạp danh sách Voucher của Shop sản phẩm này
+        const shopId = data.shopId || 1;
+        const vouchers = await voucherService.getPublicShopVouchers(shopId);
+        setShopVouchers(vouchers);
+
+        try {
+          const wallet = await voucherService.getWalletVouchers();
+          setSavedVoucherIds(wallet.map((v) => v.id));
+        } catch {
+          // Ignore
         }
       }
       setLoading(false);
@@ -469,6 +485,24 @@ export const ProductDetailPage: React.FC = () => {
             </Link>
           </div>
         </div>
+
+        {/* Hàng Ngang Thẻ Voucher Của Shop (Carousel) */}
+        {shopVouchers.length > 0 && (
+          <VoucherCarousel
+            vouchers={shopVouchers}
+            title={`MÃ GIẢM GIÁ CỦA SHOP (${product.shopName || 'Shopew Store'})`}
+            subtitle="Lưu voucher ngay để nhận ưu đãi giảm giá khi thanh toán sản phẩm này"
+            savedVoucherIds={savedVoucherIds}
+            onVoucherSaved={async () => {
+              try {
+                const wallet = await voucherService.getWalletVouchers();
+                setSavedVoucherIds(wallet.map((v) => v.id));
+              } catch {
+                // Ignore
+              }
+            }}
+          />
+        )}
 
         {/* Chi tiết thuộc tính sản phẩm động (Dynamic Attributes Spec Table - FE-204) */}
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 space-y-4">

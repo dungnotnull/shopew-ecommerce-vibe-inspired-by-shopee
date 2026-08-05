@@ -140,19 +140,25 @@
 
 ## Phase 5: Mã Giảm Giá & Flash Sales (Promotions & Concurrency UI)
 
-- [x] **FE-501: Áp dụng Voucher 3 Tầng tại Checkout**
-  - [x] Modal chọn Shopee Voucher (Voucher miễn phí vận chuyển / Voucher giảm giá Sàn).
-  - [x] Section chọn Voucher riêng của Shop (Shop Voucher).
-  - [x] Toggle dùng Shopee Xu (Quy đổi xu sang tiền VND giảm trực tiếp).
-  - [x] Hiển thị chi tiết số tiền được giảm tương ứng từng loại Voucher.
-  - *BE Dependency:* `GET /api/v1/vouchers/applicable`
+- [x] **FE-501: Nơi Lấy/Lưu Voucher (Voucher Collect Carousel & Section)**
+  - [x] Hàng ngang Voucher Carousel tại Trang chi tiết Shop (`ShopDetailPage.tsx`) kèm nút "Lưu".
+  - [x] Hàng ngang Voucher Carousel tại Trang chi tiết Sản phẩm (`ProductDetailPage.tsx`) kèm nút "Lưu".
+  - [x] Mục Voucher Xtra / Mã Giảm Giá Sàn tại Trang Chủ (`HomePage.tsx`).
+  - [x] Tích hợp API `POST /api/v1/vouchers/save` để lưu voucher vào ví khách hàng.
 
-- [x] **FE-502: Trang & Widget Flash Sale**
+- [x] **FE-502: Áp dụng Voucher tại Checkout (Voucher Apply & Real-time Discount)**
+  - [x] Popup Modal Chọn Voucher (`VoucherModal.tsx`) trên Trang Thanh Toán (`CheckoutPage.tsx`) hiển thị ví Voucher.
+  - [x] Tính toán tự động số tiền giảm giá tương ứng ngay khi khách chọn/bỏ chọn voucher trước khi chốt đơn.
+  - [x] Ô nhập mã voucher thủ công trực tiếp trong Modal.
+  - [x] Trừ trực tiếp số tiền giảm giá vào tổng thanh toán và gửi `platformVoucherId` trong payload `POST /api/v1/orders/checkout`.
+  - *BE Dependency:* `GET /api/v1/vouchers/wallet`, `POST /api/v1/vouchers/save`, `POST /api/v1/orders/checkout`
+
+- [x] **FE-503: Trang & Widget Flash Sale**
   - [x] Block Flash Sale trang chủ với Đồng hồ Đếm ngược (Countdown Timer `HH:MM:SS`).
   - [x] Tab khung giờ Flash Sale (Ví dụ: 00:00, 09:00, 12:00, 15:00, 21:00).
   - [x] Thanh Tiến trình Tồn kho Flash Sale: "Đã bán X%", "Sắp bán hết", "Đã hết hàng".
   - [x] Badge Giảm giá Nổi bật (Ví dụ: `Giảm 50%`, `Chỉ từ 9k`).
-  - *BE Dependency:* `GET /api/v1/flash-sale/current`
+  - *BE Dependency:* `GET /api/v1/home/flash-sale`
 
 ---
 

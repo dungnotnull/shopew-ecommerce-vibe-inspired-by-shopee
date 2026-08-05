@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { CustomerLayout } from '../components/layout/CustomerLayout';
-import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Trash2, Check, RefreshCw, Ticket } from 'lucide-react';
+import { MapPin, CreditCard, CheckCircle2, ArrowLeft, ShoppingBag, Plus, Edit2, Trash2, Check, RefreshCw, Ticket, ChevronRight } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { orderService } from '../services/order-service';
 import { addressService, AddressPayload } from '../services/address-service';
 import { voucherService, Voucher } from '../services/voucher-service';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { formatVND } from '../utils/format-currency';
+import { VoucherModal } from '../components/vouchers/VoucherModal';
 
 export const CheckoutPage: React.FC = () => {
   const location = useLocation();
@@ -24,6 +25,7 @@ export const CheckoutPage: React.FC = () => {
   // Quản lý Vouchers từ Ví User: GET /api/v1/vouchers/wallet
   const [walletVouchers, setWalletVouchers] = useState<Voucher[]>([]);
   const [selectedPlatformVoucherId, setSelectedPlatformVoucherId] = useState<number | null>(null);
+  const [showVoucherModal, setShowVoucherModal] = useState<boolean>(false);
 
   // State Modal Chọn & Chỉnh Sửa / Thêm Địa Chỉ
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
@@ -332,51 +334,42 @@ export const CheckoutPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Khối Chọn Shopew Voucher / Mã Giảm Giá */}
+            {/* Khối Chọn Shopew Voucher / Mã Giảm Giá (Tích hợp Modal Chọn Voucher) */}
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs space-y-3">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
                   <Ticket className="w-5 h-5 text-[#ee4d2d]" /> Shopew Voucher & Mã Giảm Giá
                 </div>
-                <span className="text-xs text-slate-500">
-                  {walletVouchers.length} mã trong Ví
-                </span>
+                <button
+                  onClick={() => setShowVoucherModal(true)}
+                  className="text-xs text-[#ee4d2d] font-bold hover:underline flex items-center gap-1 cursor-pointer bg-orange-50 px-3 py-1.5 rounded-lg border border-orange-200"
+                >
+                  {selectedPlatformVoucher ? 'Đổi Voucher khác' : 'Chọn Voucher'}
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
 
-              {walletVouchers.length === 0 ? (
-                <div className="text-xs text-slate-400 py-1 flex items-center justify-between">
-                  <span>Bạn chưa có mã giảm giá nào trong Ví.</span>
-                  <Link to="/user/vouchers" className="text-[#ee4d2d] font-bold hover:underline">
-                    Vào Ví Voucher
-                  </Link>
+              {selectedPlatformVoucher ? (
+                <div className="p-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 text-[#ee4d2d] rounded-xl font-bold flex items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#ee4d2d] text-white text-[10px] px-2 py-0.5 rounded font-extrabold uppercase">
+                      Đã áp dụng
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-900">
+                      {selectedPlatformVoucher.code} (-{selectedPlatformVoucher.discountPercentage}%)
+                    </span>
+                  </div>
+                  <span className="text-sm font-extrabold">-{formatVND(platformDiscount)}</span>
                 </div>
               ) : (
-                <div className="space-y-2 text-xs">
-                  <label className="block font-bold text-slate-700">Chọn Mã Giảm Giá Sàn Khả Dụng:</label>
-                  <select
-                    value={selectedPlatformVoucherId || ''}
-                    onChange={(e) => setSelectedPlatformVoucherId(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:border-[#ee4d2d] font-bold text-slate-800"
+                <div className="flex items-center justify-between text-xs text-slate-500 py-1">
+                  <span>Ví của bạn có {walletVouchers.length} mã giảm giá sẵn sàng sử dụng.</span>
+                  <button
+                    onClick={() => setShowVoucherModal(true)}
+                    className="font-bold text-[#ee4d2d] hover:underline cursor-pointer"
                   >
-                    <option value="">-- Không sử dụng mã giảm giá sàn --</option>
-                    {walletVouchers
-                      .filter((v) => !v.shopId)
-                      .map((v) => {
-                        const isValid = totalProductAmount >= v.minOrderValue;
-                        return (
-                          <option key={v.id} value={v.id} disabled={!isValid}>
-                            {v.code} - Giảm {v.discountPercentage}% (Đơn từ {formatVND(v.minOrderValue)}) {!isValid ? '[Chưa đủ điều kiện]' : ''}
-                          </option>
-                        );
-                      })}
-                  </select>
-
-                  {selectedPlatformVoucher && (
-                    <div className="p-2.5 bg-orange-50 border border-orange-200 text-[#ee4d2d] rounded-lg font-bold flex items-center justify-between">
-                      <span>Đã áp dụng mã: {selectedPlatformVoucher.code} (-{selectedPlatformVoucher.discountPercentage}%)</span>
-                      <span>-{formatVND(platformDiscount)}</span>
-                    </div>
-                  )}
+                    Bấm để chọn mã
+                  </button>
                 </div>
               )}
             </div>
@@ -648,6 +641,16 @@ export const CheckoutPage: React.FC = () => {
             setDeleteConfirmOpen(false);
             setDeletingAddrId(null);
           }}
+        />
+
+        {/* Modal Chọn Voucher Trực Tiếp Từ Ví */}
+        <VoucherModal
+          isOpen={showVoucherModal}
+          onClose={() => setShowVoucherModal(false)}
+          walletVouchers={walletVouchers}
+          totalAmount={totalProductAmount}
+          selectedPlatformVoucherId={selectedPlatformVoucherId}
+          onSelectPlatformVoucher={(id) => setSelectedPlatformVoucherId(id)}
         />
 
         {/* Modal Thành Công */}
