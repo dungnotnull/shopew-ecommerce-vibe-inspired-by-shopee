@@ -41,4 +41,10 @@ export class OrdersController {
   async payOrder(@Request() req: any, @Param('id') id: string) {
     return this.ordersService.payOrder(req.user.id, Number(id));
   }
+
+  @Post(':id/rebuy')
+  @ApiOperation({ summary: 'Mua lại đơn hàng (Thêm tất cả sản phẩm vào giỏ hàng)' })
+  async rebuyOrder(@Request() req: any, @Param('id') id: string) {
+    return this.ordersService.rebuyOrder(req.user.id, Number(id));
+  }
 }

@@ -488,6 +488,10 @@
 - **Request:** *(Headers: `Authorization: Bearer <token>`)*
 - **Response:** `{ "id": 1, "status": "PROCESSING" }`
 
+### `POST /api/v1/orders/:id/rebuy`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)*
+- **Response:** `{ "message": "Đã thêm các sản phẩm vào giỏ hàng" }`
+
 ## Addresses
 ### `GET /api/v1/users/addresses`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)*
@@ -528,6 +532,30 @@
 - **Body:** *(Same as Admin voucher, but applies only to the Seller's Shop)*
 - **Response:** Created voucher object.
 
+### `GET /api/v1/admin/vouchers`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Array of all platform vouchers.
+
+### `GET /api/v1/seller/vouchers`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Array of the seller's shop vouchers.
+
+### `PUT /api/v1/admin/vouchers/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Updated voucher object.
+
+### `DELETE /api/v1/admin/vouchers/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** `{ "success": true }`
+
+### `PUT /api/v1/seller/vouchers/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Updated voucher object.
+
+### `DELETE /api/v1/seller/vouchers/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** `{ "success": true }`
+
 ### `POST /api/v1/vouchers/save`
 - **Request:** *(Headers: `Authorization: Bearer <token>`)*
 - **Body:** `{ "voucherId": 1 }`
@@ -547,6 +575,26 @@
 - **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
 - **Body:** `{ "sessionId": 1, "productId": 101, "skuId": 1001, "promotionalStock": 50, "discountPercentage": 20 }`
 - **Response:** Created flash sale item object.
+
+### `GET /api/v1/admin/flash-sales`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Array of flash sale sessions.
+
+### `PUT /api/v1/admin/flash-sales/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** Updated session object.
+
+### `DELETE /api/v1/admin/flash-sales/:id`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires ADMIN role*
+- **Response:** `{ "success": true }`
+
+### `GET /api/v1/seller/flash-sales/sessions`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Array of active/upcoming sessions available for registration.
+
+### `GET /api/v1/seller/flash-sales/:sessionId/items`
+- **Request:** *(Headers: `Authorization: Bearer <token>`)* - *Requires SELLER role*
+- **Response:** Array of products the seller registered in the session.
 
 ## Social (WebSockets)
 - **Namespace:** `/chat`

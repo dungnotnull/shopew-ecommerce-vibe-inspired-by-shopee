@@ -112,4 +112,58 @@ export class FlashSalesService implements OnModuleInit {
     }
     return true;
   }
+
+  // --- ADMIN METHODS ---
+
+  async getAdminSessions() {
+    return this.prisma.flashSaleSession.findMany({
+      orderBy: { startTime: 'desc' }
+    });
+  }
+
+  async updateAdminSession(id: number, data: any) {
+    return this.prisma.flashSaleSession.update({
+      where: { id },
+      data: {
+        startTime: data.startTime ? new Date(data.startTime) : undefined,
+        endTime: data.endTime ? new Date(data.endTime) : undefined,
+        isActive: data.isActive
+      }
+    });
+  }
+
+  async deleteAdminSession(id: number) {
+    return this.prisma.flashSaleSession.delete({
+      where: { id }
+    });
+  }
+
+  // --- SELLER METHODS ---
+
+  async getSellerSessions() {
+    // Return sessions that are currently active or upcoming
+    return this.prisma.flashSaleSession.findMany({
+      where: {
+        isActive: true,
+        endTime: { gte: new Date() }
+      },
+      orderBy: { startTime: 'asc' }
+    });
+  }
+
+  async getSellerRegisteredItems(sellerId: number, sessionId: number) {
+    const shop = await this.prisma.shop.findUnique({ where: { userId: sellerId } });
+    if (!shop) throw new Error('Seller does not have a shop');
+
+    return this.prisma.flashSaleItem.findMany({
+      where: {
+        sessionId,
+        product: { shopId: shop.id }
+      },
+      include: {
+        product: true,
+        sku: true
+      }
+    });
+  }
 }
