@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Ticket, Check, Sparkles } from 'lucide-react';
 import { Voucher, voucherService } from '../../services/voucher-service';
 import { formatVND } from '../../utils/format-currency';
+import { useAuthStore } from '../../store/useAuthStore';
 
 interface VoucherCardProps {
   voucher: Voucher;
@@ -10,18 +12,35 @@ interface VoucherCardProps {
 }
 
 export const VoucherCard: React.FC<VoucherCardProps> = ({ voucher, onSaved, isSavedInitial = false }) => {
+  const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [saving, setSaving] = useState<boolean>(false);
   const [isSaved, setIsSaved] = useState<boolean>(isSavedInitial);
 
   const handleSave = async () => {
     if (saving || isSaved) return;
+
+    // Nếu người dùng chưa đăng nhập, chuyển hướng ngay sang trang Login
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
     setSaving(true);
     try {
       await voucherService.saveVoucher(voucher.id);
       setIsSaved(true);
       if (onSaved) onSaved();
     } catch (err: any) {
+      const status = err?.response?.status;
       const msg = err?.response?.data?.message || 'Bạn đã lưu voucher này hoặc cần đăng nhập.';
+
+      // Nếu lỗi 401 Unauthorized hoặc chưa đăng nhập từ API Backend
+      if (status === 401 || msg.toLowerCase().includes('unauthorized') || msg.toLowerCase().includes('đăng nhập')) {
+        navigate('/login');
+        return;
+      }
+
       if (msg.includes('đã lưu')) {
         setIsSaved(true);
       } else {
