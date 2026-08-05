@@ -136,7 +136,13 @@
 - [x] **Vouchers (`src/vouchers`):**
   - [x] Define `Voucher` schema.
   - [x] `POST /api/v1/admin/vouchers`: Admin tạo voucher hệ thống.
+  - [x] `GET /api/v1/admin/vouchers`: Admin lấy danh sách voucher hệ thống.
+  - [x] `PUT /api/v1/admin/vouchers/:id`: Admin cập nhật voucher.
+  - [x] `DELETE /api/v1/admin/vouchers/:id`: Admin xóa voucher.
   - [x] `POST /api/v1/seller/vouchers`: Seller tạo voucher cho Shop.
+  - [x] `GET /api/v1/seller/vouchers`: Seller lấy danh sách voucher của Shop.
+  - [x] `PUT /api/v1/seller/vouchers/:id`: Seller cập nhật voucher.
+  - [x] `DELETE /api/v1/seller/vouchers/:id`: Seller xóa voucher.
   - [x] `POST /api/v1/vouchers/save`: User lưu voucher vào ví.
   - [x] `GET /api/v1/vouchers/wallet`: User lấy danh sách voucher khả dụng.
   - [x] Update Checkout Transaction (`CheckoutProcessor`) to validate `platformVoucherId` and `shopVouchers`, deduct voucher usage, and calculate final totalAmount.
@@ -144,6 +150,11 @@
 - [x] **Flash Sales (High Concurrency - `src/flash-sales`):**
   - [x] `GET /api/v1/home/flash-sale`: Fetch active `FlashSaleItem`, return with `stock`, `soldCount` and `discountPercentage`.
   - [x] `POST /api/v1/admin/flash-sales`: Admin tạo khung giờ (Session) Flash Sale.
+  - [x] `GET /api/v1/admin/flash-sales`: Admin xem danh sách Session.
+  - [x] `PUT /api/v1/admin/flash-sales/:id`: Admin cập nhật Session.
+  - [x] `DELETE /api/v1/admin/flash-sales/:id`: Admin xóa Session.
+  - [x] `GET /api/v1/seller/flash-sales/sessions`: Seller lấy danh sách Session khả dụng để đăng ký.
+  - [x] `GET /api/v1/seller/flash-sales/:sessionId/items`: Seller xem danh sách sản phẩm đã đăng ký.
   - [x] `POST /api/v1/seller/flash-sales/register`: Seller đăng ký sản phẩm tham gia.
   - [x] Update Checkout Transaction (`CheckoutProcessor`) to handle Flash Sale logic (validate if SKU in active flash sale, apply flash sale price instead of normal price).
   - [x] **Redis Operations:**

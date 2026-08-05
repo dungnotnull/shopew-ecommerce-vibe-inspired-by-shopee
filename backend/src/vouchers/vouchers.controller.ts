@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Request, Param, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, UseGuards, Request, Param, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -9,7 +9,7 @@ import { VouchersService } from './vouchers.service';
 @ApiTags('Vouchers')
 @Controller('v1')
 export class VouchersController {
-  constructor(private readonly vouchersService: VouchersService) {}
+  constructor(private readonly vouchersService: VouchersService) { }
 
   @Post('admin/vouchers')
   @ApiBearerAuth()
@@ -23,6 +23,33 @@ export class VouchersController {
     });
   }
 
+  @Get('admin/vouchers')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Admin lấy danh sách voucher hệ thống (Platform)' })
+  async getPlatformVouchers() {
+    return this.vouchersService.getPlatformVouchers();
+  }
+
+  @Put('admin/vouchers/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Admin cập nhật voucher hệ thống' })
+  async updatePlatformVoucher(@Param('id') id: string, @Body() dto: any) {
+    return this.vouchersService.updatePlatformVoucher(Number(id), dto);
+  }
+
+  @Delete('admin/vouchers/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Admin xóa voucher hệ thống' })
+  async deletePlatformVoucher(@Param('id') id: string) {
+    return this.vouchersService.deletePlatformVoucher(Number(id));
+  }
+
   @Post('seller/vouchers')
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -33,6 +60,33 @@ export class VouchersController {
       ...dto,
       userId: req.user.id
     });
+  }
+
+  @Get('seller/vouchers')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.SELLER, Role.ADMIN)
+  @ApiOperation({ summary: 'Seller lấy danh sách voucher của Shop' })
+  async getShopVouchers(@Request() req: any) {
+    return this.vouchersService.getShopVouchers(req.user.id);
+  }
+
+  @Put('seller/vouchers/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.SELLER, Role.ADMIN)
+  @ApiOperation({ summary: 'Seller cập nhật voucher của Shop' })
+  async updateShopVoucher(@Request() req: any, @Param('id') id: string, @Body() dto: any) {
+    return this.vouchersService.updateShopVoucher(req.user.id, Number(id), dto);
+  }
+
+  @Delete('seller/vouchers/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.SELLER, Role.ADMIN)
+  @ApiOperation({ summary: 'Seller xóa voucher của Shop' })
+  async deleteShopVoucher(@Request() req: any, @Param('id') id: string) {
+    return this.vouchersService.deleteShopVoucher(req.user.id, Number(id));
   }
 
   @Post('vouchers/save')

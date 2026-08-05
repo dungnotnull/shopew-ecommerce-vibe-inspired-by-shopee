@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, UseGuards, Request, Param } from '@nestjs/common';
 import { FlashSalesService } from './flash-sales.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -25,6 +25,51 @@ export class FlashSalesController {
   @ApiOperation({ summary: 'Admin tạo phiên Flash Sale' })
   createFlashSaleSession(@Body() dto: any) {
     return this.flashSalesService.createFlashSaleSession(dto);
+  }
+
+  @Get('admin/flash-sales')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Admin xem danh sách Flash Sale Session' })
+  getAdminSessions() {
+    return this.flashSalesService.getAdminSessions();
+  }
+
+  @Put('admin/flash-sales/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Admin cập nhật Flash Sale Session' })
+  updateAdminSession(@Param('id') id: string, @Body() dto: any) {
+    return this.flashSalesService.updateAdminSession(Number(id), dto);
+  }
+
+  @Delete('admin/flash-sales/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Admin xóa Flash Sale Session' })
+  deleteAdminSession(@Param('id') id: string) {
+    return this.flashSalesService.deleteAdminSession(Number(id));
+  }
+
+  @Get('seller/flash-sales/sessions')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.SELLER, Role.ADMIN)
+  @ApiOperation({ summary: 'Seller lấy danh sách Session khả dụng' })
+  getSellerSessions() {
+    return this.flashSalesService.getSellerSessions();
+  }
+
+  @Get('seller/flash-sales/:sessionId/items')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(Role.SELLER, Role.ADMIN)
+  @ApiOperation({ summary: 'Seller xem sản phẩm đã đăng ký trong Session' })
+  getSellerRegisteredItems(@Request() req: any, @Param('sessionId') sessionId: string) {
+    return this.flashSalesService.getSellerRegisteredItems(req.user.id, Number(sessionId));
   }
 
   @Post('seller/flash-sales/register')
